@@ -1,0 +1,56 @@
+# Node modules
+node_modules/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependency directories
+bower_components/
+
+# Build output
+build/
+dist/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# dotenv environment variables
+.env
+.env.local
+.env.*.local
+
+# Misc
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS generated files
+*.swp
+*.bak
+*.tmp
+
+# Optional: React specific
+*.env.development.local
+*.env.test.local
+*.env.production.local
+
+# Optional: TypeScript
+*.tsbuildinfo
+
+# Coverage reports
+coverage/
+
+# Optional: if using Parcel or other bundlers
+.cache/
