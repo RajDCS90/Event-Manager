@@ -10,6 +10,7 @@ const UserForm = () => {
     username: '',
     password: '',
     role: 'user',
+    email:'',
     assignedTables: []
   });
   const [error, setError] = useState('');
@@ -17,9 +18,9 @@ const UserForm = () => {
   const [success, setSuccess] = useState(false);
 
   const accessOptions = [
-    { value: 'events', label: 'Event Table' },
+    { value: 'event', label: 'Event Table' },
     { value: 'grievances', label: 'Grievance Table' },
-    { value: 'partyYouth', label: 'Party & Youth Affair' },
+    { value: 'party', label: 'Party & Youth Affair' },
   ];
 
   const handleChange = (e) => {
@@ -42,9 +43,10 @@ const UserForm = () => {
     e.preventDefault();
     setError('');
     setIsSubmitting(true);
-    
+    console.log("formdata",formData);
     try {
-      await createUser(formData);
+      const res = await createUser(formData);
+      console.log("res",res);
       setSuccess(true);
       setFormData({
         username: '',
@@ -81,6 +83,13 @@ const UserForm = () => {
           label="Username"
           name="username"
           value={formData.username}
+          onChange={handleChange}
+          required
+        />
+        <FormInput
+          label="email "
+          name="email"
+          value={formData.email}
           onChange={handleChange}
           required
         />

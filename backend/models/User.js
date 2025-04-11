@@ -24,7 +24,7 @@ const UserSchema = new mongoose.Schema({
   },
   assignedTables: [{
     type: String,
-    enum: ['event', 'grievance', 'party']
+    enum: ['event', 'grievances', 'party']
   }]
 }, { timestamps: true });
 

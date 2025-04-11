@@ -34,6 +34,7 @@ const UserTable = () => {
     const fetchUsers = async () => {
       try {
         const usersData = await getUsers();
+        console.log("userData: ", usersData);
         setUsers(usersData);
         setFilteredUsers(usersData);
       } catch (err) {

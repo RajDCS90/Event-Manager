@@ -6,17 +6,27 @@ import { NavLink } from 'react-router-dom';
 const Navbar = () => {
   const { currentUser, activeTab, setActiveTab } = useContext(AppContext);
 
+  // Mapping between backend table names and frontend tab IDs
+  const tableToTabMap = {
+    event: 'events',
+    grievance: 'grievance',
+    party: 'partyYouth'
+  };  
+
   const tabs = [
     { id: 'events', label: 'Event Table' },
-    { id: 'grievances', label: 'Grievance Table' },
+    { id: 'grievance', label: 'Grievance Table' },
     { id: 'partyYouth', label: 'Party & Youth Affair' },
     ...(currentUser.role === 'admin' ? [{ id: 'userManagement', label: 'User Management' }] : [])
   ];
 
+  // Convert assignedTables to frontend tab IDs
+  const userTabAccess = currentUser.assignedTables?.map(table => tableToTabMap[table]) || [];
+
   // Only show tabs that user has access to
   const filteredTabs = tabs.filter(tab => 
     tab.id === 'userManagement' || 
-    currentUser.assignedTables.includes(tab.id)
+    userTabAccess.includes(tab.id)
   );
 
   return (

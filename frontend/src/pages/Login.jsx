@@ -1,4 +1,3 @@
-// src/pages/Login.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../services/api';
@@ -23,12 +22,17 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      const { token, role, assignedTables } = await login(formData.username, formData.password);
+      const response = await login(formData.username, formData.password);
       
       // Store token and user data
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify({ username: formData.username, role, assignedTables }));
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify({
+        username: response.username,
+        role: response.role,
+        assignedTables: response.assignedTables
+      }));
       
+      // Navigate to dashboard
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');

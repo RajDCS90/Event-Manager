@@ -54,12 +54,6 @@ export const AppProvider = ({ children }) => {
   };
 
 
-  // // Switch user role for demo purposes
-  // const switchUser = (userId) => {
-  //   const user = users.find(u => u.id === userId);
-  //   setCurrentUser(user);
-  // };
-
   // Common CRUD operations
   const addEvent = (event) => {
     setEvents([...events, { ...event, id: Date.now() }]);
