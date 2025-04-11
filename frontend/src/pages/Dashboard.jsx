@@ -12,9 +12,10 @@ import UserManagement from '../components/User/UserManagement';
 const Dashboard = () => {
   const { activeTab, currentUser } = useContext(AppContext);
 
+
   return (
     <div className="space-y-6">
-      {activeTab === 'events' && currentUser.access.includes('events') && (
+      {activeTab === 'events' && currentUser.assignedTables.includes('events') && (
         <>
           <div className="bg-gray-100 p-4 rounded-lg">
             <h2 className="text-xl font-semibold mb-2">Add New Event</h2>

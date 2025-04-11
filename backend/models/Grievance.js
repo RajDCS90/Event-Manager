@@ -7,7 +7,8 @@ const GrievanceSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    required: true
+    required: true,
+    enum: ['complaint', 'request', 'feedback', 'other']
   },
   applicant: {
     type: String,
@@ -17,9 +18,33 @@ const GrievanceSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
+  programDate: {
+    type: Date,
+    required: true
+  },
+  startTime: {
+    type: String,
+    required: true,
+    validate: {
+      validator: function(v) {
+        return /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
+      },
+      message: props => `${props.value} is not a valid time format (HH:MM)`
+    }
+  },
+  endTime: {
+    type: String,
+    required: true,
+    validate: {
+      validator: function(v) {
+        return /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
+      },
+      message: props => `${props.value} is not a valid time format (HH:MM)`
+    }
+  },
   status: {
     type: String,
-    enum: ['pending', 'completed', 'cancelled'],
+    enum: ['pending', 'in_progress', 'completed', 'cancelled'],
     default: 'pending'
   },
   description: {
@@ -34,6 +59,9 @@ const GrievanceSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
+  },
+  resolutionNotes: {
+    type: String
   }
 }, { timestamps: true });
 
