@@ -2,20 +2,57 @@
 import { useState, useEffect } from 'react';
 import { AppContext } from './AppContext';
 import { initialEvents, initialGrievances, initialPartyYouth, initialUsers } from '../data/initialData';
+import { getMe } from '../services/api';
 
 export const AppProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [users, setUsers] = useState(initialUsers);
+  const [isLoading, setIsLoading] = useState(true);
   const [events, setEvents] = useState(initialEvents);
   const [grievances, setGrievances] = useState(initialGrievances);
   const [partyYouth, setPartyYouth] = useState(initialPartyYouth);
   const [activeTab, setActiveTab] = useState('events');
 
   // Initialize with admin user
-  useEffect(() => {
-    const adminUser = users.find(user => user.role === 'admin');
-    setCurrentUser(adminUser);
+  // useEffect(() => {
+  //   const adminUser = users.find(user => user.role === 'admin');
+  //   setCurrentUser(adminUser);
+  // }, []);
+
+   // Check for logged in user on initial load
+   useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          const user = await getMe();
+          setCurrentUser(user);
+        }
+      } catch (err) {
+        console.error('Authentication check failed:', err);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
   }, []);
+
+  // Login function
+  const loginUser = (userData) => {
+    setCurrentUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
+  };
+
+  // Logout function
+  const logoutUser = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  };
+
 
   // // Switch user role for demo purposes
   // const switchUser = (userId) => {
@@ -81,8 +118,11 @@ export const AppProvider = ({ children }) => {
   const value = {
     currentUser,
     setCurrentUser,
+    isLoading,
     users,
     deleteUser,
+    loginUser,
+    logoutUser,
     events,
     grievances,
     partyYouth,

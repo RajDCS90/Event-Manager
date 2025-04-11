@@ -7,7 +7,7 @@ const User = require('../models/User');
 // @access  Private/Admin
 const registerUser = async (req, res) => {
   try {
-    const { username, password, role, assignedTables } = req.body;
+    const { username, password, email ,role, assignedTables } = req.body;
 
     // Check if user exists
     const userExists = await User.findOne({ username });
@@ -17,6 +17,7 @@ const registerUser = async (req, res) => {
 
     const user = await User.create({
       username,
+      email,
       password,
       role,
       assignedTables
@@ -46,11 +47,13 @@ const loginUser = async (req, res) => {
     const { username, password } = req.body;
 
     const user = await User.findOne({ username });
+    console.log("user",user)
 
     if (user && (await user.comparePassword(password))) {
       res.json({
         _id: user._id,
         username: user.username,
+        email:user.email,
         role: user.role,
         assignedTables: user.assignedTables,
         token: generateToken(user._id)

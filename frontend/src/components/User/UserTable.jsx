@@ -1,31 +1,65 @@
 // src/components/User/UserTable.jsx
-import { useContext, useState } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { AppContext } from '../../context/AppContext';
+import { getUsers, deleteUser } from '../../services/api';
 import Filter from '../common/Filter';
 import Table from '../common/Table';
 
 const UserTable = () => {
-  const { users, currentUser, deleteUser } = useContext(AppContext);
-  const [filteredUsers, setFilteredUsers] = useState(users);
+  const { currentUser } = useContext(AppContext);
+  const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const columns = [
-    { header: 'Name', accessor: 'name' },
-    { header: 'Email', accessor: 'email' },
+    { header: 'Username', accessor: 'username' },
     { header: 'Role', accessor: 'role' },
     { 
-      header: 'Access', 
-      accessor: 'access', 
-      render: (access) => (
+      header: 'Assigned Tables', 
+      accessor: 'assignedTables', 
+      render: (tables) => (
         <div className="flex flex-wrap gap-1">
-          {access.map(item => (
-            <span key={item} className="bg-gray-100 px-2 py-1 text-xs rounded">
-              {item}
+          {tables.map(table => (
+            <span key={table} className="bg-gray-100 px-2 py-1 text-xs rounded">
+              {table}
             </span>
           ))}
         </div>
       ) 
     },
   ];
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const usersData = await getUsers();
+        setUsers(usersData);
+        setFilteredUsers(usersData);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to fetch users');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this user?')) {
+      try {
+        await deleteUser(id);
+        setUsers(users.filter(user => user._id !== id));
+        setFilteredUsers(filteredUsers.filter(user => user._id !== id));
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to delete user');
+      }
+    }
+  };
+
+  if (isLoading) return <div>Loading users...</div>;
+  if (error) return <div className="text-red-500">{error}</div>;
 
   return (
     <div className="mt-6">
@@ -50,33 +84,35 @@ const UserTable = () => {
                   {column.header}
                 </th>
               ))}
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              {currentUser.role === 'admin' && (
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              )}
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredUsers.length > 0 ? (
               filteredUsers.map(user => (
-                <tr key={user.id}>
+                <tr key={user._id}>
                   {columns.map(column => (
-                    <td key={`${user.id}-${column.accessor}`} className="px-6 py-4 whitespace-nowrap">
+                    <td key={`${user._id}-${column.accessor}`} className="px-6 py-4 whitespace-nowrap">
                       {column.render ? column.render(user[column.accessor]) : user[column.accessor]}
                     </td>
                   ))}
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {currentUser.role === 'admin' && currentUser.id !== user.id && (
+                  {currentUser.role === 'admin' && currentUser._id !== user._id && (
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <button
-                        onClick={() => deleteUser(user.id)}
+                        onClick={() => handleDelete(user._id)}
                         className="text-red-600 hover:text-red-900"
                       >
                         Delete
                       </button>
-                    )}
-                  </td>
+                    </td>
+                  )}
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={columns.length + 1} className="px-6 py-4 text-center text-gray-500">
+                <td colSpan={columns.length + (currentUser.role === 'admin' ? 1 : 0)} className="px-6 py-4 text-center text-gray-500">
                   No users available
                 </td>
               </tr>

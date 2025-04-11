@@ -5,11 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 
 const Layout = ({ children }) => {
-  const { currentUser, setCurrentUser } = useContext(AppContext);
+  const { currentUser, logoutUser } = useContext(AppContext);
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    setCurrentUser(null);
+    logoutUser();
     navigate('/login');
   };
 
@@ -20,7 +20,7 @@ const Layout = ({ children }) => {
           <h1 className="text-2xl font-bold">Admin Dashboard</h1>
           {currentUser && (
             <div className="mt-2">
-              <span className="font-semibold">Logged in as:</span> {currentUser.name} ({currentUser.role})
+              <span className="font-semibold">Logged in as:</span> {currentUser.username} ({currentUser.role})
             </div>
           )}
         </div>
