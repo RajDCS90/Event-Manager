@@ -7,6 +7,10 @@ const {
   updateGrievance,
   deleteGrievance
 } = require('../controllers/grievanceController');
+const { protect } = require('../middlewares/authMiddleware');
+
+// Protect all routes
+router.use(protect);
 
 // Apply table access middleware to all routes
 router.use(checkTableAccess('grievance'));

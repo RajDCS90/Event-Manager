@@ -31,6 +31,30 @@ const EventSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  eventDate: {
+    type: Date,
+    required: true
+  },
+  startTime: {
+    type: String,
+    required: true,
+    validate: {
+      validator: function(v) {
+        return /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
+      },
+      message: props => `${props.value} is not a valid time format (HH:MM)`
+    }
+  },
+  endTime: {
+    type: String,
+    required: true,
+    validate: {
+      validator: function(v) {
+        return /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
+      },
+      message: props => `${props.value} is not a valid time format (HH:MM)`
+    }
+  },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -38,4 +62,4 @@ const EventSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Event', EventSchema);
+module.exports = mongoose.model('Events', EventSchema);
