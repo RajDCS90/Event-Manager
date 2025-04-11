@@ -5,18 +5,27 @@ import Filter from '../common/Filter';
 import Table from '../common/Table';
 
 const UserTable = () => {
-  const { users, currentUser, switchUser, deleteUser } = useContext(AppContext);
+  const { users, currentUser, deleteUser } = useContext(AppContext);
   const [filteredUsers, setFilteredUsers] = useState(users);
 
   const columns = [
     { header: 'Name', accessor: 'name' },
+    { header: 'Email', accessor: 'email' },
     { header: 'Role', accessor: 'role' },
-    { header: 'Access', accessor: 'access', render: (access) => access.join(', ') },
+    { 
+      header: 'Access', 
+      accessor: 'access', 
+      render: (access) => (
+        <div className="flex flex-wrap gap-1">
+          {access.map(item => (
+            <span key={item} className="bg-gray-100 px-2 py-1 text-xs rounded">
+              {item}
+            </span>
+          ))}
+        </div>
+      ) 
+    },
   ];
-
-  const handleSwitchUser = (userId) => {
-    switchUser(userId);
-  };
 
   return (
     <div className="mt-6">
@@ -53,13 +62,7 @@ const UserTable = () => {
                       {column.render ? column.render(user[column.accessor]) : user[column.accessor]}
                     </td>
                   ))}
-                  <td className="px-6 py-4 whitespace-nowrap space-x-2">
-                    <button
-                      onClick={() => handleSwitchUser(user.id)}
-                      className="text-blue-600 hover:text-blue-900"
-                    >
-                      Switch
-                    </button>
+                  <td className="px-6 py-4 whitespace-nowrap">
                     {currentUser.role === 'admin' && currentUser.id !== user.id && (
                       <button
                         onClick={() => deleteUser(user.id)}

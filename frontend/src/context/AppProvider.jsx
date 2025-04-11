@@ -17,11 +17,11 @@ export const AppProvider = ({ children }) => {
     setCurrentUser(adminUser);
   }, []);
 
-  // Switch user role for demo purposes
-  const switchUser = (userId) => {
-    const user = users.find(u => u.id === userId);
-    setCurrentUser(user);
-  };
+  // // Switch user role for demo purposes
+  // const switchUser = (userId) => {
+  //   const user = users.find(u => u.id === userId);
+  //   setCurrentUser(user);
+  // };
 
   // Common CRUD operations
   const addEvent = (event) => {
@@ -80,6 +80,7 @@ export const AppProvider = ({ children }) => {
 
   const value = {
     currentUser,
+    setCurrentUser,
     users,
     deleteUser,
     events,
@@ -87,7 +88,7 @@ export const AppProvider = ({ children }) => {
     partyYouth,
     activeTab,
     setActiveTab,
-    switchUser,
+    // switchUser,
     addEvent,
     updateEvent,
     deleteEvent,

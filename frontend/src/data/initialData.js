@@ -77,18 +77,24 @@ export const initialEvents = [
     {
       id: 1,
       name: 'Admin User',
+      email: 'admin@example.com',
+      password: 'admin123', // In real app, store hashed passwords
       role: 'admin',
-      access: ['events', 'grievances', 'partyYouth']
+      access: ['events', 'grievances', 'partyYouth', 'userManagement']
     },
     {
       id: 2,
       name: 'Lisa',
+      email: 'Lisa@example.com',
+      password: 'Lisa123',
       role: 'user',
       access: ['events']
     },
     {
       id: 3,
       name: 'Raj',
+      email: 'Raj@example.com',
+      password: 'Raj123',
       role: 'user',
       access: ['events','grievances']
     },

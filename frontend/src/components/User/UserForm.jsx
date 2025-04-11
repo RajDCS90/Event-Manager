@@ -7,6 +7,8 @@ const UserForm = () => {
   const { addUser } = useContext(AppContext);
   const [formData, setFormData] = useState({
     name: '',
+    email: '',
+    password: '',
     role: 'user',
     access: []
   });
@@ -35,9 +37,15 @@ const UserForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // In a real app, you would send an email to the user here
+    console.log(`Would send email to ${formData.email} with credentials`);
+    
     addUser(formData);
     setFormData({
       name: '',
+      email: '',
+      password: '',
       role: 'user',
       access: []
     });
@@ -47,9 +55,27 @@ const UserForm = () => {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormInput
-          label="User Name"
+          label="Full Name"
           name="name"
           value={formData.name}
+          onChange={handleChange}
+          required
+        />
+        
+        <FormInput
+          label="Email"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+        />
+        
+        <FormInput
+          label="Password"
+          name="password"
+          type="password"
+          value={formData.password}
           onChange={handleChange}
           required
         />
