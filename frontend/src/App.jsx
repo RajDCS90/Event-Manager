@@ -10,7 +10,6 @@ import { EventProvider } from './context/EventContext';
 
 function App() {
   return (
-    <Router>
       <AppProvider>
       <GrievanceProvider>
         <EventProvider>
@@ -28,7 +27,6 @@ function App() {
         </EventProvider>
         </GrievanceProvider>
       </AppProvider>
-    </Router>
   );
 }
 

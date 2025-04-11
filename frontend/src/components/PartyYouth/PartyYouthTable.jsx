@@ -29,7 +29,7 @@ const PartyYouthTable = () => {
       <Filter 
         data={partyYouth} 
         setFilteredData={setFilteredPartyYouth} 
-        columns={columns.map(col => ({ value: col.accessor, label: col.header }))}
+        columns={columns?.map(col => ({ value: col.accessor, label: col.header }))}
       />
       
       <Table

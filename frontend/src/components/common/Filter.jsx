@@ -4,13 +4,12 @@ import { useState } from 'react';
 const Filter = ({ data, setFilteredData, columns }) => {
   const [filterColumn, setFilterColumn] = useState('');
   const [filterValue, setFilterValue] = useState('');
-
+  
   const handleFilter = () => {
     if (!filterColumn) {
       setFilteredData(data);
       return;
     }
-
     const filtered = data.filter(item => 
       String(item[filterColumn]).toLowerCase().includes(filterValue.toLowerCase())
     );
@@ -27,7 +26,7 @@ const Filter = ({ data, setFilteredData, columns }) => {
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"
         >
           <option value="">Select column</option>
-          {columns.map(column => (
+          {columns?.map(column => (
             <option key={column.value} value={column.value}>
               {column.label}
             </option>

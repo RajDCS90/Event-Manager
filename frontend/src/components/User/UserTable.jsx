@@ -69,14 +69,14 @@ const UserTable = () => {
       <Filter 
         data={users} 
         setFilteredData={setFilteredUsers} 
-        columns={columns.map(col => ({ value: col.accessor, label: col.header }))}
+        columns={columns?.map(col => ({ value: col.accessor, label: col.header }))}
       />
       
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              {columns.map(column => (
+              {columns?.map(column => (
                 <th
                   key={column.accessor}
                   scope="col"
@@ -94,7 +94,7 @@ const UserTable = () => {
             {filteredUsers.length > 0 ? (
               filteredUsers.map(user => (
                 <tr key={user._id}>
-                  {columns.map(column => (
+                  {columns?.map(column => (
                     <td key={`${user._id}-${column.accessor}`} className="px-6 py-4 whitespace-nowrap">
                       {column.render ? column.render(user[column.accessor]) : user[column.accessor]}
                     </td>

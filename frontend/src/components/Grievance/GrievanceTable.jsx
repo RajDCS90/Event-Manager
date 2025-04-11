@@ -49,7 +49,7 @@ const GrievanceTable = () => {
           onChange={(e) => setFilterField(e.target.value)}
           className="border rounded p-2"
         >
-          {columns.map(col => (
+          {columns?.map(col => (
             <option key={col.accessor} value={col.accessor}>
               {col.header}
             </option>
@@ -69,7 +69,7 @@ const GrievanceTable = () => {
         <table className="min-w-full border border-gray-300">
           <thead>
             <tr className="bg-gray-100">
-              {columns.map(col => (
+              {columns?.map(col => (
                 <th key={col.accessor} className="py-2 px-4 text-left border-b">{col.header}</th>
               ))}
               <th className="py-2 px-4 text-left border-b">Actions</th>
@@ -78,7 +78,7 @@ const GrievanceTable = () => {
           <tbody>
             {filteredGrievances.map(grievance => (
               <tr key={grievance._id} className="border-b">
-                {columns.map(col => (
+                {columns?.map(col => (
                   <td key={col.accessor} className="py-2 px-4">
                     {grievance[col.accessor]}
                   </td>

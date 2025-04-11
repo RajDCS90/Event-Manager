@@ -1,5 +1,5 @@
 // src/components/Event/EventTable.jsx
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import Filter from '../common/Filter';
 import Table from '../common/Table';
 import { format, parseISO } from 'date-fns';
@@ -10,7 +10,11 @@ const EventTable = () => {
   const { events, loading, error, updateEvent, deleteEvent } = useEvents();
   const { currentUser } = useContext(AppContext) // Get current user from auth context
   const [filteredEvents, setFilteredEvents] = useState(events);
-
+  useEffect(() => {
+    console.log("events: ", events)
+    setFilteredEvents(events);
+  }, [events]);
+  
   const formatDate = (dateString) => {
     try {
       return format(parseISO(dateString), 'MMM dd, yyyy');

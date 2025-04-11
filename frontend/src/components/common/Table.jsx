@@ -26,7 +26,7 @@ const Table = ({ data, columns, onEdit, onDelete }) => {
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            {columns.map(column => (
+            {columns?.map(column => (
               <th
                 key={column.accessor}
                 scope="col"
@@ -42,7 +42,7 @@ const Table = ({ data, columns, onEdit, onDelete }) => {
           {data.length > 0 ? (
             data.map(item => (
               <tr key={item.id}>
-                {columns.map(column => (
+                {columns?.map(column => (
                   <td key={`${item.id}-${column.accessor}`} className="px-6 py-4 whitespace-nowrap">
                     {editingId === item.id && editingField === column.accessor ? (
                       <input

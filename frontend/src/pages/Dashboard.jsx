@@ -33,7 +33,7 @@ const Dashboard = () => {
         </>
       )}
 
-      {activeTab === 'grievances' && currentUser.assignedTables.includes("grievances") && (
+      {activeTab === 'grievance' && currentUser.assignedTables.includes("grievance") && (
         <>
           <div className="bg-gray-100 p-4 rounded-lg">
             <h2 className="text-xl font-semibold mb-2">Add New Grievance</h2>
@@ -45,7 +45,7 @@ const Dashboard = () => {
         </>
       )}
 
-      {activeTab === 'partyYouth' && currentUser.access.includes("party") && (
+      {activeTab === 'partyYouth' && currentUser.assignedTables.includes("party") && (
         <>
           <div className="bg-gray-100 p-4 rounded-lg">
             <h2 className="text-xl font-semibold mb-2">Add New Member</h2>
