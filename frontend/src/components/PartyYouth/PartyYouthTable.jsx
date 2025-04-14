@@ -1,13 +1,21 @@
-// src/components/PartyYouth/PartyYouthTable.jsx
-import { useContext, useState } from 'react';
-import { AppContext } from '../../context/AppContext';
+import { useState } from 'react';
 import Filter from '../common/Filter';
 import Table from '../common/Table';
 
 const PartyYouthTable = () => {
-  const { partyYouth, currentUser, updatePartyYouth, deletePartyYouth } = useContext(AppContext);
-  const [filteredPartyYouth, setFilteredPartyYouth] = useState(partyYouth);
+  // Dummy data for Party Youth
+  const partyYouth = [
+    { id: 1, memberId: 'M001', aadharNo: '123456789012', name: 'John Doe', whatsappNo: '9876543210', designation: 'Member', mandalPanchayat: 'Mandal A' },
+    { id: 2, memberId: 'M002', aadharNo: '234567890123', name: 'Jane Smith', whatsappNo: '9123456789', designation: 'Leader', mandalPanchayat: 'Mandal B' },
+    { id: 3, memberId: 'M003', aadharNo: '345678901234', name: 'Robert Brown', whatsappNo: '9801234567', designation: 'Member', mandalPanchayat: 'Mandal C' },
+    { id: 4, memberId: 'M004', aadharNo: '456789012345', name: 'Emily White', whatsappNo: '9879879876', designation: 'Coordinator', mandalPanchayat: 'Mandal D' },
+  ];
 
+  // State for filtered data
+  const [filteredPartyYouth, setFilteredPartyYouth] = useState(partyYouth);
+  const [currentUser] = useState({ role: 'admin' }); // Dummy current user (Admin role)
+
+  // Columns for table
   const columns = [
     { header: 'Member ID', accessor: 'memberId' },
     { header: 'Aadhar No', accessor: 'aadharNo' },
@@ -17,6 +25,17 @@ const PartyYouthTable = () => {
     { header: 'Mandal/Panchayat', accessor: 'mandalPanchayat' },
   ];
 
+  // Dummy update function (simulating API call)
+  const updatePartyYouth = (updatedMember) => {
+    console.log('Updating Party Youth member:', updatedMember);
+  };
+
+  // Dummy delete function (simulating API call)
+  const deletePartyYouth = (id) => {
+    console.log('Deleting Party Youth member with id:', id);
+  };
+
+  // Edit handler
   const handleEdit = (id, field, value) => {
     const memberToUpdate = partyYouth.find(m => m.id === id);
     updatePartyYouth({ ...memberToUpdate, [field]: value });
@@ -29,7 +48,7 @@ const PartyYouthTable = () => {
       <Filter 
         data={partyYouth} 
         setFilteredData={setFilteredPartyYouth} 
-        columns={columns?.map(col => ({ value: col.accessor, label: col.header }))}
+        columns={columns?.map(col => ({ value: col.accessor, label: col.header }))} 
       />
       
       <Table

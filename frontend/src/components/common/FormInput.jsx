@@ -1,4 +1,3 @@
-// src/components/common/FormInput.jsx
 const FormInput = ({ label, name, type = 'text', value, onChange, options = [], required = false }) => {
   return (
     <div className="space-y-1">
@@ -12,13 +11,27 @@ const FormInput = ({ label, name, type = 'text', value, onChange, options = [], 
           name={name}
           value={value}
           onChange={onChange}
+          required={required}
           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"
         >
-          {options.map(option => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
+          <option value="" disabled>
+            Select {label}
+          </option>
+          {options.map((option) => {
+            if (typeof option === 'string') {
+              return (
+                <option key={option} value={option}>
+                  {option.charAt(0).toUpperCase() + option.slice(1).replace('_', ' ')}
+                </option>
+              );
+            } else {
+              return (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              );
+            }
+          })}
         </select>
       ) : (
         <input
@@ -35,4 +48,4 @@ const FormInput = ({ label, name, type = 'text', value, onChange, options = [], 
   );
 };
 
-export default FormInput;
+export default FormInput

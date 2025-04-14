@@ -23,7 +23,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Routes
-app.use('/api/users', userRoutes);
+app.use('/api/auth', userRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/grievances', grievanceRoutes);
 app.use('/api/party', partyRoutes);

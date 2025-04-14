@@ -26,7 +26,7 @@ const GrievanceSchema = new mongoose.Schema({
     type: String,
     required: true,
     validate: {
-      validator: function(v) {
+      validator: function (v) {
         return /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
       },
       message: props => `${props.value} is not a valid time format (HH:MM)`
@@ -36,7 +36,7 @@ const GrievanceSchema = new mongoose.Schema({
     type: String,
     required: true,
     validate: {
-      validator: function(v) {
+      validator: function (v) {
         return /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
       },
       message: props => `${props.value} is not a valid time format (HH:MM)`
@@ -52,6 +52,10 @@ const GrievanceSchema = new mongoose.Schema({
     required: true
   },
   assignedTo: {
+    type: String,
+    required: true
+  },
+  mandal: {
     type: String,
     required: true
   },

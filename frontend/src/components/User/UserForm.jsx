@@ -1,11 +1,11 @@
 // src/components/User/UserForm.jsx
-import { useState, useContext } from 'react';
-import { AppContext } from '../../context/AppContext';
+import { useState } from 'react';
 import { createUser } from '../../services/api';
 import FormInput from '../common/FormInput';
+import { useAuth } from '../../context/AuthContext';
 
 const UserForm = () => {
-  const { currentUser } = useContext(AppContext);
+  const { currentUser } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
     password: '',

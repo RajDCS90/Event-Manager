@@ -1,12 +1,12 @@
 // src/components/User/UserTable.jsx
 import { useState, useEffect, useContext } from 'react';
-import { AppContext } from '../../context/AppContext';
 import { getUsers, deleteUser } from '../../services/api';
 import Filter from '../common/Filter';
 import Table from '../common/Table';
+import { useAuth } from '../../context/AuthContext';
 
 const UserTable = () => {
-  const { currentUser } = useContext(AppContext);
+  const { currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);

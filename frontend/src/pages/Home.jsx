@@ -1,14 +1,13 @@
 // src/pages/Home.jsx
-import { useContext } from 'react';
-import { AppContext } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
-  const { users, switchUser } = useContext(AppContext);
+  const { users } = useAuth()
   const navigate = useNavigate();
 
   const handleUserSelect = (userId) => {
-    switchUser(userId);
+    // switchUser(userId);
     navigate('/dashboard');
   };
 

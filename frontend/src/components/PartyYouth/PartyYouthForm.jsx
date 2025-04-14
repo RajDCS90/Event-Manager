@@ -1,10 +1,8 @@
 // src/components/PartyYouth/PartyYouthForm.jsx
-import { useState, useContext } from 'react';
-import { AppContext } from '../../context/AppContext';
+import { useState } from 'react';
 import FormInput from '../common/FormInput';
 
 const PartyYouthForm = () => {
-  const { addPartyYouth } = useContext(AppContext);
   const [formData, setFormData] = useState({
     aadharNo: '',
     name: '',
@@ -22,11 +20,11 @@ const PartyYouthForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    addPartyYouth({
-      ...formData,
-      id: Date.now(),
-      memberId: `PY-${Math.floor(1000 + Math.random() * 9000)}`
-    });
+    // addPartyYouth({
+    //   ...formData,
+    //   id: Date.now(),
+    //   memberId: `PY-${Math.floor(1000 + Math.random() * 9000)}`
+    // });
     setFormData({
       aadharNo: '',
       name: '',

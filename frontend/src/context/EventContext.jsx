@@ -12,10 +12,19 @@ export const EventProvider = ({ children }) => {
   const fetchEvents = async () => {
     try {
       setLoading(true);
+      // Check if token exists in localStorage to ensure user is authenticated
+      const token = localStorage.getItem('token');
+      if (!token) {
+        // User not authenticated, don't make the API call
+        return;
+      }
+      
       const response = await api.get('/events');
+      console.log('Events response:', response);
       setEvents(response.data);
       setError(null);
     } catch (err) {
+      console.error('Error fetching events:', err);
       setError(err.response?.data?.message || 'Failed to fetch events');
     } finally {
       setLoading(false);
@@ -83,9 +92,13 @@ export const EventProvider = ({ children }) => {
     });
   };
 
-  // Initialize with first fetch
+  // Initialize with first fetch when the component mounts
   useEffect(() => {
-    fetchEvents();
+    // Check if user is authenticated before fetching events
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetchEvents();
+    }
   }, []);
 
   return (

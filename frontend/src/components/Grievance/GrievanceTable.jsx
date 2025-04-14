@@ -1,9 +1,12 @@
 // src/components/Grievance/GrievanceTable.jsx
 import { useContext, useState, useEffect } from 'react';
-import { AppContext } from '../../context/AppContext';
+import { useGrievance } from '../../context/GrievanceContext';
+import { useAuth } from '../../context/AuthContext';
 
 const GrievanceTable = () => {
-  const { grievances, currentUser, updateGrievance, deleteGrievance } = useContext(AppContext);
+  const {grievances} = useGrievance();
+
+  const {currentUser} = useAuth();
   const [filteredGrievances, setFilteredGrievances] = useState(grievances);
   const [filterField, setFilterField] = useState('grievanceName');
   const [filterQuery, setFilterQuery] = useState('');
@@ -21,7 +24,6 @@ const GrievanceTable = () => {
   }, [filterQuery, filterField, grievances]);
 
   const columns = [
-    { header: 'Grievance ID', accessor: 'grievanceId' },
     { header: 'Grievance Name', accessor: 'grievanceName' },
     { header: 'Type', accessor: 'type' },
     { header: 'Applicant', accessor: 'applicant' },

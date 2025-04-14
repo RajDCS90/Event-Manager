@@ -1,20 +1,19 @@
-// src/components/Event/EventTable.jsx
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Filter from '../common/Filter';
 import Table from '../common/Table';
 import { format, parseISO } from 'date-fns';
 import { useEvents } from '../../context/EventContext';
-import { AppContext } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 
 const EventTable = () => {
   const { events, loading, error, updateEvent, deleteEvent } = useEvents();
-  const { currentUser } = useContext(AppContext) // Get current user from auth context
+  const { currentUser } = useAuth();
   const [filteredEvents, setFilteredEvents] = useState(events);
+
   useEffect(() => {
-    console.log("events: ", events)
     setFilteredEvents(events);
   }, [events]);
-  
+
   const formatDate = (dateString) => {
     try {
       return format(parseISO(dateString), 'MMM dd, yyyy');
@@ -23,32 +22,113 @@ const EventTable = () => {
     }
   };
 
+  const formatTime = (timeString) => {
+    if (!timeString) return '';
+    // Convert "09:00" to "9:00 AM" format
+    const [hours, minutes] = timeString.split(':');
+    const hourNum = parseInt(hours, 10);
+    const period = hourNum >= 12 ? 'PM' : 'AM';
+    const displayHour = hourNum % 12 || 12;
+    return `${displayHour}:${minutes} ${period}`;
+  };
+
   const columns = [
-    { header: 'Event Name', accessor: 'eventName' },
+    { 
+      header: 'Event Name', 
+      accessor: 'eventName',
+      editable: (user) => user.role === 'admin' || user.assignedTables?.includes('event')
+    },
     { 
       header: 'Type', 
       accessor: 'eventType', 
-      cell: (value) => value.charAt(0).toUpperCase() + value.slice(1) 
+      cell: (value) => value.charAt(0).toUpperCase() + value.slice(1),
+      editable: (user) => user.role === 'admin',
+      editType: 'select',
+      editOptions: [
+        { value: 'political', label: 'Political' },
+        { value: 'social', label: 'Social' },
+        { value: 'commercial', label: 'Commercial' },
+        { value: 'welfare', label: 'Welfare' }
+      ]
     },
-    { header: 'Venue', accessor: 'venue' },
+    { 
+      header: 'Venue', 
+      accessor: 'venue',
+      editable: (user) => user.role === 'admin' || user.assignedTables?.includes('event')
+    },
     { 
       header: 'Date', 
       accessor: 'eventDate',
-      cell: (value) => formatDate(value)
+      cell: (value) => formatDate(value),
+      editable: (user) => user.role === 'admin' || user.assignedTables?.includes('event'),
+      editType: 'date'
     },
     { 
-      header: 'Time', 
-      accessor: (row) => `${row.startTime} - ${row.endTime}` 
+      header: 'Start Time', 
+      accessor: 'startTime',
+      cell: (value) => formatTime(value),
+      editable: (user) => user.role === 'admin' || user.assignedTables?.includes('event'),
+      editType: 'time'
+    },
+    { 
+      header: 'End Time', 
+      accessor: 'endTime',
+      cell: (value) => formatTime(value),
+      editable: (user) => user.role === 'admin' || user.assignedTables?.includes('event'),
+      editType: 'time'
     },
     { 
       header: 'Status', 
       accessor: 'status',
       cell: (value) => value.charAt(0).toUpperCase() + value.slice(1),
+      editable: (user) => user.role === 'admin' || user.assignedTables?.includes('event'),
+      editType: 'select',
+      editOptions: [
+        { value: 'pending', label: 'Pending' },
+        { value: 'completed', label: 'Completed' },
+        { value: 'cancelled', label: 'Cancelled' }
+      ]
+    },
+    { 
+      header: 'Mandal', 
+      accessor: 'mandal',
+      editable: (user) => user.role === 'admin',
+      editType: 'select',
+      editOptions: [
+        'Mandal 1',
+        'Mandal 2',
+        'Mandal 3',
+        'Mandal 4',
+        'Mandal 5'
+      ].map(m => ({ value: m, label: m }))
+    },
+    { 
+      header: 'Requester', 
+      accessor: 'requesterName',
       editable: (user) => user.role === 'admin' || user.assignedTables?.includes('event')
     },
-    { header: 'Mandal', accessor: 'mandal' },
-    { header: 'Requester', accessor: 'requesterName' },
-    { header: 'Contact', accessor: 'requesterContact' },
+    { 
+      header: 'Contact', 
+      accessor: 'requesterContact',
+      editable: (user) => user.role === 'admin' || user.assignedTables?.includes('event'),
+      editType: 'tel'
+    },
+    { 
+      header: 'Actions',
+      accessor: '_id',
+      cell: (id) => (
+        <div className="flex space-x-2">
+          {currentUser?.role === 'admin' && (
+            <button 
+              onClick={() => handleDelete(id)}
+              className="text-red-500 hover:text-red-700"
+            >
+              Delete
+            </button>
+          )}
+        </div>
+      )
+    }
   ];
 
   const handleEdit = async (id, field, value) => {
@@ -59,18 +139,22 @@ const EventTable = () => {
         throw new Error('Event not found');
       }
 
-      // Special handling for date field
-      if (field === 'eventDate') {
-        value = new Date(value).toISOString();
-      }
-      
       // Validate time fields
       if ((field === 'startTime' || field === 'endTime') && 
           !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(value)) {
-        throw new Error('Please enter time in HH:MM format');
+        throw new Error('Please enter time in HH:MM format (24-hour)');
       }
 
-      // Create updated event object
+      // Validate end time is after start time if both are being updated
+      if (field === 'startTime' || field === 'endTime') {
+        const startTime = field === 'startTime' ? value : eventToUpdate.startTime;
+        const endTime = field === 'endTime' ? value : eventToUpdate.endTime;
+        
+        if (startTime >= endTime) {
+          throw new Error('End time must be after start time');
+        }
+      }
+
       const updatedEvent = { 
         ...eventToUpdate, 
         [field]: value,
@@ -81,6 +165,7 @@ const EventTable = () => {
     } catch (error) {
       console.error('Error updating event:', error);
       alert(error.message || 'Failed to update event');
+      throw error; // Re-throw to prevent the table from updating
     }
   };
 
@@ -123,7 +208,7 @@ const EventTable = () => {
           {
             label: 'Mandal',
             accessor: 'mandal',
-            options: Array.from(new Set(events.map(e => e.mandal))).sort()
+            options: ['Mandal 1', 'Mandal 2', 'Mandal 3', 'Mandal 4', 'Mandal 5']
           }
         ]}
       />
@@ -134,9 +219,8 @@ const EventTable = () => {
         <Table
           data={filteredEvents}
           columns={columns}
-          onEdit={currentUser?.role === 'admin' || currentUser?.assignedTables?.includes('event') ? handleEdit : null}
-          onDelete={currentUser?.role === 'admin' ? handleDelete : null}
-          editableFields={['eventName', 'venue', 'status', 'eventDate', 'startTime', 'endTime']}
+          onEdit={handleEdit}
+          editableFields={['eventName', 'eventType', 'venue', 'eventDate', 'startTime', 'endTime', 'status', 'mandal', 'requesterName', 'requesterContact']}
         />
       )}
     </div>
