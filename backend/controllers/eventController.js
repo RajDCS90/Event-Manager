@@ -20,9 +20,9 @@ exports.getAllEvents = async (req, res) => {
     }
 
     // For non-admin users, only show their own events
-    if (req.user.role !== 'admin') {
-      filters.createdBy = req.user._id;
-    }
+    // if (req.user.role !== 'admin') {
+    //   filters.createdBy = req.user._id;
+    // }
 
     const events = await Events.find(filters)
       .populate('createdBy', 'username')

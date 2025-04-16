@@ -1,17 +1,15 @@
 
-import Header from "../components/Header";
-import MobileMenu from "../components/MobileMenu";
-import HeroCarousel from "../components/HeroCarousel";
-import ContactBanner from "../components/ContactBanner";
-import NewsSection from "../components/NewsSection";
-import EventsSection from "../components/EventsSection";
-import GrievancesSection from "../components/GrievancesSection";
-import RegistrationButton from "../components/RegistrationButton";
-import RegistrationForm from "../components/RegistrationForm";
-import Footer from "../components/Footer";
-
 import React, { useState } from 'react'
 import EventDetail from "./EventDetail";
+import HeroCarousel from "../components/Landing/HeroCarousel";
+import Header from "../components/Landing/Header";
+import ContactBanner from "../components/Landing/ContactBanner";
+import NewsSection from "../components/Landing/NewsSection";
+import EventsSection from "../components/Landing/EventsSection";
+import GrievancesSection from "../components/Landing/GrievancesSection";
+import RegistrationButton from "../components/Landing/RegistrationButton";
+import RegistrationForm from "../components/Landing/RegistrationForm";
+import Footer from "../components/Landing/Footer";
 
 const LandingPage = () => {
 

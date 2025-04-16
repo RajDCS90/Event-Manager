@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Menu, X, Search, Facebook, Youtube, Instagram, Linkedin, Twitter } from "lucide-react";
 import { Link } from "react-router-dom";
-import Login from "../pages/Login";
+import Login from "../../pages/Login";
 
 export default function Header({ isMenuOpen, setIsMenuOpen }) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);

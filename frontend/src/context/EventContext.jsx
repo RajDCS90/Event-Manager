@@ -92,14 +92,6 @@ export const EventProvider = ({ children }) => {
     });
   };
 
-  // Initialize with first fetch when the component mounts
-  useEffect(() => {
-    // Check if user is authenticated before fetching events
-    const token = localStorage.getItem('token');
-    if (token) {
-      fetchEvents();
-    }
-  }, []);
 
   return (
     <EventContext.Provider

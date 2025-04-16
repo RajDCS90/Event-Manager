@@ -18,7 +18,7 @@ const ProtectedRoute = ({ children }) => {
   // Redirect to login if not authenticated
   if (!currentUser) {
     // Save the location the user was trying to access
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
 
   // User is authenticated, render the protected content

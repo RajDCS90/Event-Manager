@@ -8,18 +8,20 @@ import PartyYouthForm from '../components/PartyYouth/PartyYouthForm';
 import PartyYouthTable from '../components/PartyYouth/PartyYouthTable';
 import UserManagement from '../components/User/UserManagement';
 import { useAuth } from '../context/AuthContext';
+import UpcomingEvents from '../components/Event/UpcomingEvents';
+import UpcomingGrievances from '../components/Grievance/UpcomingGrievances';
 
 const Dashboard = () => {
   const { currentUser, activeTab } = useAuth();
   
-  useEffect(() => {
-    console.log("currentUser", currentUser);
-  }, [currentUser]);
 
   return (
     <div className="space-y-6">
       {activeTab === 'events' && currentUser?.assignedTables?.includes('event') && (
         <>
+          <div className="bg-gray-100 p-4 rounded-lg">
+            <UpcomingEvents />
+          </div>
           <div className="bg-gray-100 p-4 rounded-lg">
             <h2 className="text-xl font-semibold mb-2">Add New Event</h2>
             <EventForm />
@@ -32,6 +34,9 @@ const Dashboard = () => {
 
       {activeTab === 'grievance' && currentUser?.assignedTables?.includes("grievance") && (
         <>
+          <div className="bg-gray-100 p-4 rounded-lg">
+            <UpcomingGrievances />
+          </div>
           <div className="bg-gray-100 p-4 rounded-lg">
             <h2 className="text-xl font-semibold mb-2">Add New Grievance</h2>
             <GrievanceForm />

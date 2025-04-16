@@ -14,7 +14,7 @@ router.post('/', createPartyMember);
 // Protected routes (require party table access)
 router.use(checkTableAccess('party'));
 
-router.get('/', getAllPartyMembers);
+router.get('/party-members', getAllPartyMembers);
 router.put('/:id', updatePartyMember);
 router.delete('/:id', deletePartyMember);
 

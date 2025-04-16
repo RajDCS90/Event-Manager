@@ -1,8 +1,10 @@
 // src/components/PartyYouth/PartyYouthForm.jsx
 import { useState } from 'react';
 import FormInput from '../common/FormInput';
+import { usePartyAndYouth } from '../../context/P&YContext';
 
 const PartyYouthForm = () => {
+  const {createMember} = usePartyAndYouth();
   const [formData, setFormData] = useState({
     aadharNo: '',
     name: '',
@@ -18,13 +20,13 @@ const PartyYouthForm = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
-    // addPartyYouth({
-    //   ...formData,
-    //   id: Date.now(),
-    //   memberId: `PY-${Math.floor(1000 + Math.random() * 9000)}`
-    // });
+   await createMember({
+      ...formData,
+      id: Date.now(),
+      memberId: `PY-${Math.floor(1000 + Math.random() * 9000)}`
+    });
     setFormData({
       aadharNo: '',
       name: '',

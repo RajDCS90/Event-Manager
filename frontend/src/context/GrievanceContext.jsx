@@ -83,15 +83,6 @@ export const GrievanceProvider = ({ children }) => {
     }
   };
 
-  // Initialize with checking if user is authenticated
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      fetchGrievances();
-    } else {
-      setLoading(false);
-    }
-  }, []);
 
   return (
     <GrievanceContext.Provider value={{

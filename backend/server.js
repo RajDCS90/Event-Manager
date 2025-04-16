@@ -26,7 +26,7 @@ app.use(bodyParser.json());
 app.use('/api/auth', userRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/grievances', grievanceRoutes);
-app.use('/api/party', partyRoutes);
+app.use('/api/party-members', partyRoutes);
 
 // Test route
 app.get('/', (req, res) => {

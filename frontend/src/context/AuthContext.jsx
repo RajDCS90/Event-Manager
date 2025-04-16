@@ -107,7 +107,7 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = useCallback(() => {
     clearAuthData();
-    navigate('/login');
+    navigate('/');
   }, [navigate]);
 
   // Set active tab function

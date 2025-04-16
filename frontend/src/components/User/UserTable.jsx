@@ -1,8 +1,5 @@
-// src/components/User/UserTable.jsx
-import { useState, useEffect, useContext } from 'react';
-import { getUsers, deleteUser } from '../../services/api';
-import Filter from '../common/Filter';
-import Table from '../common/Table';
+import { useState, useEffect } from 'react';
+import { getUsers, deleteUser, updateUser } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
 const UserTable = () => {
@@ -11,22 +8,31 @@ const UserTable = () => {
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [editUserId, setEditUserId] = useState(null);
+  const [editData, setEditData] = useState({ username: '', role: '', assignedTables: [] });
+
+  const accessOptions = [
+    { value: 'event', label: 'Event Table' },
+    { value: 'grievances', label: 'Grievance Table' },
+    { value: 'party', label: 'Party & Youth Affair' },
+  ];
 
   const columns = [
     { header: 'Username', accessor: 'username' },
     { header: 'Role', accessor: 'role' },
-    { 
-      header: 'Assigned Tables', 
-      accessor: 'assignedTables', 
+    {
+      header: 'Assigned Tables',
+      accessor: 'assignedTables',
       render: (tables) => (
         <div className="flex flex-wrap gap-1">
-          {tables.map(table => (
+          {tables.map((table) => (
             <span key={table} className="bg-gray-100 px-2 py-1 text-xs rounded">
               {table}
             </span>
           ))}
         </div>
-      ) 
+      ),
     },
   ];
 
@@ -34,7 +40,6 @@ const UserTable = () => {
     const fetchUsers = async () => {
       try {
         const usersData = await getUsers();
-        console.log("userData: ", usersData);
         setUsers(usersData);
         setFilteredUsers(usersData);
       } catch (err) {
@@ -51,11 +56,61 @@ const UserTable = () => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
         await deleteUser(id);
-        setUsers(users.filter(user => user._id !== id));
-        setFilteredUsers(filteredUsers.filter(user => user._id !== id));
+        const updated = users.filter((user) => user._id !== id);
+        setUsers(updated);
+        setFilteredUsers(updated);
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to delete user');
       }
+    }
+  };
+
+  const handleSearch = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchTerm(value);
+    const filtered = users.filter((user) =>
+      user.username.toLowerCase().includes(value)
+    );
+    setFilteredUsers(filtered);
+  };
+
+  const handleEdit = (user) => {
+    setEditUserId(user._id);
+    setEditData({ ...user, assignedTables: [...user.assignedTables] });
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleAssignedTablesChange = (e) => {
+    const { value, checked } = e.target;
+    setEditData((prev) => {
+      const updatedTables = checked
+        ? [...prev.assignedTables, value]
+        : prev.assignedTables.filter((table) => table !== value);
+      return {
+        ...prev,
+        assignedTables: updatedTables,
+      };
+    });
+  };
+
+  const handleEditSubmit = async () => {
+    try {
+      const updatedUser = await updateUser(editUserId, editData);
+      const updatedList = users.map((user) =>
+        user._id === editUserId ? updatedUser : user
+      );
+      setUsers(updatedList);
+      setFilteredUsers(updatedList);
+      setEditUserId(null);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Update failed');
     }
   };
 
@@ -65,59 +120,123 @@ const UserTable = () => {
   return (
     <div className="mt-6">
       <h2 className="text-xl font-semibold mb-4">User Records</h2>
-      
-      <Filter 
-        data={users} 
-        setFilteredData={setFilteredUsers} 
-        columns={columns?.map(col => ({ value: col.accessor, label: col.header }))}
-      />
-      
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Search by username"
+          value={searchTerm}
+          onChange={handleSearch}
+          className="w-full p-2 border border-gray-300 rounded"
+        />
+      </div>
+
+      <div className="overflow-x-auto bg-white shadow rounded-lg">
+        <table className="min-w-full table-auto">
+          <thead className="bg-gray-100">
             <tr>
-              {columns?.map(column => (
+              {columns.map((column) => (
                 <th
                   key={column.accessor}
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-4 py-3 text-left text-sm font-semibold text-gray-700"
                 >
                   {column.header}
                 </th>
               ))}
               {currentUser.role === 'admin' && (
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                  Actions
+                </th>
               )}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredUsers.length > 0 ? (
-              filteredUsers.map(user => (
-                <tr key={user._id}>
-                  {columns?.map(column => (
-                    <td key={`${user._id}-${column.accessor}`} className="px-6 py-4 whitespace-nowrap">
-                      {column.render ? column.render(user[column.accessor]) : user[column.accessor]}
+          <tbody className="divide-y divide-gray-200 text-sm">
+            {filteredUsers.map((user) => (
+              <tr key={user._id} className="hover:bg-gray-50">
+                {editUserId === user._id ? (
+                  <>
+                    <td className="px-4 py-3">
+                      <input
+                        name="username"
+                        value={editData.username}
+                        onChange={handleEditChange}
+                        className="border px-2 py-1 w-full rounded"
+                      />
                     </td>
-                  ))}
-                  {currentUser.role === 'admin' && currentUser._id !== user._id && (
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() => handleDelete(user._id)}
-                        className="text-red-600 hover:text-red-900"
+                    <td className="px-4 py-3">
+                      <select
+                        name="role"
+                        value={editData.role}
+                        onChange={handleEditChange}
+                        className="border px-2 py-1 w-full rounded"
                       >
-                        Delete
+                        <option value="admin">Admin</option>
+                        <option value="user">User</option>
+                      </select>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-2">
+                        {accessOptions.map(({ value, label }) => (
+                          <label key={value} className="flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded">
+                            <input
+                              type="checkbox"
+                              value={value}
+                              checked={editData.assignedTables.includes(value)}
+                              onChange={handleAssignedTablesChange}
+                            />
+                            {label}
+                          </label>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 space-x-2">
+                      <button
+                        onClick={handleEditSubmit}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setEditUserId(null)}
+                        className="text-gray-600 hover:text-gray-800"
+                      >
+                        Cancel
                       </button>
                     </td>
-                  )}
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={columns.length + (currentUser.role === 'admin' ? 1 : 0)} className="px-6 py-4 text-center text-gray-500">
-                  No users available
-                </td>
+                  </>
+                ) : (
+                  <>
+                    {columns.map((column) => (
+                      <td key={`${user._id}-${column.accessor}`} className="px-4 py-3">
+                        {column.render
+                          ? column.render(user[column.accessor])
+                          : user[column.accessor]}
+                      </td>
+                    ))}
+                    {currentUser.role === 'admin' && (
+                      <td className="px-4 py-3 space-x-2">
+                        {currentUser._id !== user._id && (
+                          <>
+                            <button
+                              onClick={() => handleEdit(user)}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(user._id)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
+                      </td>
+                    )}
+                  </>
+                )}
               </tr>
-            )}
+            ))}
           </tbody>
         </table>
       </div>

@@ -20,9 +20,9 @@ exports.getAllGrievances = async (req, res) => {
     }
 
     // For non-admin users, only show their created grievances
-    if (req.user.role !== 'admin') {
-      filters.createdBy = req.user._id;
-    }
+    // if (req.user.role !== 'admin') {
+    //   filters.createdBy = req.user._id;
+    // }
 
     const grievances = await Grievance.find(filters)
       .populate('createdBy', 'username')
