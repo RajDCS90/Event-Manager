@@ -51,7 +51,7 @@ export default function HeroCarousel() {
             <img
               src={slide.image}
               alt={`Slide ${index + 1}`}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/70 to-indigo-900/30 flex items-center">
               <div className="container mx-auto px-4 md:px-12">

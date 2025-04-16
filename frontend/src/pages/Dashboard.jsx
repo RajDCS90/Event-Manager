@@ -1,5 +1,3 @@
-// src/pages/Dashboard.jsx
-import { useEffect } from 'react';
 import EventForm from '../components/Event/EventForm';
 import EventTable from '../components/Event/EventTable';
 import GrievanceForm from '../components/Grievance/GrievanceForm';
@@ -32,7 +30,7 @@ const Dashboard = () => {
         </>
       )}
 
-      {activeTab === 'grievance' && currentUser?.assignedTables?.includes("grievance") && (
+      {activeTab === 'grievance' && currentUser?.assignedTables?.includes("grievances") && (
         <>
           <div className="bg-gray-100 p-4 rounded-lg">
             <UpcomingGrievances />

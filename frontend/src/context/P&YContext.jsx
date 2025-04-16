@@ -12,16 +12,7 @@ export const PartyAndYouthProvider = ({ children }) => {
   const fetchMembers = async (filters = {}) => {
     try {
       setLoading(true);
-      
-      // Build query string from filters
-      const queryParams = new URLSearchParams();
-      if (filters.mandal) queryParams.append('mandal', filters.mandal);
-      if (filters.designation) queryParams.append('designation', filters.designation);
-      
-      const queryString = queryParams.toString();
-      const endpoint = queryString ? `/party-members?${queryString}` : '/party-members';
-      
-      const response = await api.get(endpoint);
+      const response = await api.get('/party-members');
       console.log('Party members response:', response);
       setMembers(response.data);
       setError(null);
@@ -95,6 +86,7 @@ export const PartyAndYouthProvider = ({ children }) => {
       });
     });
   };
+
 
   return (
     <PartyAndYouthContext.Provider

@@ -9,13 +9,13 @@ const {
 } = require('../controllers/grievanceController');
 const { protect } = require('../middlewares/authMiddleware');
 
+router.get('/', getAllGrievances);
 // Protect all routes
 router.use(protect);
 
 // Apply table access middleware to all routes
 router.use(checkTableAccess('grievance'));
 
-router.get('/', getAllGrievances);
 router.post('/', createGrievance);
 router.put('/:id', updateGrievance);
 router.delete('/:id', deleteGrievance);

@@ -12,9 +12,12 @@ const {
 router.post('/', createPartyMember);
 
 // Protected routes (require party table access)
-router.use(checkTableAccess('party'));
+// router.use(checkTableAccess('party'));
 
-router.get('/party-members', getAllPartyMembers);
+console.log("enterHere")
+
+
+router.get('/', getAllPartyMembers);
 router.put('/:id', updatePartyMember);
 router.delete('/:id', deletePartyMember);
 

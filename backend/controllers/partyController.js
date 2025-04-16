@@ -2,6 +2,7 @@ const PartyAndYouth = require('../models/PartyAndYouth');
 
 // Get all party members (filtered by query params)
 exports.getAllPartyMembers = async (req, res) => {
+  console.log("enter")
   try {
     const filters = {};
     

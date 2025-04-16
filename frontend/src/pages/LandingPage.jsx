@@ -21,7 +21,7 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-        <Header isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
+        <Header isMenuOpen={isMenuOpen} setShowRegisterForm={setShowRegisterForm} setIsMenuOpen={setIsMenuOpen} />
         {/* <MobileMenu isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} /> */}
         <HeroCarousel />
         <ContactBanner />

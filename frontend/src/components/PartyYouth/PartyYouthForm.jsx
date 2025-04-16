@@ -10,7 +10,7 @@ const PartyYouthForm = () => {
     name: '',
     whatsappNo: '',
     designation: '',
-    mandalPanchayat: 'Mandal 1'
+    mandal: 'Mandal 1'
   });
 
   const mandalPanchayatOptions = ['Mandal 1', 'Mandal 2', 'Mandal 3', 'Panchayat A', 'Panchayat B'];
@@ -32,7 +32,7 @@ const PartyYouthForm = () => {
       name: '',
       whatsappNo: '',
       designation: '',
-      mandalPanchayat: 'Mandal 1'
+      mandal: 'Mandal 1'
     });
   };
 
@@ -75,9 +75,9 @@ const PartyYouthForm = () => {
         
         <FormInput
           label="Mandal/Panchayat"
-          name="mandalPanchayat"
+          name="mandal"
           type="select"
-          value={formData.mandalPanchayat}
+          value={formData.mandal}
           onChange={handleChange}
           options={mandalPanchayatOptions}
         />

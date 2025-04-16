@@ -3,7 +3,44 @@ import FormInput from '../common/FormInput';
 import { useGrievance } from '../../context/GrievanceContext';
 
 const GrievanceForm = () => {
-  const { addGrievance } = useGrievance()
+  const { addGrievance } = useGrievance();
+
+  // Sample mandal array - you can replace this with your actual data source
+  const mandals = [
+    'Adilabad',
+    'Bhadradri Kothagudem',
+    'Hyderabad',
+    'Jagtial',
+    'Jangaon',
+    'Jayashankar Bhupalpally',
+    'Jogulamba Gadwal',
+    'Kamareddy',
+    'Karimnagar',
+    'Khammam',
+    'Komaram Bheem Asifabad',
+    'Mahabubabad',
+    'Mahabubnagar',
+    'Mancherial',
+    'Medak',
+    'Medchal-Malkajgiri',
+    'Mulugu',
+    'Nagarkurnool',
+    'Nalgonda',
+    'Narayanpet',
+    'Nirmal',
+    'Nizamabad',
+    'Peddapalli',
+    'Rajanna Sircilla',
+    'Rangareddy',
+    'Sangareddy',
+    'Siddipet',
+    'Suryapet',
+    'Vikarabad',
+    'Wanaparthy',
+    'Warangal Rural',
+    'Warangal Urban',
+    'Yadadri Bhuvanagiri'
+  ];
 
   const [formData, setFormData] = useState({
     grievanceName: '',
@@ -16,7 +53,8 @@ const GrievanceForm = () => {
     status: 'pending',
     description: '',
     assignedTo: '',
-    resolutionNotes: ''
+    resolutionNotes: '',
+    mandal: '' // Added mandal field
   });
 
   const handleChange = (e) => {
@@ -39,7 +77,8 @@ const GrievanceForm = () => {
         status: formData.status,
         description: formData.description,
         assignedTo: formData.assignedTo,
-        resolutionNotes: formData.resolutionNotes
+        resolutionNotes: formData.resolutionNotes,
+        mandal: formData.mandal // Include mandal in the submitted data
       });
 
       // Reset form
@@ -54,7 +93,8 @@ const GrievanceForm = () => {
         status: 'pending',
         description: '',
         assignedTo: '',
-        resolutionNotes: ''
+        resolutionNotes: '',
+        mandal: '' // Reset mandal field
       });
     } catch (error) {
       console.error('Failed to submit grievance:', error.message);
@@ -88,6 +128,17 @@ const GrievanceForm = () => {
           value={formData.applicant}
           onChange={handleChange}
           required
+        />
+
+        <FormInput
+          label="Mandal"
+          name="mandal"
+          type="select"
+          value={formData.mandal}
+          onChange={handleChange}
+          options={mandals}
+          required
+          placeholder="Select Mandal"
         />
 
         <FormInput

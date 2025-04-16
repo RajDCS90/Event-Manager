@@ -14,14 +14,15 @@ import { GrievanceProvider } from "./context/GrievanceContext";
 import { EventProvider } from "./context/EventContext";
 import { AuthProvider } from "./context/AuthContext";
 import { PartyAndYouthProvider } from "./context/P&YContext";
+import SocialMediaUploader from "./components/socialmedia/SocialMediaUploader";
 
 function App() {
   return (
     <Router>
       <AuthProvider>
-        <PartyAndYouthProvider>
-          <GrievanceProvider>
-            <EventProvider>
+        <GrievanceProvider>
+          <EventProvider>
+            <PartyAndYouthProvider>
               <Routes>
                 {/* Landing page as the default route */}
                 <Route path="/" element={<LandingPage />} />
@@ -46,10 +47,20 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+                <Route
+                  path="/social-media"
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <SocialMediaUploader />
+                      </Layout>
+                    </ProtectedRoute>
+                  }
+                />
               </Routes>
-            </EventProvider>
-          </GrievanceProvider>
-        </PartyAndYouthProvider>
+            </PartyAndYouthProvider>
+          </EventProvider>
+        </GrievanceProvider>
       </AuthProvider>
     </Router>
   );

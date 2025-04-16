@@ -86,8 +86,8 @@ export const AuthProvider = ({ children }) => {
       // Set default active tab based on user permissions
       if (userWithoutToken.assignedTables?.includes('event')) {
         setActiveTab('events');
-      } else if (userWithoutToken.assignedTables?.includes('grievance')) {
-        setActiveTab('grievance');
+      } else if (userWithoutToken.assignedTables?.includes('grievances')) {
+        setActiveTab('grievances');
       } else if (userWithoutToken.assignedTables?.includes('party')) {
         setActiveTab('partyYouth');
       } else if (userWithoutToken.role === 'admin') {

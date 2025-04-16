@@ -46,8 +46,8 @@ const loginUser = async (req, res) => {
   try {
     const { username, password } = req.body;
 
+    console.log("user",req.body)
     const user = await User.findOne({ username });
-    console.log("user",user)
 
     if (user && (await user.comparePassword(password))) {
       res.json({

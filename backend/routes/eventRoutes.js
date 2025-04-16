@@ -10,10 +10,10 @@ const {
 } = require('../controllers/eventController');
 
 // Protect all routes
+router.get('/', getAllEvents);
 router.use(protect);
 router.use(checkTableAccess('event'));
 
-router.get('/', getAllEvents);
 router.post('/', createEvent);
 router.put('/:id', updateEvent);
 router.delete('/:id', deleteEvent);
