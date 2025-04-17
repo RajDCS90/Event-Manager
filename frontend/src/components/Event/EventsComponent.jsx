@@ -1,72 +1,29 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, CheckCircle, XCircle, Clock4 } from 'lucide-react';
+import { Calendar, Clock, MapPin, CheckCircle, XCircle, Clock4, X } from 'lucide-react';
+import { useEvents } from '../../context/EventContext';
 
 const EventsComponent = () => {
   const [activeTab, setActiveTab] = useState('upcoming');
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState('');
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
 
-  // Mock data - replace with actual API calls
-  useEffect(() => {
-    const fetchEvents = async () => {
-      setLoading(true);
-      try {
-        // Simulate API call
-        const mockEvents = [
-          {
-            _id: '1',
-            eventName: 'Community Welfare Camp',
-            eventType: 'welfare',
-            venue: 'Rajpur Community Hall',
-            status: 'pending',
-            mandal: 'Rajpur',
-            requesterName: 'Ramesh Kumar',
-            requesterContact: '9876543210',
-            eventDate: new Date(Date.now() + 86400000 * 2), // 2 days from now
-            startTime: '09:00',
-            endTime: '17:00',
-            createdBy: 'user123'
-          },
-          {
-            _id: '2',
-            eventName: 'Political Rally',
-            eventType: 'political',
-            venue: 'Town Square',
-            status: 'completed',
-            mandal: 'Ganeshpur',
-            requesterName: 'Suresh Patel',
-            requesterContact: '8765432109',
-            eventDate: new Date(Date.now() - 86400000 * 3), // 3 days ago
-            startTime: '14:00',
-            endTime: '18:00',
-            createdBy: 'user456'
-          },
-          // Add more mock events as needed
-        ];
-        setEvents(mockEvents);
-      } catch (error) {
-        console.error('Error fetching events:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { events, loading, fetchEvents } = useEvents();
 
+  useEffect(() => {
     fetchEvents();
   }, []);
 
   const handleFeedbackSubmit = (e) => {
     e.preventDefault();
     if (!feedback.trim() || !selectedEvent) return;
-    
-    // Here you would typically make an API call to submit feedback
+
+    // Handle feedback submission logic here
     console.log('Feedback submitted:', {
       eventId: selectedEvent._id,
       feedback: feedback.trim()
     });
-    
+
     setFeedbackSubmitted(true);
     setTimeout(() => {
       setFeedbackSubmitted(false);
@@ -78,7 +35,7 @@ const EventsComponent = () => {
   const filteredEvents = events.filter(event => {
     const now = new Date();
     const eventDate = new Date(event.eventDate);
-    
+
     if (activeTab === 'upcoming') {
       return eventDate >= now && event.status !== 'cancelled';
     } else {
@@ -111,13 +68,13 @@ const EventsComponent = () => {
         <div className="flex space-x-2">
           <button
             onClick={() => setActiveTab('upcoming')}
-            className={`px-4 py-2 rounded-md ${activeTab === 'upcoming' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+            className={`px-4 py-2 rounded-md ${activeTab === 'upcoming' ? 'bg-[#00B8DB] text-white' : 'bg-gray-200 text-gray-700'}`}
           >
             Upcoming Events
           </button>
           <button
             onClick={() => setActiveTab('past')}
-            className={`px-4 py-2 rounded-md ${activeTab === 'past' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+            className={`px-4 py-2 rounded-md ${activeTab === 'past' ? 'bg-[#00B8DB] text-white' : 'bg-gray-200 text-gray-700'}`}
           >
             Past Events
           </button>
@@ -126,7 +83,7 @@ const EventsComponent = () => {
 
       {loading ? (
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00B8DB]"></div>
         </div>
       ) : filteredEvents.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
@@ -137,10 +94,10 @@ const EventsComponent = () => {
           {filteredEvents.map(event => {
             const eventDate = new Date(event.eventDate);
             const isPast = eventDate < new Date() || event.status === 'completed';
-            
+
             return (
-              <div 
-                key={event._id} 
+              <div
+                key={event._id}
                 className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="p-4">
@@ -150,26 +107,26 @@ const EventsComponent = () => {
                       {event.eventType}
                     </span>
                   </div>
-                  
+
                   <div className="flex items-center text-sm text-gray-600 mb-1">
                     <Calendar className="w-4 h-4 mr-2" />
-                    {eventDate.toLocaleDateString('en-IN', { 
-                      day: 'numeric', 
-                      month: 'short', 
-                      year: 'numeric' 
+                    {eventDate.toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric'
                     })}
                   </div>
-                  
+
                   <div className="flex items-center text-sm text-gray-600 mb-1">
                     <Clock className="w-4 h-4 mr-2" />
                     {event.startTime} - {event.endTime}
                   </div>
-                  
+
                   <div className="flex items-center text-sm text-gray-600 mb-3">
                     <MapPin className="w-4 h-4 mr-2" />
                     {event.venue}, {event.mandal}
                   </div>
-                  
+
                   <div className="flex justify-between items-center text-sm">
                     <div className="flex items-center">
                       {getStatusIcon(event.status)}
@@ -177,7 +134,7 @@ const EventsComponent = () => {
                     </div>
                     <span className="text-gray-500">By: {event.requesterName}</span>
                   </div>
-                  
+
                   {isPast && (
                     <button
                       onClick={() => setSelectedEvent(event)}
@@ -199,7 +156,7 @@ const EventsComponent = () => {
           <div className="bg-white rounded-lg w-full max-w-md p-6 shadow-xl">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-semibold">Event Feedback</h3>
-              <button 
+              <button
                 onClick={() => {
                   setSelectedEvent(null);
                   setFeedback('');
@@ -209,14 +166,14 @@ const EventsComponent = () => {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            
+
             <div className="mb-4">
               <h4 className="font-medium text-gray-800 mb-1">{selectedEvent.eventName}</h4>
               <p className="text-sm text-gray-600">
                 {new Date(selectedEvent.eventDate).toLocaleDateString()} • {selectedEvent.venue}
               </p>
             </div>
-            
+
             {feedbackSubmitted ? (
               <div className="p-4 bg-green-50 text-green-700 rounded-md text-center">
                 Thank you for your feedback!

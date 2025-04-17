@@ -1,4 +1,3 @@
-// src/App.js
 import {
   BrowserRouter as Router,
   Routes,
@@ -8,13 +7,17 @@ import {
 import Layout from "./components/common/Layout";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
-import LandingPage from "./pages/LandingPage"; // Import the LandingPage component
+import LandingPage from "./pages/LandingPage";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import { GrievanceProvider } from "./context/GrievanceContext";
 import { EventProvider } from "./context/EventContext";
 import { AuthProvider } from "./context/AuthContext";
 import { PartyAndYouthProvider } from "./context/P&YContext";
 import SocialMediaUploader from "./components/socialmedia/SocialMediaUploader";
+import EventsComponent from "./components/Event/EventsComponent";
+import PublicLayout from "./pages/PublicLayout";
+import GrievancesComponent from "./components/Grievance/GrievancesComponent";
+import EventsAndGrievancesPage from "./pages/EventsAndGrievancesPage";
 
 function App() {
   return (
@@ -24,19 +27,60 @@ function App() {
           <EventProvider>
             <PartyAndYouthProvider>
               <Routes>
-                {/* Landing page as the default route */}
-                <Route path="/" element={<LandingPage />} />
-
-                {/* Login route */}
-                <Route path="/login" element={<Login />} />
-
-                {/* Redirect /dashboard to /dashboard/* route */}
+                {/* Public routes with header */}
                 <Route
-                  path="/dashboard"
-                  element={<Navigate to="/dashboard/home" />}
+                  path="/"
+                  element={
+                    <PublicLayout>
+                      <LandingPage />
+                    </PublicLayout>
+                  }
                 />
 
-                {/* Protected dashboard routes */}
+                <Route
+                  path="/login"
+                  element={
+                    <PublicLayout>
+                      <Login />
+                    </PublicLayout>
+                  }
+                />
+
+                <Route
+                  path="/events"
+                  element={
+                    <PublicLayout>
+                      <EventsComponent />
+                    </PublicLayout>
+                  }
+                />
+                <Route
+                  path="/grievance"
+                  element={
+                    <PublicLayout>
+                      <GrievancesComponent />
+                    </PublicLayout>
+                  }
+                />
+
+                {/* Redirect /dashboard to /dashboard/home route */}
+                <Route
+                  path="/dashboard"
+                  element={<Navigate to="/dashboard/home" replace />}
+                />
+
+                {/* Make the EventsAndGrievancesPage render at /dashboard/home */}
+                <Route
+                  path="/dashboard/home"
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <EventsAndGrievancesPage />
+                      </Layout>
+                    </ProtectedRoute>
+                  }
+                />
+
                 <Route
                   path="/dashboard/*"
                   element={

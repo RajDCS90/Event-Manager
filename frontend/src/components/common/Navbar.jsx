@@ -54,8 +54,11 @@ const Navbar = () => {
     // Navigate to the appropriate dashboard route
     let targetRoute = '/dashboard/';
     switch (tab) {
+      case '':
+        targetRoute += 'home';
+        break;
       case 'events':
-        targetRoute += 'home'; // assuming 'home' is your events page
+        targetRoute += 'events'; // assuming 'home' is your events page
         break;
       case 'grievance':
         targetRoute += 'grievances';

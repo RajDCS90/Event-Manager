@@ -15,12 +15,12 @@ export const GrievanceProvider = ({ children }) => {
     try {
       setLoading(true);
       // Check if token exists in localStorage to ensure user is authenticated
-      const token = localStorage.getItem('token');
-      if (!token) {
-        // User not authenticated, don't make the API call
-        setLoading(false);
-        return;
-      }
+      // const token = localStorage.getItem('token');
+      // if (!token) {
+      //   // User not authenticated, don't make the API call
+      //   setLoading(false);
+      //   return;
+      // }
       
       const query = new URLSearchParams(filters).toString();
       const res = await api.get(`/grievances?${query}`);

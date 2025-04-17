@@ -13,11 +13,11 @@ export const EventProvider = ({ children }) => {
     try {
       setLoading(true);
       // Check if token exists in localStorage to ensure user is authenticated
-      const token = localStorage.getItem('token');
-      if (!token) {
-        // User not authenticated, don't make the API call
-        return;
-      }
+      // const token = localStorage.getItem('token');
+      // if (!token) {
+      //   // User not authenticated, don't make the API call
+      //   return;
+      // }
       
       const response = await api.get('/events');
       console.log('Events response:', response);

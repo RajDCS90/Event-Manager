@@ -35,6 +35,14 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
+const cron = require('node-cron');
+const { sendMorningReminders } = require('./controllers/whatsappReminderController');
+
+cron.schedule('0 8 * * *', () => {
+  sendMorningReminders();
+});
+
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
