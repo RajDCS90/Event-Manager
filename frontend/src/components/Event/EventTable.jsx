@@ -7,7 +7,6 @@ import StatusBadge from '../common/StatusBadge';
 
 const EventTable = () => {
   const { events, loading, error, updateEvent, deleteEvent, fetchEvents } = useEvents();
-  const { currentUser } = useAuth();
   const [filteredEvents, setFilteredEvents] = useState(events);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});

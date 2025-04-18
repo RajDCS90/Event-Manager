@@ -154,10 +154,6 @@ const Login = ({ isOpen, onClose }) => {
                 {authLoading ? 'Logging in...' : 'Login'}
               </button>
             </div>
-            
-            <div className="text-center text-sm text-gray-600 mt-4">
-              <p>Don't have an account? <button type="button" className="text-indigo-600 hover:text-indigo-800 font-medium">Register</button></p>
-            </div>
           </form>
         </div>
       </div>

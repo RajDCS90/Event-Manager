@@ -1,4 +1,5 @@
 const DesktopMenu = ({ menuRef, currentUser, activeTab, handleTabClick }) => {
+  console.log(activeTab,"active tab")
   return (
     <div
       ref={menuRef}

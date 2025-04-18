@@ -59,28 +59,44 @@ const SocialMediaUploader = () => {
     setPreviewUrls(newPreviewUrls);
   };
 
-  // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (selectedMedia.length === 0 || selectedPlatforms.length === 0) return;
-
+  
     setIsUploading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      console.log({
-        media: selectedMedia,
-        description,
-        platforms: selectedPlatforms
+    try {
+      const formData = new FormData();
+      selectedMedia.forEach(file => {
+        formData.append('media', file);
       });
+      formData.append('description', description);
+      formData.append('platforms', JSON.stringify(selectedPlatforms));
+      
+      const response = await fetch('/api/social-media/post', {
+        method: 'POST',
+        body: formData,
+        // No Content-Type header needed as FormData sets it automatically
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('Content submitted successfully!');
+        // Reset form
+        setSelectedMedia([]);
+        setPreviewUrls([]);
+        setDescription('');
+        setSelectedPlatforms([]);
+      } else {
+        alert(`Error: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Upload failed:', error);
+      alert('Upload failed. Please try again.');
+    } finally {
       setIsUploading(false);
-      alert('Content submitted successfully!');
-      // Reset form
-      setSelectedMedia([]);
-      setPreviewUrls([]);
-      setDescription('');
-      setSelectedPlatforms([]);
-    }, 1500);
+    }
   };
 
   // Trigger file input

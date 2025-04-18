@@ -27,15 +27,15 @@ export default function Header({
   };
 
   const menuCategories = [
-    {
-      title: "ABOUT MLA",
-      id: "about",
-      items: ["Biography", "BJP Connect", "People's Corner", "Timeline"],
-    },
+    // {
+    //   title: "ABOUT MLA",
+    //   id: "about",
+    //   items: ["Biography", "BJP Connect", "People's Corner", "Timeline"],
+    // },
     {
       title: "EVENTS",
       id: "events",
-      items: ["Upcoming Events", "Past Events", "Annual Meets", "Live Webcast"],
+      items: ["Upcoming Events", "Past Events"],
     },
     {
       title: "GRIEVANCE",
@@ -86,10 +86,12 @@ export default function Header({
               >
                 <Menu size={24} />
               </button>
-              <div className="flex items-center">
-                <span className="text-3xl font-light text-indigo-700">MLA</span>
-                <span className="text-3xl font-bold text-indigo-900">
-                  Sethi
+              <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
+                <span className="text-xl sm:text-2xl md:text-3xl font-bold text-indigo-900 text-center sm:text-left">
+                  Prakash Chandra Sethi
+                </span>
+                <span className="text-sm sm:text-base text-gray-600 text-center sm:text-left">
+                  (MLA Cuttack Sadar)
                 </span>
               </div>
             </div>

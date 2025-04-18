@@ -58,7 +58,7 @@ const Navbar = () => {
         targetRoute += 'home';
         break;
       case 'events':
-        targetRoute += 'events'; // assuming 'home' is your events page
+        targetRoute += 'events';
         break;
       case 'grievance':
         targetRoute += 'grievances';

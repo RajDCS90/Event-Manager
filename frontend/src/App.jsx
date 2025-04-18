@@ -5,7 +5,6 @@ import {
   Navigate,
 } from "react-router-dom";
 import Layout from "./components/common/Layout";
-import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import LandingPage from "./pages/LandingPage";
 import ProtectedRoute from "./components/common/ProtectedRoute";
@@ -17,7 +16,8 @@ import SocialMediaUploader from "./components/socialmedia/SocialMediaUploader";
 import EventsComponent from "./components/Event/EventsComponent";
 import PublicLayout from "./pages/PublicLayout";
 import GrievancesComponent from "./components/Grievance/GrievancesComponent";
-import EventsAndGrievancesPage from "./pages/EventsAndGrievancesPage";
+import Home from "./components/Home/Home";
+import Dashboard from "./components/Dashboard/Dashboard";
 
 function App() {
   return (
@@ -75,7 +75,7 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <Layout>
-                        <EventsAndGrievancesPage />
+                        <Home />
                       </Layout>
                     </ProtectedRoute>
                   }

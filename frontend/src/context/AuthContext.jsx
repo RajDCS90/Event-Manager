@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('events'); // Added activeTab state
+  const [activeTab, setActiveTab] = useState(''); // Added activeTab state
   const navigate = useNavigate();
 
   // Check authentication on initial load
@@ -85,6 +85,9 @@ export const AuthProvider = ({ children }) => {
       
       // Set default active tab based on user permissions
       if (userWithoutToken.assignedTables?.includes('event')) {
+        setActiveTab('');
+      } 
+      else if (userWithoutToken.assignedTables?.includes('event')) {
         setActiveTab('events');
       } else if (userWithoutToken.assignedTables?.includes('grievances')) {
         setActiveTab('grievances');
