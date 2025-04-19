@@ -3,77 +3,92 @@ import { Edit, Trash, Phone } from "lucide-react";
 import { usePartyAndYouth } from "../../context/P&YContext";
 
 const PartyYouthTable = () => {
-  const { members, fetchMembers,updateMember } = usePartyAndYouth();
+  const {
+    members,
+    fetchMembers,
+    updateMember,
+    deleteMember,
+  } = usePartyAndYouth();
 
-  useEffect(() => {
-    if (members.length === 0) fetchMembers();
-  }, []);
-
-  // State for filtered data
-  const [filteredMembers, setFilteredMembers] = useState(members);
+  const [filteredMembers, setFilteredMembers] = useState([]);
   const [currentUser] = useState({ role: "admin" });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [mandalFilter, setMandalFilter] = useState("");
+  const [designationFilter, setDesignationFilter] = useState("");
 
-  // Update filtered members when members data changes
-  useEffect(() => {
-    setFilteredMembers(members);
-  }, [members]);
-
-  // Columns for table
-  const columns = [
-    { header: "Aadhar No", accessor: "aadharNo" },
-    { header: "Name", accessor: "name" },
-    { header: "WhatsApp No", accessor: "whatsappNo" },
-    { header: "Designation", accessor: "designation" },
-    { header: "Mandal", accessor: "mandal" },
-  ];
-
-  // State for editing data
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
 
+  useEffect(() => {
+    fetchMembers();
+  }, []);
 
-  // Dummy delete function (replace with your actual API call)
-  const deletePartyYouth = async (id) => {
-    console.log("Deleting member with id:", id);
-    // Add your actual delete logic here
+  useEffect(() => {
+    handleFiltering();
+  }, [members, searchTerm, mandalFilter, designationFilter]);
+
+  const handleFiltering = () => {
+    let filtered = [...members];
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (m) =>
+          m.name?.toLowerCase().includes(term) ||
+          m.aadharNo?.toLowerCase().includes(term)
+      );
+    }
+
+    if (mandalFilter) {
+      filtered = filtered.filter((m) => m.address?.mandal === mandalFilter);
+    }
+
+    if (designationFilter) {
+      filtered = filtered.filter((m) => m.designation === designationFilter);
+    }
+
+    setFilteredMembers(filtered);
   };
 
-  // Handle input change for the edit form
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setEditForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle save after editing
   const handleSaveEdit = async () => {
     try {
-      // You need to pass memberId and updatedData separately to updateMember
-      await updateMember(editingId, editForm); // Fixed: passing arguments correctly
+      await updateMember(editingId, editForm);
       setEditingId(null);
       setEditForm({});
-      // No need to call fetchMembers() since we're already updating the state in updateMember
     } catch (error) {
       console.error("Error updating member:", error);
-      // You might want to show this error to the user
     }
   };
 
-  // Handle cancel after editing
   const handleCancelEdit = () => {
     setEditingId(null);
     setEditForm({});
   };
 
-  // Handle search/filter input change
-  const handleSearch = (e) => {
-    const term = e.target.value.toLowerCase();
-    setFilteredMembers(
-      members.filter(
-        (member) =>
-          member.name?.toLowerCase().includes(term) ||
-          member.aadharNo?.toLowerCase().includes(term)
-    ));
+  const handleDelete = async (id) => {
+    if (confirm("Are you sure you want to delete this member?")) {
+      try {
+        await deleteMember(id);
+      } catch (error) {
+        console.error("Error deleting member:", error);
+      }
+    }
   };
+
+  // Get distinct values for filters
+  const mandalOptions = [
+    "Mandal 1",
+    "Mandal 2",
+    "Mandal 3",
+    "Mandal 4",
+    "Mandal 5",
+  ];
+  const designationOptions = [...new Set(members.map((m) => m.designation))];
 
   return (
     <div className="mt-6">
@@ -81,14 +96,41 @@ const PartyYouthTable = () => {
         Party & Youth Affair Records
       </h2>
 
-      {/* Search input */}
-      <div className="mb-4">
+      {/* Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <input
           type="text"
           placeholder="Search by Name or Aadhar No"
-          onChange={handleSearch}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
           className="p-2 border border-gray-300 rounded w-full"
         />
+
+        <select
+          value={mandalFilter}
+          onChange={(e) => setMandalFilter(e.target.value)}
+          className="p-2 border border-gray-300 rounded w-full"
+        >
+          <option value="">Filter by Mandal</option>
+          {mandalOptions.map((mandal, index) => (
+            <option key={index} value={mandal}>
+              {mandal}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={designationFilter}
+          onChange={(e) => setDesignationFilter(e.target.value)}
+          className="p-2 border border-gray-300 rounded w-full"
+        >
+          <option value="">Filter by Designation</option>
+          {designationOptions.map((designation, index) => (
+            <option key={index} value={designation}>
+              {designation}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Table */}
@@ -96,43 +138,94 @@ const PartyYouthTable = () => {
         <table className="min-w-full table-auto">
           <thead className="bg-gray-100">
             <tr>
-              {columns.map((column) => (
-                <th
-                  key={column.accessor}
-                  className="py-3 px-4 text-left text-sm font-semibold text-gray-700"
-                >
-                  {column.header}
-                </th>
-              ))}
-              <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">
-                Actions
-              </th>
+              <th className="py-3 px-4 text-left text-sm font-semibold">Aadhar No</th>
+              <th className="py-3 px-4 text-left text-sm font-semibold">Name</th>
+              <th className="py-3 px-4 text-left text-sm font-semibold">WhatsApp No</th>
+              <th className="py-3 px-4 text-left text-sm font-semibold">Designation</th>
+              <th className="py-3 px-4 text-left text-sm font-semibold">Mandal</th>
+              <th className="py-3 px-4 text-left text-sm font-semibold">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredMembers.map((member) => (
               <tr key={member._id} className="border-b hover:bg-gray-50">
-                {columns.map((column) => (
-                  <td
-                    key={column.accessor}
-                    className="py-3 px-4 text-sm text-gray-700"
-                  >
-                    {editingId === member._id ? (
-                      <input
-                        type="text"
-                        name={column.accessor}
-                        value={
-                          editForm[column.accessor] || member[column.accessor] || ""
-                        }
-                        onChange={handleInputChange}
-                        className="p-2 border border-gray-300 rounded w-full"
-                      />
-                    ) : (
-                      member[column.accessor] || "-"
-                    )}
-                  </td>
-                ))}
-                <td className="py-3 px-4 text-sm text-gray-700">
+                <td className="py-3 px-4 text-sm">
+                  {editingId === member._id ? (
+                    <input
+                      name="aadharNo"
+                      value={editForm.aadharNo || ""}
+                      onChange={handleInputChange}
+                      className="p-1 border rounded w-full"
+                    />
+                  ) : (
+                    member.aadharNo || "-"
+                  )}
+                </td>
+                <td className="py-3 px-4 text-sm">
+                  {editingId === member._id ? (
+                    <input
+                      name="name"
+                      value={editForm.name || ""}
+                      onChange={handleInputChange}
+                      className="p-1 border rounded w-full"
+                    />
+                  ) : (
+                    member.name || "-"
+                  )}
+                </td>
+                <td className="py-3 px-4 text-sm">
+                  {editingId === member._id ? (
+                    <input
+                      name="whatsappNo"
+                      value={editForm.whatsappNo || ""}
+                      onChange={handleInputChange}
+                      className="p-1 border rounded w-full"
+                    />
+                  ) : (
+                    member.whatsappNo || "-"
+                  )}
+                </td>
+                <td className="py-3 px-4 text-sm">
+                  {editingId === member._id ? (
+                    <input
+                      name="designation"
+                      value={editForm.designation || ""}
+                      onChange={handleInputChange}
+                      className="p-1 border rounded w-full"
+                    />
+                  ) : (
+                    member.designation || "-"
+                  )}
+                </td>
+                <td className="py-3 px-4 text-sm">
+                  {editingId === member._id ? (
+                    <select
+                      name="address.mandal"
+                      value={editForm.address?.mandal || ""}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          address: {
+                            ...prev.address,
+                            mandal: e.target.value,
+                          },
+                        }))
+                      }
+                      className="p-1 border rounded w-full"
+                    >
+                      <option value="">Select Mandal</option>
+                      {mandalOptions.map((mandal, idx) => (
+                        <option key={idx} value={mandal}>
+                          {mandal}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    member.address?.mandal || "-"
+                  )}
+                </td>
+
+                <td className="py-3 px-4 text-sm">
                   <div className="flex space-x-2">
                     {editingId === member._id ? (
                       <>
@@ -163,7 +256,7 @@ const PartyYouthTable = () => {
                               <Edit size={16} />
                             </button>
                             <button
-                              onClick={() => deletePartyYouth(member._id)}
+                              onClick={() => handleDelete(member._id)}
                               className="text-red-600 hover:text-red-800"
                             >
                               <Trash size={16} />
@@ -190,48 +283,8 @@ const PartyYouthTable = () => {
         </table>
       </div>
 
-      {/* Empty state */}
       {filteredMembers.length === 0 && (
-        <div className="text-center py-4 text-gray-500">
-          No members found
-        </div>
-      )}
-
-      {/* Edit form */}
-      {editingId && (
-        <div className="mt-6 p-4 border border-gray-200 rounded-lg">
-          <h3 className="text-lg font-semibold mb-4">Edit Member Details</h3>
-          <div className="grid grid-cols-2 gap-4">
-            {columns.map((column) => (
-              <div key={column.accessor}>
-                <label className="block text-sm font-medium text-gray-700">
-                  {column.header}
-                </label>
-                <input
-                  type="text"
-                  name={column.accessor}
-                  value={editForm[column.accessor] || ""}
-                  onChange={handleInputChange}
-                  className="mt-1 p-2 border border-gray-300 rounded w-full"
-                />
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 flex justify-end gap-4">
-            <button
-              onClick={handleCancelEdit}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSaveEdit}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Save Changes
-            </button>
-          </div>
-        </div>
+        <div className="text-center py-4 text-gray-500">No members found</div>
       )}
     </div>
   );
