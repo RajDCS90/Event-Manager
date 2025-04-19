@@ -23,7 +23,6 @@ const EventForm = ({ onClose }) => {
       postOffice: "",
       policeStation: "",
       pincode: "",
-      landmark: "",
     },
   });
 

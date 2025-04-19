@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -29,6 +29,15 @@ export default function EventsAndGrievancesPage() {
   const [activeTab, setActiveTab] = useState("all"); // 'all', 'events', 'grievances'
   const [showEventTables, setShowEventTables] = useState(false);
   const [showGrevianceTables, setShowGravianceTables] = useState(false);
+  const tablesRef = useRef(null);
+
+  // In EventsAndGrievancesPage component
+const scrollToTables = () => {
+  tablesRef.current?.scrollIntoView({ 
+    behavior: 'smooth',
+    block: 'start' // You can adjust this to 'center' or 'end' if needed
+  });
+};
 
   useEffect(() => {
     fetchEvents();
@@ -124,6 +133,7 @@ export default function EventsAndGrievancesPage() {
             currentMonth={selectedDate}
             setShowEventTables={setShowEventTables}
             setShowGravianceTables={setShowGravianceTables}
+            scrollToTables={scrollToTables}
           />
         </div>
 
@@ -222,9 +232,29 @@ export default function EventsAndGrievancesPage() {
           </div>
         </div>
       </div>
-      <div className="flex flex-wrap gap-4 w-full mt-10">
-        {showGrevianceTables && <GrievanceTable />}
-        {showEventTables && <EventTable />}
+      <div className="flex flex-wrap gap-4 w-full mt-10" ref={tablesRef}>
+        {showGrevianceTables && (
+          <div className="w-full">
+            {grievancesLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
+              </div>
+            ) : (
+              <GrievanceTable />
+            )}
+          </div>
+        )}
+        {showEventTables && (
+          <div className="w-full">
+            {eventsLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+              </div>
+            ) : (
+              <EventTable />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

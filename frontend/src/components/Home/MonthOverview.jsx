@@ -1,6 +1,25 @@
 import { Calendar, AlertCircle } from 'lucide-react';
 
-const MonthOverview = ({ events, grievances, currentMonth,setShowEventTables,setShowGravianceTables }) => {
+const MonthOverview = ({  events, 
+  grievances, 
+  currentMonth, 
+  setShowEventTables, 
+  setShowGravianceTables,
+  scrollToTables // Add this new prop
+ }) => {
+
+  const handleEventClick = () => {
+    setShowEventTables(true);
+    // Scroll after a small delay to allow the table to render
+    setTimeout(() => scrollToTables(), 100);
+  };
+
+  const handleGrievanceClick = () => {
+    setShowGravianceTables(true);
+    // Scroll after a small delay to allow the table to render
+    setTimeout(() => scrollToTables(), 100);
+  };
+
   // Helper to filter items for current month
   const getMonthItems = (items, dateField) => {
     return items.filter(item => {
@@ -20,7 +39,7 @@ const MonthOverview = ({ events, grievances, currentMonth,setShowEventTables,set
       </h2>
       
       <div className="grid grid-cols-2 gap-4">
-        <div onClick={()=>setShowEventTables(true)} className="bg-blue-50 rounded-lg p-4 flex items-center">
+        <div onClick={handleEventClick} className="bg-blue-50 cursor-pointer rounded-lg p-4 flex items-center">
           <div className="bg-blue-100 rounded-full p-3 mr-3">
             <Calendar size={24} className="text-blue-600" />
           </div>
@@ -30,7 +49,7 @@ const MonthOverview = ({ events, grievances, currentMonth,setShowEventTables,set
           </div>
         </div>
         
-        <div onClick={()=>setShowGravianceTables(true)} className="bg-red-50 rounded-lg p-4 flex items-center">
+        <div onClick={handleGrievanceClick} className="bg-red-50 rounded-lg p-4 cursor-pointer flex items-center">
           <div className="bg-red-100 rounded-full p-3 mr-3">
             <AlertCircle size={24} className="text-red-600" />
           </div>
