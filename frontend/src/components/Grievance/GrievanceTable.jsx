@@ -44,7 +44,7 @@ const GrievanceTable = () => {
       grievanceName: grievance.grievanceName,
       type: grievance.type,
       applicant: grievance.applicant,
-      programDate: grievance.programDate,
+      programDate: format(new Date(grievance.programDate), 'yyyy-MM-dd'), // ✅ formatted
       startTime: grievance.startTime,
       endTime: grievance.endTime,
       status: grievance.status,
@@ -76,8 +76,8 @@ const GrievanceTable = () => {
         ...editForm,
         updatedAt: new Date().toISOString()
       };
-
-      await updateGrievance(updatedGrievance);
+      console.log("updatedGrievance",updatedGrievance);
+      await updateGrievance(editingId, updatedGrievance);
       setEditingId(null);
       setEditForm({});
     } catch (error) {
@@ -302,7 +302,7 @@ const GrievanceTable = () => {
                         >
                           <option value="pending">Pending</option>
                           <option value="resolved">Resolved</option>
-                          <option value="in-progress">In Progress</option>
+                          <option value="inprogress">In Progress</option>
                         </select>
                       ) : (
                         <StatusBadge status={grievance.status} />
