@@ -8,7 +8,8 @@ const {
   getUsers,
   getUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  updateUserPassword
 } = require('../controllers/userController');
 
 // Public routes
@@ -27,5 +28,7 @@ router.get('/', getUsers);
 router.get('/:id', getUser);
 router.put('/:id', updateUser);
 router.delete('/:id', deleteUser);
+
+router.patch('/password/:id',updateUserPassword );
 
 module.exports = router;

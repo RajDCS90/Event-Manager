@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { getUsers, deleteUser, updateUser } from '../../services/api';
+import { getUsers, deleteUser, updateUser, updateUserPassword } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
-const UserTable = () => {
+const UserTable = ({ refresh }) => {
   const { currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
@@ -11,6 +11,8 @@ const UserTable = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editUserId, setEditUserId] = useState(null);
   const [editData, setEditData] = useState({ username: '', role: '', assignedTables: [] });
+  const [editingPasswordUserId, setEditingPasswordUserId] = useState(null);
+  const [newPassword, setNewPassword] = useState('');
 
   const accessOptions = [
     { value: 'event', label: 'Event Table' },
@@ -50,7 +52,7 @@ const UserTable = () => {
     };
 
     fetchUsers();
-  }, []);
+  }, [refresh]);
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
@@ -111,6 +113,18 @@ const UserTable = () => {
       setEditUserId(null);
     } catch (err) {
       alert(err.response?.data?.message || 'Update failed');
+    }
+  };
+
+  const handlePasswordSubmit = async (userId) => {
+    try {
+      const res = await updateUserPassword(userId, newPassword);
+      console.log('res of changepas',res)
+      setEditingPasswordUserId(null);
+      setNewPassword('');
+      alert('Password updated successfully');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Password update failed');
     }
   };
 
@@ -190,18 +204,8 @@ const UserTable = () => {
                       </div>
                     </td>
                     <td className="px-4 py-3 space-x-2">
-                      <button
-                        onClick={handleEditSubmit}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        Save
-                      </button>
-                      <button
-                        onClick={() => setEditUserId(null)}
-                        className="text-gray-600 hover:text-gray-800"
-                      >
-                        Cancel
-                      </button>
+                      <button onClick={handleEditSubmit} className="text-blue-600 hover:text-blue-800">Save</button>
+                      <button onClick={() => setEditUserId(null)} className="text-gray-600 hover:text-gray-800">Cancel</button>
                     </td>
                   </>
                 ) : (
@@ -214,21 +218,47 @@ const UserTable = () => {
                       </td>
                     ))}
                     {currentUser.role === 'admin' && (
-                      <td className="px-4 py-3 space-x-2">
+                      <td className="px-4 py-3 space-y-2 space-x-2">
                         {currentUser._id !== user._id && (
                           <>
-                            <button
-                              onClick={() => handleEdit(user)}
-                              className="text-blue-600 hover:text-blue-800"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDelete(user._id)}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              Delete
-                            </button>
+                            <div className="flex gap-2 flex-wrap">
+                              <button onClick={() => handleEdit(user)} className="text-blue-600 hover:text-blue-800">
+                                Edit
+                              </button>
+                              <button onClick={() => handleDelete(user._id)} className="text-red-600 hover:text-red-800">
+                                Delete
+                              </button>
+                              <button onClick={() => setEditingPasswordUserId(user._id)} className="text-yellow-600 hover:text-yellow-800">
+                                Change Password
+                              </button>
+                            </div>
+                            {editingPasswordUserId === user._id && (
+                              <div className="mt-2 space-x-2">
+                                <input
+                                  type="password"
+                                  placeholder="New password"
+                                  value={newPassword}
+                                  autoComplete="current-password"
+                                  onChange={(e) => setNewPassword(e.target.value)}
+                                  className="border px-2 py-1 rounded"
+                                />
+                                <button
+                                  onClick={() => handlePasswordSubmit(user._id)}
+                                  className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+                                >
+                                  Submit
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setEditingPasswordUserId(null);
+                                    setNewPassword('');
+                                  }}
+                                  className="text-gray-600 hover:text-gray-800"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            )}
                           </>
                         )}
                       </td>

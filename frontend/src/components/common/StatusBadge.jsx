@@ -13,6 +13,16 @@ const StatusBadge = ({ status }) => {
       color: 'bg-green-100 text-green-800',
       icon: <CheckCircle size={16} />
     },
+    resolved: {
+      label: 'Resolved',
+      color: 'bg-green-100 text-green-800',
+      icon: <CheckCircle size={16} />
+    },
+    inprogress: {
+      label: 'in Progress',
+      color: 'bg-yellow-100 text-yellow-800',
+      icon: <Clock size={16} />
+    },
     cancelled: {
       label: 'Cancelled',
       color: 'bg-red-100 text-red-800',

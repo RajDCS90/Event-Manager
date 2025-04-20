@@ -4,7 +4,7 @@ import { createUser } from '../../services/api';
 import FormInput from '../common/FormInput';
 import { useAuth } from '../../context/AuthContext';
 
-const UserForm = () => {
+const UserForm = ({ onUserCreated }) => {
   const { currentUser } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
@@ -54,7 +54,7 @@ const UserForm = () => {
         role: 'user',
         assignedTables: []
       });
-      
+      if (onUserCreated) onUserCreated(); // 👈 trigger table refresh
       // Reset success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {

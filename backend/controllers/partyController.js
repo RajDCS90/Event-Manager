@@ -2,13 +2,12 @@ const PartyAndYouth = require('../models/PartyAndYouth');
 
 // Get all party members (filtered by query params)
 exports.getAllPartyMembers = async (req, res) => {
-  console.log("enter")
   try {
     const filters = {};
     
-    // Apply filters from query params
+    // Updated: Apply nested field filter
     if (req.query.mandal) {
-      filters.mandal = req.query.mandal;
+      filters['address.mandal'] = req.query.mandal;
     }
     if (req.query.designation) {
       filters.designation = req.query.designation;
@@ -21,7 +20,7 @@ exports.getAllPartyMembers = async (req, res) => {
   }
 };
 
-// Create new party member (public access)
+// Create new party member
 exports.createPartyMember = async (req, res) => {
   try {
     const memberData = req.body;
@@ -63,11 +62,11 @@ exports.updatePartyMember = async (req, res) => {
 exports.deletePartyMember = async (req, res) => {
   try {
     const member = await PartyAndYouth.findByIdAndDelete(req.params.id);
-    
+
     if (!member) {
       return res.status(404).json({ message: 'Member not found' });
     }
-    
+
     res.json({ message: 'Member deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
