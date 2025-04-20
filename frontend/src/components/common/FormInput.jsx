@@ -38,7 +38,7 @@ const FormInput = ({ label, name, type = 'text', value, onChange, options = [], 
           type={type}
           id={name}
           name={name}
-          value={value}
+          value={value ?? ""}
           onChange={onChange}
           required={required}
           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"

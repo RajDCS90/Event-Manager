@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { getUsers, deleteUser, updateUser } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
-const UserTable = () => {
+const UserTable = ({refresh}) => {
   const { currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
@@ -50,7 +50,7 @@ const UserTable = () => {
     };
 
     fetchUsers();
-  }, []);
+  }, [refresh]);
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
