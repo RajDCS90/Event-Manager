@@ -45,10 +45,7 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { username, password } = req.body;
-
-    console.log("user",req.body)
     const user = await User.findOne({ username });
-
     if (user && (await user.comparePassword(password))) {
       res.json({
         _id: user._id,
@@ -163,6 +160,27 @@ const generateToken = (id) => {
   });
 };
 
+// route: PATCH /api/users/:id/password
+const updateUserPassword = async (req, res) => {
+  const { id } = req.params;
+  const { newPassword } = req.body;
+
+  if (!newPassword) return res.status(400).json({ message: 'Password required' });
+
+  try {
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.password = newPassword;  // Let pre-save hook hash it
+    await user.save();            // ✅ Triggers the pre-save hook
+
+    res.status(200).json({ message: 'Password updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
 module.exports = {
   registerUser,
   loginUser,
@@ -170,5 +188,6 @@ module.exports = {
   getUsers,
   getUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  updateUserPassword
 };

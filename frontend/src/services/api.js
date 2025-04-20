@@ -75,6 +75,11 @@ export const getUsers = async () => {
     throw error.response?.data || error;
   }
 };
+export const updateUserPassword = async (id, newPassword) => {
+  console.log('updateUserPassword')
+  const res = await api.patch(`/auth/password/${id}`, { newPassword });
+  return res.data;
+};
 
 export const createUser = async (userData) => {
   try {
