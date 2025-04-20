@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react';
-import { Upload, X, Image, Video, File, Facebook, Instagram, Twitter, Linkedin, Youtube } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Upload, X, Image, Video, File, Facebook, Instagram, Twitter, FileText } from 'lucide-react';
+import { useSocialMedia } from '../../context/SocialMediaContext';
 
 const SocialMediaUploader = () => {
   // Available social media platforms with Lucide icons
@@ -7,16 +8,16 @@ const SocialMediaUploader = () => {
     { id: 'facebook', name: 'Facebook', icon: <Facebook className="w-4 h-4 mr-2" /> },
     { id: 'instagram', name: 'Instagram', icon: <Instagram className="w-4 h-4 mr-2" /> },
     { id: 'twitter', name: 'Twitter', icon: <Twitter className="w-4 h-4 mr-2" /> },
-    { id: 'linkedin', name: 'LinkedIn', icon: <Linkedin className="w-4 h-4 mr-2" /> },
-    { id: 'youtube', name: 'YouTube', icon: <Youtube className="w-4 h-4 mr-2" /> },
-    { id: 'tiktok', name: 'TikTok', icon: <span className="mr-2">🎵</span> }, // No Lucide icon for TikTok
   ];
+
+  // Get context functions and state
+  const { createPost, loading, error, uploadProgress, successMessage, clearMessages } = useSocialMedia();
 
   // State management
   const [selectedMedia, setSelectedMedia] = useState([]);
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState([]);
-  const [isUploading, setIsUploading] = useState(false);
   const [previewUrls, setPreviewUrls] = useState([]);
   const fileInputRef = useRef(null);
 
@@ -29,12 +30,20 @@ const SocialMediaUploader = () => {
     setSelectedMedia(newMedia);
 
     // Create preview URLs
-    const newPreviewUrls = files.map(file => ({
-      url: URL.createObjectURL(file),
-      type: file.type.startsWith('image/') ? 'image' : 
-            file.type.startsWith('video/') ? 'video' : 'file',
-      name: file.name
-    }));
+    const newPreviewUrls = files.map(file => {
+      let type = 'file';
+      if (file.type.startsWith('image/')) type = 'image';
+      else if (file.type.startsWith('video/')) type = 'video';
+      else if (file.type.endsWith('pdf')) type = 'pdf';
+      else if (file.type.includes('word') || file.type.includes('document')) type = 'doc';
+      
+      return {
+        url: URL.createObjectURL(file),
+        type,
+        name: file.name
+      };
+    });
+    
     setPreviewUrls([...previewUrls, ...newPreviewUrls]);
   };
 
@@ -59,43 +68,44 @@ const SocialMediaUploader = () => {
     setPreviewUrls(newPreviewUrls);
   };
 
+  // Clear messages after showing
+  useEffect(() => {
+    if (error || successMessage) {
+      const timer = setTimeout(() => {
+        clearMessages();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, successMessage, clearMessages]);
+
+  // Reset form after successful upload
+  useEffect(() => {
+    if (successMessage) {
+      setSelectedMedia([]);
+      setPreviewUrls([]);
+      setTitle('');
+      setDescription('');
+      setSelectedPlatforms([]);
+    }
+  }, [successMessage]);
+
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (selectedMedia.length === 0 || selectedPlatforms.length === 0) return;
   
-    setIsUploading(true);
-    
     try {
-      const formData = new FormData();
-      selectedMedia.forEach(file => {
-        formData.append('media', file);
-      });
-      formData.append('description', description);
-      formData.append('platforms', JSON.stringify(selectedPlatforms));
+      const postData = {
+        title,
+        description,
+        media: selectedMedia,
+        platforms: selectedPlatforms
+      };
       
-      const response = await fetch('/api/social-media/post', {
-        method: 'POST',
-        body: formData,
-        // No Content-Type header needed as FormData sets it automatically
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        alert('Content submitted successfully!');
-        // Reset form
-        setSelectedMedia([]);
-        setPreviewUrls([]);
-        setDescription('');
-        setSelectedPlatforms([]);
-      } else {
-        alert(`Error: ${result.message}`);
-      }
-    } catch (error) {
-      console.error('Upload failed:', error);
-      alert('Upload failed. Please try again.');
-    } finally {
-      setIsUploading(false);
+      await createPost(postData);
+    } catch (err) {
+      // Error is handled in context
+      console.error('Upload failed:', err);
     }
   };
 
@@ -104,9 +114,42 @@ const SocialMediaUploader = () => {
     fileInputRef.current.click();
   };
 
+  // Get file icon based on type
+  const getFileIcon = (type) => {
+    switch (type) {
+      case 'pdf':
+        return <FileText className="w-8 h-8 text-red-500" />;
+      case 'doc':
+        return <FileText className="w-8 h-8 text-blue-500" />;
+      case 'file':
+      default:
+        return <File className="w-8 h-8 text-gray-400" />;
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Social Media Content Uploader</h2>
+      
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-md flex items-center">
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+          {successMessage}
+        </div>
+      )}
+      
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md flex items-center">
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          {error}
+        </div>
+      )}
       
       <form onSubmit={handleSubmit}>
         {/* Media Upload Section */}
@@ -118,14 +161,14 @@ const SocialMediaUploader = () => {
           >
             <Upload className="mx-auto w-8 h-8 text-gray-400 mb-2" />
             <p className="text-gray-500">Click to upload or drag and drop</p>
-            <p className="text-sm text-gray-400 mt-1">Supports images, videos, and other files</p>
+            <p className="text-sm text-gray-400 mt-1">Supports images, videos, PDFs, Word documents and more</p>
             <input 
               type="file" 
               ref={fileInputRef}
               onChange={handleFileChange}
               className="hidden"
               multiple
-              accept="image/*, video/*, .pdf, .doc, .docx"
+              accept="image/*,video/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             />
           </div>
           
@@ -135,7 +178,7 @@ const SocialMediaUploader = () => {
               <h4 className="text-md font-medium mb-2 text-gray-700">Selected Media:</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {previewUrls.map((item, index) => (
-                  <div key={index} className="relative border rounded-md p-2">
+                  <div key={index} className="relative border rounded-md p-2 bg-gray-50">
                     {item.type === 'image' && (
                       <img 
                         src={item.url} 
@@ -150,9 +193,9 @@ const SocialMediaUploader = () => {
                         controls
                       />
                     )}
-                    {item.type === 'file' && (
+                    {['file', 'pdf', 'doc'].includes(item.type) && (
                       <div className="flex flex-col items-center justify-center h-32">
-                        <File className="w-8 h-8 text-gray-400" />
+                        {getFileIcon(item.type)}
                         <p className="text-xs text-gray-500 mt-2 truncate w-full text-center">{item.name}</p>
                       </div>
                     )}
@@ -171,9 +214,21 @@ const SocialMediaUploader = () => {
           )}
         </div>
 
+        {/* Title Section */}
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold mb-2 text-gray-700">Title</h3>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Add a title for your post..."
+            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
         {/* Description Section */}
         <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-3 text-gray-700">Description</h3>
+          <h3 className="text-lg font-semibold mb-2 text-gray-700">Description</h3>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -201,19 +256,48 @@ const SocialMediaUploader = () => {
           </div>
         </div>
 
+        {/* Progress Bar (shows when uploading) */}
+        {loading && uploadProgress > 0 && (
+          <div className="mb-6">
+            <div className="relative pt-1">
+              <div className="flex mb-2 items-center justify-between">
+                <div>
+                  <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-600 bg-blue-200">
+                    Uploading
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs font-semibold inline-block text-blue-600">
+                    {uploadProgress}%
+                  </span>
+                </div>
+              </div>
+              <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-200">
+                <div 
+                  style={{ width: `${uploadProgress}%` }} 
+                  className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500 transition-all duration-300 ease-out"
+                ></div>
+              </div>
+              <p className="text-sm text-gray-600 text-center animate-pulse">
+                {uploadProgress < 100 ? 'Uploading your content...' : 'Processing your post...'}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={selectedMedia.length === 0 || selectedPlatforms.length === 0 || isUploading}
-          className={`w-full py-3 px-4 rounded-md text-white font-medium ${selectedMedia.length === 0 || selectedPlatforms.length === 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} transition-colors`}
+          disabled={selectedMedia.length === 0 || selectedPlatforms.length === 0 || loading}
+          className={`w-full py-3 px-4 rounded-md text-white font-medium ${selectedMedia.length === 0 || selectedPlatforms.length === 0 || loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} transition-colors`}
         >
-          {isUploading ? (
+          {loading ? (
             <span className="flex items-center justify-center">
               <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Uploading...
+              Processing...
             </span>
           ) : `Post to ${selectedPlatforms.length} Platform${selectedPlatforms.length !== 1 ? 's' : ''}`}
         </button>

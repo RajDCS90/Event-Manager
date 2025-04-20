@@ -1,102 +1,93 @@
-import { LogOut } from 'lucide-react';
+import { LogOut } from "lucide-react";
 
-const MobileMenu = ({ 
-  isMenuOpen, 
-  isTransitioning, 
-  menuRef, 
-  currentUser, 
-  activeTab, 
-  handleTabClick, 
-  handleLogout 
+const MobileMenu = ({
+  isMenuOpen,
+  isTransitioning,
+  menuRef,
+  currentUser,
+  activeTab,
+  handleTabClick,
+  handleLogout,
 }) => {
   return (
-    <div 
-      className={`mobile-menu-container fixed inset-0 z-50 md:hidden ${
-        isMenuOpen ? 'animate-fade-in' : 'animate-fade-out'
+    <div
+      ref={menuRef}
+      className={`md:hidden fixed inset-x-0 top-16 z-30 bg-white shadow-lg transition-all duration-300 transform ${
+        isMenuOpen ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
       }`}
-      style={{
-        animationDuration: '300ms',
-        animationFillMode: 'forwards',
-        pointerEvents: isTransitioning ? 'none' : 'auto'
-      }}
     >
-      <div 
-        ref={menuRef}
-        className={`absolute top-16 left-0 right-0 bg-blue-800 shadow-lg transform ${
-          isMenuOpen ? 'animate-slide-down' : 'animate-slide-up'
-        }`}
-        style={{
-          animationDuration: '300ms',
-          animationFillMode: 'forwards'
-        }}
-      >
-        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          {/* Mobile User Info */}
+      <div className="px-2 pt-2 pb-3 space-y-1">
+        {/* Events - Only show if user has access */}
+        {currentUser?.assignedTables?.includes("event") && (
+          <button
+            onClick={() => handleTabClick("events")}
+            className={`w-full text-left block px-3 py-2 rounded-md text-base font-medium transition-colors ${
+              activeTab === "events"
+                ? "bg-blue-100 text-blue-700"
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            Events
+          </button>
+        )}
+
+        {/* Grievances - Only show if user has access */}
+        {currentUser?.assignedTables?.includes("grievances") && (
+          <button
+            onClick={() => handleTabClick("grievance")}
+            className={`w-full text-left block px-3 py-2 rounded-md text-base font-medium transition-colors ${
+              activeTab === "grievance"
+                ? "bg-blue-100 text-blue-700"
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            Grievances
+          </button>
+        )}
+
+        {/* Party Youth - Only show if user has access */}
+        {currentUser?.assignedTables?.includes("party") && (
+          <button
+            onClick={() => handleTabClick("partyYouth")}
+            className={`w-full text-left block px-3 py-2 rounded-md text-base font-medium transition-colors ${
+              activeTab === "partyYouth"
+                ? "bg-blue-100 text-blue-700"
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            Party Youth
+          </button>
+        )}
+
+        {/* User Management - Only show for admins */}
+        {currentUser?.role === "admin" && (
+          <button
+            onClick={() => handleTabClick("userManagement")}
+            className={`w-full text-left block px-3 py-2 rounded-md text-base font-medium transition-colors ${
+              activeTab === "userManagement"
+                ? "bg-blue-100 text-blue-700"
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            User Management
+          </button>
+        )}
+
+        {/* Separator and User Info */}
+        <div className="border-t border-gray-200 my-2 pt-2">
           {currentUser && (
-            <div className="px-3 py-2 text-blue-100 border-b border-blue-700 mb-2">
-              Welcome, {currentUser.username} ({currentUser.role})
+            <div className="px-3 py-2 text-sm text-gray-500">
+              Signed in as {currentUser.username}
             </div>
           )}
-          
-          {currentUser?.assignedTables?.includes('event') && (
-            <button
-              className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium ${
-                activeTab === 'events' 
-                  ? 'bg-blue-900 text-white' 
-                  : 'text-blue-200 hover:bg-blue-700 hover:text-white'
-              }`}
-              onClick={() => handleTabClick('events')}
-            >
-              Events
-            </button>
-          )}
-          
-          {currentUser?.assignedTables?.includes('grievances') && (
-            <button
-              className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium ${
-                activeTab === 'grievance' 
-                  ? 'bg-blue-900 text-white' 
-                  : 'text-blue-200 hover:bg-blue-700 hover:text-white'
-              }`}
-              onClick={() => handleTabClick('grievance')}
-            >
-              Grievances
-            </button>
-          )}
-          
-          {currentUser?.assignedTables?.includes('party') && (
-            <button
-              className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium ${
-                activeTab === 'partyYouth' 
-                  ? 'bg-blue-900 text-white' 
-                  : 'text-blue-200 hover:bg-blue-700 hover:text-white'
-              }`}
-              onClick={() => handleTabClick('partyYouth')}
-            >
-              Party Youth
-            </button>
-          )}
-          
-          {currentUser?.role === 'admin' && (
-            <button
-              className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium ${
-                activeTab === 'userManagement' 
-                  ? 'bg-blue-900 text-white' 
-                  : 'text-blue-200 hover:bg-blue-700 hover:text-white'
-              }`}
-              onClick={() => handleTabClick('userManagement')}
-            >
-              User Management
-            </button>
-          )}
-          
+
           {/* Mobile Logout Button */}
           {currentUser && (
             <button
-              className="flex items-center space-x-2 w-full text-left px-3 py-2 rounded-md text-base font-medium bg-red-500 hover:bg-red-600 text-white transition-colors mt-2"
               onClick={handleLogout}
+              className="w-full text-left flex items-center px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50 transition-colors"
             >
-              <LogOut size={16} />
+              <LogOut size={18} className="mr-2" />
               <span>Logout</span>
             </button>
           )}

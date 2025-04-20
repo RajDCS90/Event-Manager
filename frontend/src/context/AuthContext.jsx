@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, useContext, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   login as apiLogin,
   getMe,
@@ -20,6 +20,22 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState(''); // Added activeTab state
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Set active tab based on current URL path
+  useEffect(() => {
+    if (location.pathname.includes('/dashboard/events')) {
+      setActiveTab('events');
+    } else if (location.pathname.includes('/dashboard/grievances')) {
+      setActiveTab('grievance');
+    } else if (location.pathname.includes('/dashboard/party-youth')) {
+      setActiveTab('partyYouth');
+    } else if (location.pathname.includes('/dashboard/users')) {
+      setActiveTab('userManagement');
+    } else if (location.pathname.includes('/dashboard/home')) {
+      setActiveTab('');
+    }
+  }, [location.pathname]);
 
   // Check authentication on initial load
   useEffect(() => {
@@ -31,16 +47,21 @@ export const AuthProvider = ({ children }) => {
           const savedUser = localStorage.getItem('user');
           if (savedUser) {
             setCurrentUser(JSON.parse(savedUser));
+            
+            // Fetch user data in background to ensure it's fresh
+            try {
+              const freshUser = await getMe();
+              setCurrentUser(freshUser);
+              localStorage.setItem('user', JSON.stringify(freshUser));
+            } catch (refreshErr) {
+              console.warn('Could not refresh user data:', refreshErr);
+              // Continue with saved user data
+            }
           } else {
             // Fetch user data if not in localStorage
             const user = await getMe();
             setCurrentUser(user);
             localStorage.setItem('user', JSON.stringify(user));
-          }
-
-          // Fetch all users if admin
-          if (currentUser?.role === 'admin') {
-            await refreshUsers();
           }
         }
       } catch (err) {
@@ -55,6 +76,23 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
+  // Fetch users if admin
+  useEffect(() => {
+    const loadUsersIfAdmin = async () => {
+      if (currentUser?.role === 'admin') {
+        try {
+          await refreshUsers();
+        } catch (err) {
+          console.error('Failed to load users:', err);
+        }
+      }
+    };
+
+    if (currentUser) {
+      loadUsersIfAdmin();
+    }
+  }, [currentUser]);
+
   const clearAuthData = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -62,7 +100,7 @@ export const AuthProvider = ({ children }) => {
     setUsers([]);
   };
 
-  // Login function - updated to handle the response format you provided
+  // Login function - updated to handle the response format
   const login = useCallback(async (credentials) => {
     setIsLoading(true);
     setError(null);
@@ -78,11 +116,6 @@ export const AuthProvider = ({ children }) => {
       
       setCurrentUser(userWithoutToken);
       
-      // Fetch users if admin
-      if (userWithoutToken.role === 'admin') {
-        await refreshUsers();
-      }
-      
       // Set default active tab based on user permissions
       if (userWithoutToken.assignedTables?.includes('event')) {
         setActiveTab('');
@@ -97,7 +130,7 @@ export const AuthProvider = ({ children }) => {
         setActiveTab('userManagement');
       }
       
-      navigate('/dashboard');
+      navigate('/dashboard/home');
       return userWithoutToken;
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
@@ -123,6 +156,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const userList = await getUsers();
       setUsers(userList);
+      return userList;
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to refresh users');
       throw err;

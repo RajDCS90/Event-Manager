@@ -1,9 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  CalendarIcon,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarIcon } from "lucide-react";
 
 // Import components
 import { useEvents } from "../../context/EventContext";
@@ -30,12 +26,12 @@ export default function EventsAndGrievancesPage() {
   const tablesRef = useRef(null);
 
   // In EventsAndGrievancesPage component
-const scrollToTables = () => {
-  tablesRef.current?.scrollIntoView({ 
-    behavior: 'smooth',
-    block: 'start' // You can adjust this to 'center' or 'end' if needed
-  });
-};
+  const scrollToTables = () => {
+    tablesRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start", // You can adjust this to 'center' or 'end' if needed
+    });
+  };
 
   useEffect(() => {
     fetchEvents();
@@ -243,7 +239,7 @@ const scrollToTables = () => {
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
               </div>
             ) : (
-              <EventTable />
+              <EventTable skipInitialFetch={true} />
             )}
           </div>
         )}

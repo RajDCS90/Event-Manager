@@ -136,6 +136,31 @@ const Navbar = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-4">
+              {/* Dashboard Link (moved from menu) */}
+              <Link
+                to="/dashboard/home"
+                onClick={() => handleTabChange('')}
+                className={`px-4 py-2 ${
+                  location.pathname.includes('/dashboard/home')
+                    ? 'bg-blue-800'
+                    : 'bg-blue-700 hover:bg-blue-800'
+                } rounded-md text-white font-medium transition-colors`}
+              >
+                Dashboard
+              </Link>
+
+              {/* Social Media Link */}
+              <Link
+                to="/social-media"
+                className={`px-4 py-2 ${
+                  location.pathname.includes('/social-media')
+                    ? 'bg-blue-800'
+                    : 'bg-blue-700 hover:bg-blue-800'
+                } rounded-md text-white font-medium transition-colors`}
+              >
+                Social Media
+              </Link>
+
               {/* Desktop Menu Button */}
               <div className="relative flex justify-center items-center">
                 <button
@@ -164,14 +189,6 @@ const Navbar = () => {
                 )}
               </div>
 
-              {/* Social Media Link (separate from menu) */}
-              <Link
-                to="/social-media"
-                className="px-4 py-2 bg-blue-700 hover:bg-blue-800 rounded-md text-white font-medium transition-colors"
-              >
-                Social Media
-              </Link>
-
               {/* Desktop Welcome Text */}
               {currentUser && (
                 <div className="px-3 py-2 border-l border-blue-500 text-blue-100">
@@ -193,10 +210,27 @@ const Navbar = () => {
 
             {/* Mobile Menu Button */}
             <div className="md:hidden flex items-center space-x-2">
+              {/* Mobile Dashboard Link */}
+              <Link
+                to="/dashboard/home"
+                onClick={() => handleTabChange('')}
+                className={`px-3 py-1 ${
+                  location.pathname.includes('/dashboard/home')
+                    ? 'bg-blue-800'
+                    : 'bg-blue-700 hover:bg-blue-800'
+                } rounded-md text-white text-sm transition-colors`}
+              >
+                Dashboard
+              </Link>
+
               {/* Mobile Social Media Link */}
               <Link
                 to="/social-media"
-                className="px-3 py-1 bg-blue-700 hover:bg-blue-800 rounded-md text-white text-sm transition-colors"
+                className={`px-3 py-1 ${
+                  location.pathname.includes('/social-media')
+                    ? 'bg-blue-800'
+                    : 'bg-blue-700 hover:bg-blue-800'
+                } rounded-md text-white text-sm transition-colors`}
               >
                 Social Media
               </Link>

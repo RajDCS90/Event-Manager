@@ -7,7 +7,7 @@ import UpdateEventModal from "./UpdateEventModal";
 import ErrorMessage from "../common/ErrorMessage";
 import LoadingSpinner from "../common/LoadingSpinner";
 
-const EventTable = () => {
+const EventTable = ({ skipInitialFetch = false }) => {
   const { events, loading, error, deleteEvent, fetchEvents } = useEvents();
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -28,10 +28,12 @@ const EventTable = () => {
     pincode: "",
   });
 
-  // Initial fetch
+  // Initial fetch - now with skipInitialFetch option
   useEffect(() => {
-    fetchEvents();
-  }, []);
+    if (!skipInitialFetch) {
+      fetchEvents();
+    }
+  }, [skipInitialFetch, fetchEvents]);
 
   // Update filtered events when events change
   useEffect(() => {

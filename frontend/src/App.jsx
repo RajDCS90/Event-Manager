@@ -18,11 +18,13 @@ import PublicLayout from "./pages/PublicLayout";
 import GrievancesComponent from "./components/Grievance/GrievancesComponent";
 import Home from "./components/Home/Home";
 import Dashboard from "./components/Dashboard/Dashboard";
+import { SocialMediaProvider } from "./context/SocialMediaContext";
 
 function App() {
   return (
     <Router>
       <AuthProvider>
+        <SocialMediaProvider>
         <GrievanceProvider>
           <EventProvider>
             <PartyAndYouthProvider>
@@ -105,6 +107,7 @@ function App() {
             </PartyAndYouthProvider>
           </EventProvider>
         </GrievanceProvider>
+        </SocialMediaProvider>
       </AuthProvider>
     </Router>
   );

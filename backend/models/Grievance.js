@@ -59,6 +59,30 @@ const GrievanceSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  address: {
+    village: {
+      type: String,
+      trim: true
+    },
+    postOffice: {
+      type: String,
+      trim: true
+    },
+    policeStation: {
+      type: String,
+      trim: true
+    },
+    pincode: {
+      type: String,
+      trim: true,
+      validate: {
+        validator: function(v) {
+          return /^[0-9]{6}$/.test(v); // Indian pincode validation (6 digits)
+        },
+        message: props => `${props.value} is not a valid pincode!`
+      },
+    },
+  },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
