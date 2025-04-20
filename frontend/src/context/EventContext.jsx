@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import api from '../services/api';
 
 const EventContext = createContext();
@@ -14,19 +14,17 @@ export const EventProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch events with filtering and pagination
-const fetchEvents = async (filters = {}, page = 1, limit = 100) => {
+  // Memoized fetchEvents with useCallback
+  const fetchEvents = useCallback(async (filters = {}, page = 1, limit = 100) => {
     try {
       setLoading(true);
       
-      // Prepare query params
       const params = {
         page,
         limit,
         ...filters
       };
 
-      // Convert date range to server format if present
       if (filters.startDate && filters.endDate) {
         params.dateRange = `${filters.startDate},${filters.endDate}`;
         delete params.startDate;
@@ -49,14 +47,13 @@ const fetchEvents = async (filters = {}, page = 1, limit = 100) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Create new event
-  const createEvent = async (eventData) => {
+  // Memoized createEvent
+  const createEvent = useCallback(async (eventData) => {
     try {
       setLoading(true);
       const response = await api.post('/events', eventData);
-      // Refresh events list after creation
       await fetchEvents({}, pagination.page, pagination.limit);
       setError(null);
       return response.data;
@@ -66,14 +63,13 @@ const fetchEvents = async (filters = {}, page = 1, limit = 100) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchEvents, pagination.page, pagination.limit]);
 
-  // Update existing event
-  const updateEvent = async (updatedEvent) => {
+  // Memoized updateEvent
+  const updateEvent = useCallback(async (updatedEvent) => {
     try {
       setLoading(true);
       const response = await api.put(`/events/${updatedEvent._id}`, updatedEvent);
-      // Refresh events list after update
       await fetchEvents({}, pagination.page, pagination.limit);
       setError(null);
       return response.data;
@@ -83,14 +79,13 @@ const fetchEvents = async (filters = {}, page = 1, limit = 100) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchEvents, pagination.page, pagination.limit]);
 
-  // Delete event
-  const deleteEvent = async (eventId) => {
+  // Memoized deleteEvent
+  const deleteEvent = useCallback(async (eventId) => {
     try {
       setLoading(true);
       await api.delete(`/events/${eventId}`);
-      // Refresh events list after deletion
       await fetchEvents({}, pagination.page, pagination.limit);
       setError(null);
     } catch (err) {
@@ -99,51 +94,58 @@ const fetchEvents = async (filters = {}, page = 1, limit = 100) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchEvents, pagination.page, pagination.limit]);
 
-  // Client-side filtering (optional)
-  const filterEvents = (filters = {}) => {
+  // Memoized filterEvents
+  const filterEvents = useCallback((filters = {}) => {
     return events.filter(event => {
       return Object.entries(filters).every(([key, value]) => {
         if (!value) return true;
         
-        // Handle nested address fields
         if (key.startsWith('address.')) {
           const addressKey = key.split('.')[1];
           return event.address[addressKey]?.toLowerCase().includes(value.toLowerCase());
         }
         
-        // Handle date filtering
         if (key === 'eventDate' && value instanceof Date) {
           const eventDate = new Date(event[key]);
           return eventDate.toDateString() === value.toDateString();
         }
         
-        // Case-insensitive string matching
         if (typeof event[key] === 'string') {
           return event[key].toLowerCase().includes(value.toLowerCase());
         }
         
-        // Exact matching for other types
         return event[key] === value;
       });
     });
-  };
+  }, [events]);
+
+  // Memoized context value
+  const contextValue = useMemo(() => ({
+    events,
+    pagination,
+    loading,
+    error,
+    fetchEvents,
+    createEvent,
+    updateEvent,
+    deleteEvent,
+    filterEvents
+  }), [
+    events,
+    pagination,
+    loading,
+    error,
+    fetchEvents,
+    createEvent,
+    updateEvent,
+    deleteEvent,
+    filterEvents
+  ]);
 
   return (
-    <EventContext.Provider
-      value={{
-        events,
-        pagination,
-        loading,
-        error,
-        fetchEvents,
-        createEvent,
-        updateEvent,
-        deleteEvent,
-        filterEvents
-      }}
-    >
+    <EventContext.Provider value={contextValue}>
       {children}
     </EventContext.Provider>
   );

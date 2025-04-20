@@ -2,9 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   ChevronLeft,
   ChevronRight,
-  Plus,
   CalendarIcon,
-  RefreshCcw,
 } from "lucide-react";
 
 // Import components
@@ -90,12 +88,6 @@ const scrollToTables = () => {
 
   // Date details for selected date
   const { day, month, year } = getDateDetails(selectedDate);
-
-  // Handle refresh data
-  const handleRefresh = () => {
-    fetchEvents();
-    fetchGrievances();
-  };
 
   // Loading state
   const isLoading = eventsLoading || grievancesLoading;
@@ -235,7 +227,7 @@ const scrollToTables = () => {
       <div className="flex flex-wrap gap-4 w-full mt-10" ref={tablesRef}>
         {showGrevianceTables && (
           <div className="w-full">
-            {grievancesLoading ? (
+            {isLoading ? (
               <div className="flex justify-center items-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
               </div>
@@ -246,7 +238,7 @@ const scrollToTables = () => {
         )}
         {showEventTables && (
           <div className="w-full">
-            {eventsLoading ? (
+            {isLoading ? (
               <div className="flex justify-center items-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
               </div>
