@@ -5,9 +5,7 @@ const API_URL = 'http://localhost:5000/api';
 // Create axios instance
 const api = axios.create({
   baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  // Remove the default Content-Type header as we'll set it dynamically
 });
 
 // Add JWT to requests if available
@@ -17,6 +15,16 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Dynamically set Content-Type based on data type
+    if (!config.headers['Content-Type']) {
+      if (config.data instanceof FormData) {
+        config.headers['Content-Type'] = 'multipart/form-data';
+      } else {
+        config.headers['Content-Type'] = 'application/json';
+      }
+    }
+    
     return config;
   },
   (error) => {
@@ -107,6 +115,22 @@ export const deleteUser = async (id) => {
     throw error.response?.data || error;
   }
 };
+
+export const putWithFormData = async (url, formData) => {
+  const config = {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  };
+  try {
+    const response = await api.put(url, formData, config);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+
 
 // Export the configured axios instance for other API calls
 export default api;

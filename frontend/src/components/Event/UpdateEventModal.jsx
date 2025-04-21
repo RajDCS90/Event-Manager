@@ -18,7 +18,6 @@ const UpdateEventModal = ({ event, onClose }) => {
     startTime: "",
     endTime: "",
     status: "",
-    mandal: "",
     requesterName: "",
     requesterContact: "",
     // Additional fields if needed
@@ -28,6 +27,7 @@ const UpdateEventModal = ({ event, onClose }) => {
       postOffice: "",
       policeStation: "",
       pincode: "",
+      mandal: '',
     }
   });
 
@@ -36,8 +36,8 @@ const UpdateEventModal = ({ event, onClose }) => {
     if (event) {
       try {
         // Format date for input date field
-        const formattedDate = event.eventDate ? 
-          format(new Date(event.eventDate), "yyyy-MM-dd") : 
+        const formattedDate = event.eventDate ?
+          format(new Date(event.eventDate), "yyyy-MM-dd") :
           "";
 
         setForm({
@@ -48,7 +48,7 @@ const UpdateEventModal = ({ event, onClose }) => {
           startTime: event.startTime || "",
           endTime: event.endTime || "",
           status: event.status || "",
-          mandal: event.mandal || "",
+          // mandal: event.mandal || "",
           requesterName: event.requesterName || "",
           requesterContact: event.requesterContact || "",
           description: event.description || "",
@@ -57,9 +57,10 @@ const UpdateEventModal = ({ event, onClose }) => {
             postOffice: event.address?.postOffice || "",
             policeStation: event.address?.policeStation || "",
             pincode: event.address?.pincode || "",
+            mandal: event.address?.mandal || ""
           }
         });
-        
+
         // Set image preview if the event has an image
         if (event.imageUrl) {
           setImagePreview(event.imageUrl);
@@ -73,7 +74,7 @@ const UpdateEventModal = ({ event, onClose }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
+
     if (name.includes(".")) {
       const [parent, child] = name.split(".");
       setForm((prev) => ({
@@ -99,6 +100,9 @@ const UpdateEventModal = ({ event, onClose }) => {
       reader.readAsDataURL(file);
     }
   };
+  useEffect(() => {
+    console.log("Selected image:", eventImage);  // Check the image object
+  }, [eventImage])
 
   const removeImage = () => {
     setEventImage(null);
@@ -125,28 +129,22 @@ const UpdateEventModal = ({ event, onClose }) => {
 
       // Create FormData for file upload
       const formData = new FormData();
-      
       // Append all form fields
       Object.keys(form).forEach(key => {
         if (key === 'address') {
-          // Handle nested address object
-          Object.keys(form.address).forEach(addressKey => {
-            if (form.address[addressKey]) {
-              formData.append(`address.${addressKey}`, form.address[addressKey]);
-            }
-          });
+          // Stringify the address object
+          formData.append('address', JSON.stringify(form.address));
         } else if (form[key]) {
           formData.append(key, form[key]);
         }
       });
-      
+
       // Append image if selected
       if (eventImage) {
-        formData.append('eventImage', eventImage);
+        formData.append('image', eventImage);
       }
 
-      // Update event with FormData including image
-      await updateEvent({
+      const res = await updateEvent({
         _id: event._id,
         formData
       });
@@ -165,7 +163,7 @@ const UpdateEventModal = ({ event, onClose }) => {
       <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center border-b border-gray-200 px-6 py-4">
           <h2 className="text-xl font-semibold text-gray-800">Update Event</h2>
-          <button 
+          <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
           >
@@ -239,7 +237,7 @@ const UpdateEventModal = ({ event, onClose }) => {
               <input
                 type="text"
                 name="mandal"
-                value={form.mandal}
+                value={form.address.mandal}
                 onChange={handleInputChange}
                 className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
@@ -419,27 +417,34 @@ const UpdateEventModal = ({ event, onClose }) => {
             <h3 className="text-lg font-medium text-gray-700 mb-4">Event Image</h3>
             <div className="flex flex-col items-center">
               {imagePreview ? (
-                <div className="relative mb-4">
-                  <img 
-                    src={imagePreview} 
-                    alt="Event preview" 
-                    className="w-full max-w-md h-auto rounded-lg object-cover shadow-md" 
+                <div className="relative">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="max-w-full max-h-64 rounded-lg shadow border"
                   />
                   <button
                     type="button"
                     onClick={removeImage}
-                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition"
+                    className="absolute top-2 right-2 bg-white rounded-full p-1 shadow hover:bg-gray-100"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={18} className="text-red-500" />
                   </button>
                 </div>
               ) : (
-                <div className="w-full max-w-md h-48 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center mb-4 bg-gray-50">
-                  <ImageIcon size={40} className="text-gray-400 mb-2" />
-                  <p className="text-sm text-gray-500 mb-2">No image selected</p>
-                </div>
+                <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer text-gray-500 hover:border-blue-400 hover:text-blue-500 transition">
+                  <Upload className="w-6 h-6 mb-2" />
+                  <span>Upload Image</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </label>
               )}
-              
+
+
               <label className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition cursor-pointer">
                 <Upload size={16} className="mr-2" />
                 {imagePreview ? "Change Image" : "Upload Image"}

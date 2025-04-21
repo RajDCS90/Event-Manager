@@ -92,98 +92,82 @@ exports.createEvent = async (req, res) => {
       return res.status(400).json({ message: 'Phone number must be 10 digits' });
     }
 
+    // Construct address with mandal (if needed)
+    const completeAddress = {
+      village: address.village,
+      postOffice: address.postOffice,
+      policeStation: address.policeStation,
+      pincode: address.pincode,
+      mandal: address.mandal // ✅ include mandal inside address
+    };
+
     const eventData = {
       ...rest,
       eventDate: dateObj,
       startTime,
       endTime,
-      address,
+      address: completeAddress,
       createdBy: req.user.id
     };
-    
+
     const event = new Events(eventData);
     await event.save();
-    
+
     res.status(201).json(event);
   } catch (error) {
-    res.status(400).json({ 
+    res.status(400).json({
       message: 'Validation failed',
-      errors: error.errors ? Object.keys(error.errors).reduce((acc, key) => {
-        acc[key] = error.errors[key].message;
-        return acc;
-      }, {}) : error.message
+      errors: error.errors
+        ? Object.keys(error.errors).reduce((acc, key) => {
+            acc[key] = error.errors[key].message;
+            return acc;
+          }, {})
+        : error.message
     });
   }
 };
 
+
 // Update event with full validation
+// controllers/eventController.js
+// controllers/eventController.js
 exports.updateEvent = async (req, res) => {
   try {
-    const { eventDate, startTime, endTime, address, ...rest } = req.body;
-    const updateData = { ...rest };
+    // Create update object with all fields from req.body
+    const updateData = { ...req.body };
 
-    // Validate date if provided
-    if (eventDate) {
-      const dateObj = new Date(eventDate);
-      if (isNaN(dateObj.getTime())) {
-        return res.status(400).json({ message: 'Invalid date format' });
+    // Handle address if it's sent as a string
+    if (typeof updateData.address === 'string') {
+      try {
+        updateData.address = JSON.parse(updateData.address);
+      } catch (e) {
+        console.error('Error parsing address:', e);
+        return res.status(400).json({ message: 'Invalid address format' });
       }
-      updateData.eventDate = dateObj;
     }
 
-    // Validate times if provided
-    if (startTime || endTime) {
-      const event = await Events.findById(req.params.id);
-      if (!event) {
-        return res.status(404).json({ message: 'Event not found' });
-      }
-
-      const currentStart = startTime || event.startTime;
-      const currentEnd = endTime || event.endTime;
-
-      if (!isValidTime(currentStart) || !isValidTime(currentEnd)) {
-        return res.status(400).json({ message: 'Invalid time format (HH:MM)' });
-      }
-
-      if (convertTimeToMinutes(currentStart) >= convertTimeToMinutes(currentEnd)) {
-        return res.status(400).json({ message: 'End time must be after start time' });
-      }
-
-      if (startTime) updateData.startTime = startTime;
-      if (endTime) updateData.endTime = endTime;
-    }
-
-    // Validate address if provided
-    if (address) {
-      if (address.pincode && !/^\d{6}$/.test(address.pincode)) {
-        return res.status(400).json({ message: 'Pincode must be 6 digits' });
-      }
-      updateData.address = address;
-    }
-
-    // Validate phone number if provided
-    if (rest.requesterContact && !/^\d{10}$/.test(rest.requesterContact)) {
-      return res.status(400).json({ message: 'Phone number must be 10 digits' });
+    // Handle uploaded file
+    if (req.file) {
+      updateData.imageUrl = `http://localhost:5000/uploads/${req.file.filename}`; // Store the path to the image
+      console.log('File uploaded:', updateData.imageUrl); // Debug log
     }
 
     const updatedEvent = await Events.findByIdAndUpdate(
       req.params.id,
       updateData,
       { new: true, runValidators: true }
-    ).populate('createdBy', 'username');
-    
+    );
+
     if (!updatedEvent) {
       return res.status(404).json({ message: 'Event not found' });
     }
-    
+
     res.json(updatedEvent);
   } catch (error) {
-    res.status(400).json({ 
-      message: 'Validation failed',
-      errors: error.errors ? Object.keys(error.errors).reduce((acc, key) => {
-        acc[key] = error.errors[key].message;
-        return acc;
-      }, {}) : error.message
+    console.error('Update error:', error);
+    res.status(500).json({
+      message: 'Error updating event',
+      error: error.message
     });
   }
 };

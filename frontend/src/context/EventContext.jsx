@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
-import api from '../services/api';
+import api, { putWithFormData } from '../services/api';
 
 const EventContext = createContext();
 
@@ -69,7 +69,18 @@ export const EventProvider = ({ children }) => {
   const updateEvent = useCallback(async (updatedEvent) => {
     try {
       setLoading(true);
-      const response = await api.put(`/events/${updatedEvent._id}`, updatedEvent);
+      
+      // Remove the wrapping object and send FormData directly
+      const response = await api.put(
+        `/events/${updatedEvent._id}`,
+        updatedEvent.formData, // Send FormData directly
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      
       await fetchEvents({}, pagination.page, pagination.limit);
       setError(null);
       return response.data;
@@ -80,6 +91,7 @@ export const EventProvider = ({ children }) => {
       setLoading(false);
     }
   }, [fetchEvents, pagination.page, pagination.limit]);
+  
 
   // Memoized deleteEvent
   const deleteEvent = useCallback(async (eventId) => {

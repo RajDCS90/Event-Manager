@@ -29,9 +29,6 @@ export default function EventCard({ item, onClick }) {
             </a>
           </div>
         </div>
-        <a href="#" className="text-white underline text-sm mt-1">
-          Register for Event
-        </a>
       </div>
     </div>
   );
