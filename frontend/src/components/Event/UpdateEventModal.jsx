@@ -10,6 +10,13 @@ const UpdateEventModal = ({ event, onClose }) => {
   const [error, setError] = useState("");
   const [eventImage, setEventImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const mandalOptions = [
+    "Mandal 1",
+    "Mandal 2",
+    "Mandal 3",
+    "Mandal 4",
+    "Mandal 5",
+  ];
   const [form, setForm] = useState({
     eventName: "",
     eventType: "",
@@ -102,7 +109,8 @@ const UpdateEventModal = ({ event, onClose }) => {
   };
   useEffect(() => {
     console.log("Selected image:", eventImage);  // Check the image object
-  }, [eventImage])
+    console.log("form", form)
+  }, [eventImage, form])
 
   const removeImage = () => {
     setEventImage(null);
@@ -234,13 +242,19 @@ const UpdateEventModal = ({ event, onClose }) => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Mandal
               </label>
-              <input
-                type="text"
-                name="mandal"
+              <select
+                name="address.mandal"
                 value={form.address.mandal}
                 onChange={handleInputChange}
                 className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+              >
+                <option value="">Select Mandal</option>
+                {mandalOptions.map((mandal, index) => (
+                  <option key={index} value={mandal}>
+                    {mandal}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Time Slots */}

@@ -72,7 +72,7 @@ const EventSchema = new mongoose.Schema({
     village: {
       type: String,
       trim: true,
-      required: true
+      // required: true
     },
     postOffice: {
       type: String,
