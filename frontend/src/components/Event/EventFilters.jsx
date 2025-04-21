@@ -5,6 +5,13 @@ const EventFilters = ({ filters, onFilterChange, onApplyFilters, onResetFilters,
     const { name, value } = e.target;
     onFilterChange(name, value);
   };
+  const mandalOptions = [
+    "Mandal 1",
+    "Mandal 2",
+    "Mandal 3",
+    "Mandal 4",
+    "Mandal 5",
+  ];
   
   return (
     <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
@@ -58,14 +65,20 @@ const EventFilters = ({ filters, onFilterChange, onApplyFilters, onResetFilters,
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Mandal
           </label>
-          <input
+          <select
             type="text"
             name="mandal"
-            value={filters.mandal}
+            value={filters.address?.mandal}
             onChange={handleChange}
-            placeholder="Enter mandal"
             className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
+          >
+            <option value="">Select Mandal</option>
+                {mandalOptions.map((mandal, index) => (
+                  <option key={index} value={mandal}>
+                    {mandal}
+                  </option>
+                ))}
+              </select>
         </div>
 
         <div>

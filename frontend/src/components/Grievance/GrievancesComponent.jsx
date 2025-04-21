@@ -3,6 +3,7 @@ import { Calendar, Clock, MapPin, CheckCircle, XCircle, Clock4, X } from 'lucide
 import { useGrievance } from '../../context/GrievanceContext';
 
 const GrievancesComponent = () => {
+  
   const [activeTab, setActiveTab] = useState('pending');
   const [note, setNote] = useState('');
   const [selectedGrievance, setSelectedGrievance] = useState(null);
@@ -13,6 +14,13 @@ const GrievancesComponent = () => {
   useEffect(() => {
     fetchGrievances();
   }, []);
+  // useEffect(() => {
+  //     fetchEvents();
+  //     fetchGrievances();
+  //   }, []);
+    useEffect(()=>{
+      console.log("grievances",grievances)
+    },[grievances])
 
   const handleNoteSubmit = (e) => {
     e.preventDefault();
