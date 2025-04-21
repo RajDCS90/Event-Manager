@@ -73,46 +73,59 @@ exports.createGrievance = async (req, res) => {
 // Update grievance
 exports.updateGrievance = async (req, res) => {
   try {
-    const { programDate, startTime, endTime, ...rest } = req.body;
-    const updateData = { ...rest };
+    // Create update object with all fields from req.body
+    const updateData = { ...req.body };
 
-    if (programDate) {
-      const dateObj = new Date(programDate);
+    // Parse date if provided
+    if (updateData.programDate) {
+      const dateObj = new Date(updateData.programDate);
       if (isNaN(dateObj.getTime())) {
         return res.status(400).json({ message: 'Invalid date format' });
       }
       updateData.programDate = dateObj;
     }
 
-    if (startTime || endTime) {
+    // Handle start and end time validation
+    if (updateData.startTime || updateData.endTime) {
       const grievance = await Grievance.findById(req.params.id);
-      const currentStart = startTime || grievance.startTime;
-      const currentEnd = endTime || grievance.endTime;
+      if (!grievance) {
+        return res.status(404).json({ message: 'Grievance not found' });
+      }
+
+      const currentStart = updateData.startTime || grievance.startTime;
+      const currentEnd = updateData.endTime || grievance.endTime;
 
       const startMinutes = convertTimeToMinutes(currentStart);
       const endMinutes = convertTimeToMinutes(currentEnd);
-      
+
       if (startMinutes >= endMinutes) {
         return res.status(400).json({ message: 'End time must be after start time' });
       }
+    }
 
-      if (startTime) updateData.startTime = startTime;
-      if (endTime) updateData.endTime = endTime;
+    // Handle uploaded file (if any)
+    if (req.file) {
+      updateData.imageUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+      console.log('File uploaded:', updateData.imageUrl); // Debug log
     }
 
     const updatedGrievance = await Grievance.findByIdAndUpdate(
       req.params.id,
       updateData,
-      { new: true }
+      { new: true, runValidators: true }
     ).populate('createdBy', 'username');
-    
+
     if (!updatedGrievance) {
       return res.status(404).json({ message: 'Grievance not found' });
     }
-    
+
     res.json(updatedGrievance);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('Update error:', error);
+    res.status(500).json({
+      message: 'Error updating grievance',
+      error: error.message
+    });
   }
 };
 

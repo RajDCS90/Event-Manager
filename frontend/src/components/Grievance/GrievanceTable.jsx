@@ -4,14 +4,15 @@ import { useAuth } from '../../context/AuthContext';
 import { Edit, Trash, Calendar, Clock, MapPin, User } from 'lucide-react';
 import StatusBadge from '../common/StatusBadge';
 import { useGrievance } from '../../context/GrievanceContext';
+import GrievanceEditModal from './GrievanceEditModal';
 
 const GrievanceTable = () => {
-  const { grievances, loading, error, updateGrievance, deleteGrievance, fetchGrievances } = useGrievance();
+  const { grievances, loading, error, deleteGrievance, fetchGrievances } = useGrievance();
   const { currentUser } = useAuth();
-  const [filteredGrievances, setFilteredGrievances] = useState(grievances);
-  const [editingId, setEditingId] = useState(null);
-  const [editForm, setEditForm] = useState({});
+
+  const [filteredGrievances, setFilteredGrievances] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedGrievance, setSelectedGrievance] = useState(null);
 
   useEffect(() => {
     if (grievances.length === 0) fetchGrievances();
@@ -38,51 +39,19 @@ const GrievanceTable = () => {
     return `${displayHour}:${minutes} ${period}`;
   };
 
-  const handleEditClick = (grievance) => {
-    setEditingId(grievance._id);
-    setEditForm({
-      grievanceName: grievance.grievanceName,
-      type: grievance.type,
-      applicant: grievance.applicant,
-      programDate: format(new Date(grievance.programDate), 'yyyy-MM-dd'), // ✅ formatted
-      startTime: grievance.startTime,
-      endTime: grievance.endTime,
-      status: grievance.status,
-      description: grievance.description,
-      assignedTo: grievance.assignedTo,
-      resolutionNotes: grievance.resolutionNotes,
-    });
-  };
-
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setEditForm({});
-  };
-
-  const handleSaveEdit = async () => {
-    try {
-      // Validate time fields
-      if (!/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(editForm.startTime) ||
-          !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(editForm.endTime)) {
-        throw new Error('Please enter time in HH:MM format (24-hour)');
-      }
-
-      if (editForm.startTime >= editForm.endTime) {
-        throw new Error('End time must be after start time');
-      }
-
-      const updatedGrievance = { 
-        _id: editingId,
-        ...editForm,
-        updatedAt: new Date().toISOString()
-      };
-      console.log("updatedGrievance",updatedGrievance);
-      await updateGrievance(editingId, updatedGrievance);
-      setEditingId(null);
-      setEditForm({});
-    } catch (error) {
-      console.error('Error updating grievance:', error);
-      alert(error.message || 'Failed to update grievance');
+  const handleSearch = (e) => {
+    const term = e.target.value.toLowerCase();
+    setSearchTerm(term);
+    if (term === '') {
+      setFilteredGrievances(grievances);
+    } else {
+      setFilteredGrievances(
+        grievances.filter((grievance) =>
+          grievance.grievanceName.toLowerCase().includes(term) ||
+          grievance.applicant.toLowerCase().includes(term) ||
+          grievance.assignedTo.toLowerCase().includes(term)
+        )
+      );
     }
   };
 
@@ -94,43 +63,6 @@ const GrievanceTable = () => {
         console.error('Error deleting grievance:', error);
         alert(error.message || 'Failed to delete grievance');
       }
-    }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditForm(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleStatusChange = async (id, newStatus) => {
-    try {
-      const grievanceToUpdate = grievances.find(g => g._id === id);
-      if (!grievanceToUpdate) return;
-
-      const updatedGrievance = { 
-        ...grievanceToUpdate, 
-        status: newStatus,
-        updatedAt: new Date().toISOString()
-      };
-
-      await updateGrievance(updatedGrievance);
-    } catch (error) {
-      console.error('Error updating status:', error);
-      alert(error.message || 'Failed to update status');
-    }
-  };
-
-  const handleSearch = (e) => {
-    const term = e.target.value.toLowerCase();
-    setSearchTerm(term);
-    if (term === '') {
-      setFilteredGrievances(grievances);
-    } else {
-      setFilteredGrievances(grievances.filter(grievance => 
-        grievance.grievanceName.toLowerCase().includes(term) ||
-        grievance.applicant.toLowerCase().includes(term) ||
-        grievance.assignedTo.toLowerCase().includes(term)
-      ));
     }
   };
 
@@ -174,27 +106,13 @@ const GrievanceTable = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Grievance Name
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Type
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Applicant
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Program Date & Time
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Assigned To
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Grievance Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Applicant</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Program Date & Time</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned To</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -207,140 +125,30 @@ const GrievanceTable = () => {
               ) : (
                 filteredGrievances.map((grievance) => (
                   <tr key={grievance._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {editingId === grievance._id ? (
-                        <input
-                          type="text"
-                          name="grievanceName"
-                          value={editForm.grievanceName}
-                          onChange={handleInputChange}
-                          className="border border-gray-300 rounded px-2 py-1 w-full"
-                        />
-                      ) : (
-                        <div className="font-medium text-gray-900">{grievance.grievanceName}</div>
-                      )}
+                    <td className="px-6 py-4">{grievance.grievanceName}</td>
+                    <td className="px-6 py-4 capitalize">{grievance.type}</td>
+                    <td className="px-6 py-4 flex items-center">
+                      <User className="mr-1 text-gray-400" />
+                      {grievance.applicant}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {editingId === grievance._id ? (
-                        <select
-                          name="type"
-                          value={editForm.type}
-                          onChange={handleInputChange}
-                          className="border border-gray-300 rounded px-2 py-1 w-full"
-                        >
-                          <option value="complaint">Complaint</option>
-                          <option value="suggestion">Suggestion</option>
-                          <option value="inquiry">Inquiry</option>
-                        </select>
-                      ) : (
-                        <span className="capitalize">{grievance.type}</span>
-                      )}
+                    <td className="px-6 py-4">
+                      {formatDate(grievance.programDate)} at {formatTime(grievance.startTime)} - {formatTime(grievance.endTime)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {editingId === grievance._id ? (
-                        <input
-                          type="text"
-                          name="applicant"
-                          value={editForm.applicant}
-                          onChange={handleInputChange}
-                          className="border border-gray-300 rounded px-2 py-1 w-full"
-                        />
-                      ) : (
-                        <div className="flex items-center">
-                          <User className="mr-1 text-gray-400" />
-                          {grievance.applicant}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {editingId === grievance._id ? (
-                        <div className="space-y-2">
-                          <div className="flex items-center">
-                            <Calendar className="mr-2 text-gray-400" />
-                            <input
-                              type="date"
-                              name="programDate"
-                              value={editForm.programDate}
-                              onChange={handleInputChange}
-                              className="border border-gray-300 rounded px-2 py-1"
-                            />
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <div className="flex items-center">
-                              <Clock className="mr-2 text-gray-400" />
-                              <input
-                                type="time"
-                                name="startTime"
-                                value={editForm.startTime}
-                                onChange={handleInputChange}
-                                className="border border-gray-300 rounded px-2 py-1"
-                              />
-                            </div>
-                            <div className="flex items-center">
-                              <Clock className="mr-2 text-gray-400" />
-                              <input
-                                type="time"
-                                name="endTime"
-                                value={editForm.endTime}
-                                onChange={handleInputChange}
-                                className="border border-gray-300 rounded px-2 py-1"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div>{formatDate(grievance.programDate)} at {formatTime(grievance.startTime)} - {formatTime(grievance.endTime)}</div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {editingId === grievance._id ? (
-                        <select
-                          name="status"
-                          value={editForm.status}
-                          onChange={handleInputChange}
-                          className="border border-gray-300 rounded px-2 py-1 w-full"
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="resolved">Resolved</option>
-                          <option value="inprogress">In Progress</option>
-                        </select>
-                      ) : (
-                        <StatusBadge status={grievance.status} />
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {editingId === grievance._id ? (
-                        <input
-                          type="text"
-                          name="assignedTo"
-                          value={editForm.assignedTo}
-                          onChange={handleInputChange}
-                          className="border border-gray-300 rounded px-2 py-1 w-full"
-                        />
-                      ) : (
-                        <div>{grievance.assignedTo}</div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                      {editingId === grievance._id ? (
-                        <>
-                          <button onClick={handleSaveEdit} className="text-blue-600 hover:text-blue-900">
-                            Save
-                          </button>
-                          <button onClick={handleCancelEdit} className="text-gray-600 hover:text-gray-900">
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button onClick={() => handleEditClick(grievance)} className="text-green-600 hover:text-green-900">
-                            <Edit className="h-5 w-5" />
-                          </button>
-                          <button onClick={() => handleDelete(grievance._id)} className="text-red-600 hover:text-red-900">
-                            <Trash className="h-5 w-5" />
-                          </button>
-                        </>
-                      )}
+                    <td className="px-6 py-4"><StatusBadge status={grievance.status} /></td>
+                    <td className="px-6 py-4">{grievance.assignedTo}</td>
+                    <td className="px-6 py-4 text-right space-x-2">
+                      <button
+                        onClick={() => setSelectedGrievance(grievance)}
+                        className="text-green-600 hover:text-green-900"
+                      >
+                        <Edit className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(grievance._id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        <Trash className="h-5 w-5" />
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -348,6 +156,20 @@ const GrievanceTable = () => {
             </tbody>
           </table>
         </div>
+      )}
+
+      {selectedGrievance && (
+        <GrievanceEditModal
+        grievance={selectedGrievance}
+        isOpen={!!selectedGrievance}
+        onClose={() => setSelectedGrievance(null)}
+        onSave={(updatedGrievance) => {
+          // Call your update function here (e.g., API call to save it)
+          // Optional: trigger refetchGrievances() after save
+          setSelectedGrievance(null);
+        }}
+      />
+      
       )}
     </div>
   );
