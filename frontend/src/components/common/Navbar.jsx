@@ -39,7 +39,7 @@ const Navbar = () => {
   };
 
   const handleTabClick = (tab) => {
-    if (tab === activeTab && location.pathname.startsWith('/dashboard')) {
+    if (tab === activeTab && location.pathname.startsWith("/dashboard")) {
       toggleMenu({ stopPropagation: () => {} });
       setIsDesktopMenuOpen(false);
       return;
@@ -52,27 +52,27 @@ const Navbar = () => {
     handleTabChange(tab);
 
     // Navigate to the appropriate dashboard route
-    let targetRoute = '/dashboard/';
+    let targetRoute = "/dashboard/";
     switch (tab) {
-      case '':
-        targetRoute += 'home';
+      case "":
+        targetRoute += "home";
         break;
-      case 'events':
-        targetRoute += 'events';
+      case "events":
+        targetRoute += "events";
         break;
-      case 'grievance':
-        targetRoute += 'grievances';
+      case "grievance":
+        targetRoute += "grievances";
         break;
-      case 'partyYouth':
-        targetRoute += 'party-youth';
+      case "partyYouth":
+        targetRoute += "party-youth";
         break;
-      case 'userManagement':
-        targetRoute += 'users';
+      case "userManagement":
+        targetRoute += "users";
         break;
       default:
-        targetRoute += 'home';
+        targetRoute += "home";
     }
-    
+
     navigate(targetRoute);
 
     // Hide loading indicator after a delay
@@ -128,22 +128,28 @@ const Navbar = () => {
       <header className="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <h1 className="text-xl font-bold tracking-tight">
-              <Link to="/dashboard/home" className="hover:text-blue-200 transition">
-                <span className="hidden sm:inline">MLA</span> Sethi
-              </Link>
-            </h1>
+            <Link
+              to="/dashboard/home"
+              className="hover:text-blue-200 transition "
+            >
+              <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-white">
+                Prakash Chandra Sethi
+                <span className="text-xs ml-1 text-gray-300 ">
+                  (MLA Cuttack Sadar)
+                </span>
+              </h1>
+            </Link>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-4">
               {/* Dashboard Link (moved from menu) */}
               <Link
                 to="/dashboard/home"
-                onClick={() => handleTabChange('')}
+                onClick={() => handleTabChange("")}
                 className={`px-4 py-2 ${
-                  location.pathname.includes('/dashboard/home')
-                    ? 'bg-blue-800'
-                    : 'bg-blue-700 hover:bg-blue-800'
+                  location.pathname.includes("/dashboard/home")
+                    ? "bg-blue-800"
+                    : "bg-blue-700 hover:bg-blue-800"
                 } rounded-md text-white font-medium transition-colors`}
               >
                 Dashboard
@@ -153,9 +159,9 @@ const Navbar = () => {
               <Link
                 to="/social-media"
                 className={`px-4 py-2 ${
-                  location.pathname.includes('/social-media')
-                    ? 'bg-blue-800'
-                    : 'bg-blue-700 hover:bg-blue-800'
+                  location.pathname.includes("/social-media")
+                    ? "bg-blue-800"
+                    : "bg-blue-700 hover:bg-blue-800"
                 } rounded-md text-white font-medium transition-colors`}
               >
                 Social Media
@@ -213,11 +219,11 @@ const Navbar = () => {
               {/* Mobile Dashboard Link */}
               <Link
                 to="/dashboard/home"
-                onClick={() => handleTabChange('')}
+                onClick={() => handleTabChange("")}
                 className={`px-3 py-1 ${
-                  location.pathname.includes('/dashboard/home')
-                    ? 'bg-blue-800'
-                    : 'bg-blue-700 hover:bg-blue-800'
+                  location.pathname.includes("/dashboard/home")
+                    ? "bg-blue-800"
+                    : "bg-blue-700 hover:bg-blue-800"
                 } rounded-md text-white text-sm transition-colors`}
               >
                 Dashboard
@@ -227,9 +233,9 @@ const Navbar = () => {
               <Link
                 to="/social-media"
                 className={`px-3 py-1 ${
-                  location.pathname.includes('/social-media')
-                    ? 'bg-blue-800'
-                    : 'bg-blue-700 hover:bg-blue-800'
+                  location.pathname.includes("/social-media")
+                    ? "bg-blue-800"
+                    : "bg-blue-700 hover:bg-blue-800"
                 } rounded-md text-white text-sm transition-colors`}
               >
                 Social Media

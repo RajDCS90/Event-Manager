@@ -63,20 +63,20 @@ const GrievanceForm = ({ onClose }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg w-full max-w-6xl p-4 sm:p-6 shadow-2xl mx-auto overflow-y-auto max-h-screen">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-gray-800">Add New Grievance</h2>
-      </div>
+    <div className="bg-white rounded-lg w-full">
+    <div className="flex justify-between items-center mb-4">
+      <h2 className="text-xl font-semibold text-gray-800">Add New Event</h2>
+    </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <FormInput
-            label="Grievance Name"
-            name="grievanceName"
-            value={formData.grievanceName}
-            onChange={handleChange}
-            required
-          />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <FormInput
+          label="Event Name"
+          name="eventName"
+          value={formData.eventName}
+          onChange={handleChange}
+          required
+        />
           <FormInput
             label="Type"
             name="type"
