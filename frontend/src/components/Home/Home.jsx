@@ -37,6 +37,9 @@ export default function EventsAndGrievancesPage() {
     fetchEvents();
     fetchGrievances();
   }, []);
+  useEffect(()=>{
+    console.log("grievances",grievances)
+  },[grievances])
 
   // Filter items for selected date
   const filteredEvents = events.filter(

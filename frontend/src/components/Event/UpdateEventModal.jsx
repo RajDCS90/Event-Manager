@@ -107,11 +107,6 @@ const UpdateEventModal = ({ event, onClose }) => {
       reader.readAsDataURL(file);
     }
   };
-  useEffect(() => {
-    console.log("Selected image:", eventImage);  // Check the image object
-    console.log("form", form)
-  }, [eventImage, form])
-
   const removeImage = () => {
     setEventImage(null);
     setImagePreview(null);
