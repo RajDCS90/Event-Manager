@@ -13,14 +13,32 @@ const GrievanceTable = () => {
   const [filteredGrievances, setFilteredGrievances] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGrievance, setSelectedGrievance] = useState(null);
+  
+  // Filter states
+  const [statusFilter, setStatusFilter] = useState('');
+  const [mandalFilter, setMandalFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  
+  // Extract unique values for filter dropdowns
+  const statuses = [...new Set(grievances.map(g => g.status))];
+  const mandals = [...new Set(grievances.map(g => g.mandal))];
 
   useEffect(() => {
-    if (grievances.length === 0) fetchGrievances();
-  }, []);
-
+    fetchGrievancesWithFilters();
+  }, [statusFilter, mandalFilter, dateFilter]);
   useEffect(() => {
+    // Initialize filteredGrievances with the full list when grievances change
     setFilteredGrievances(grievances);
   }, [grievances]);
+
+  const fetchGrievancesWithFilters = () => {
+    const filters = {};
+    if (statusFilter) filters.status = statusFilter;
+    if (mandalFilter) filters.mandal = mandalFilter;
+    if (dateFilter) filters.programDate = new Date(dateFilter);
+    
+    fetchGrievances(filters);
+  };
 
   const formatDate = (dateString) => {
     try {
@@ -55,16 +73,42 @@ const GrievanceTable = () => {
     }
   };
 
+  const handleStatusFilterChange = (e) => {
+    setStatusFilter(e.target.value);
+  };
+
+  const handleMandalFilterChange = (e) => {
+    setMandalFilter(e.target.value);
+  };
+
+  const handleDateFilterChange = (e) => {
+    setDateFilter(e.target.value);
+  };
+
+  const resetFilters = () => {
+    setStatusFilter('');
+    setMandalFilter('');
+    setDateFilter('');
+    setSearchTerm('');
+    fetchGrievances(); // Fetch all grievances without filters
+  };
+
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this grievance?')) {
       try {
         await deleteGrievance(id);
+        fetchGrievancesWithFilters(); // Refresh with current filters
       } catch (error) {
         console.error('Error deleting grievance:', error);
         alert(error.message || 'Failed to delete grievance');
       }
     }
   };
+  
+  useEffect(()=>{
+    console.log('filteredGrievances',filteredGrievances);
+  },[filteredGrievances])
+
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -88,6 +132,56 @@ const GrievanceTable = () => {
             </div>
           </div>
         </div>
+        
+        {/* Filter controls */}
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select
+              value={statusFilter}
+              onChange={handleStatusFilterChange}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">All Status</option>
+              {statuses.map(status => (
+                <option key={status} value={status}>{status}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Mandal</label>
+            <select
+              value={mandalFilter}
+              onChange={handleMandalFilterChange}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">All Mandals</option>
+              {mandals.map(mandal => (
+                <option key={mandal} value={mandal}>{mandal}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Program Date</label>
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={handleDateFilterChange}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          
+          <div className="flex items-end">
+            <button
+              onClick={resetFilters}
+              className="w-full py-2 px-4 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md transition duration-150"
+            >
+              Reset Filters
+            </button>
+          </div>
+        </div>
       </div>
 
       {error && (
@@ -108,6 +202,7 @@ const GrievanceTable = () => {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Grievance Name</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mandal</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Applicant</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Program Date & Time</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
@@ -118,7 +213,7 @@ const GrievanceTable = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredGrievances.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan="8" className="px-6 py-4 text-center text-gray-500">
                     No grievances found
                   </td>
                 </tr>
@@ -127,6 +222,7 @@ const GrievanceTable = () => {
                   <tr key={grievance._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">{grievance.grievanceName}</td>
                     <td className="px-6 py-4 capitalize">{grievance.type}</td>
+                    <td className="px-6 py-4 capitalize">{grievance.mandal}</td>
                     <td className="px-6 py-4 flex items-center">
                       <User className="mr-1 text-gray-400" />
                       {grievance.applicant}
@@ -160,16 +256,15 @@ const GrievanceTable = () => {
 
       {selectedGrievance && (
         <GrievanceEditModal
-        grievance={selectedGrievance}
-        isOpen={!!selectedGrievance}
-        onClose={() => setSelectedGrievance(null)}
-        onSave={(updatedGrievance) => {
-          // Call your update function here (e.g., API call to save it)
-          // Optional: trigger refetchGrievances() after save
-          setSelectedGrievance(null);
-        }}
-      />
-      
+          grievance={selectedGrievance}
+          isOpen={!!selectedGrievance}
+          onClose={() => setSelectedGrievance(null)}
+          onSave={(updatedGrievance) => {
+            // Call your update function here (e.g., API call to save it)
+            // Optional: trigger refetchGrievances() after save
+            setSelectedGrievance(null);
+          }}
+        />
       )}
     </div>
   );

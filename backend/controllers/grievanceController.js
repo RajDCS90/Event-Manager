@@ -9,14 +9,25 @@ exports.getAllGrievances = async (req, res) => {
     if (req.query.status) {
       filters.status = req.query.status;
     }
-    if (req.query.type) {
-      filters.type = req.query.type;
+    if (req.query.mandal) {
+      filters.mandal = req.query.mandal;
     }
     if (req.query.programDate) {
-      filters.programDate = new Date(req.query.programDate);
-    }
-    if (req.query.assignedTo) {
-      filters.assignedTo = req.query.assignedTo;
+      // Handle both date string and ISO format
+      const date = new Date(req.query.programDate);
+      if (!isNaN(date.getTime())) {
+        // Filter for the entire day
+        const startOfDay = new Date(date);
+        startOfDay.setUTCHours(0, 0, 0, 0);
+        
+        const endOfDay = new Date(date);
+        endOfDay.setUTCHours(23, 59, 59, 999);
+        
+        filters.programDate = {
+          $gte: startOfDay,
+          $lte: endOfDay
+        };
+      }
     }
 
     // For non-admin users, only show their created grievances

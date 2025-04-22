@@ -14,15 +14,13 @@ export const GrievanceProvider = ({ children }) => {
   const fetchGrievances = async (filters = {}) => {
     try {
       setLoading(true);
-      // Check if token exists in localStorage to ensure user is authenticated
-      // const token = localStorage.getItem('token');
-      // if (!token) {
-      //   // User not authenticated, don't make the API call
-      //   setLoading(false);
-      //   return;
-      // }
+      // Convert date filter to ISO string if it's a Date object
+      const processedFilters = { ...filters };
+      if (processedFilters.programDate instanceof Date) {
+        processedFilters.programDate = processedFilters.programDate.toISOString().split('T')[0];
+      }
       
-      const query = new URLSearchParams(filters).toString();
+      const query = new URLSearchParams(processedFilters).toString();
       const res = await api.get(`/grievances?${query}`);
       setGrievances(res.data);
       setError(null);
