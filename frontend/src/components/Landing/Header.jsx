@@ -23,7 +23,6 @@ export default function Header({
     setIsLoggedIn(!!token); // set to true if token exists
   }, []);
 
-
   const openLoginModal = () => {
     setIsLoginModalOpen(true);
   };
@@ -32,21 +31,23 @@ export default function Header({
     setIsLoginModalOpen(false);
   };
 
+  // Updated menu categories with path information for events and grievances
   const menuCategories = [
-    // {
-    //   title: "ABOUT MLA",
-    //   id: "about",
-    //   items: ["Biography", "BJP Connect", "People's Corner", "Timeline"],
-    // },
     {
       title: "EVENTS",
       id: "events",
-      items: ["Upcoming Events", "Past Events"],
+      items: [
+        { name: "Upcoming Events", path: "/events?tab=upcoming" },
+        { name: "Past Events", path: "/events?tab=past" }
+      ],
     },
     {
       title: "GRIEVANCE",
       id: "grievance",
-      items: ["Upcoming Grievance", "Past Grievance"],
+      items: [
+        { name: "Upcoming Grievance", path: "/grievance?tab=upcoming" },
+        { name: "Past Grievance", path: "/grievance?tab=past" }
+      ],
     },
     {
       title: "CONNECT",
@@ -146,7 +147,7 @@ export default function Header({
           </div>
         </div>
 
-        {/* Dropdown Menu */}
+        {/* Dropdown Menu - Updated to handle different item formats */}
         <div
           id="dropdown-menu"
           className={`bg-cyan-500 w-full transition-all duration-300 ease-in-out overflow-hidden ${isMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
@@ -161,27 +162,46 @@ export default function Header({
                   </h2>
                   <ul className="space-y-2">
                     {category.items.map((item, index) => {
-                      const path = `/${category.id}`;
-                      return item === "Join Us" ? (
-                        <li key={index}>
-                          <button
-                            onClick={() => setShowRegisterForm(true)}
-                            className="text-left py-1 text-white hover:text-cyan-100 transition-colors text-sm"
-                          >
-                            {item}
-                          </button>
-                        </li>
-                      ) : (
-                        <li key={index}>
-                          <Link
-                            to={path}
-                            onClick={() => setIsMenuOpen(false)}
-                            className="block text-left py-1 text-white hover:text-cyan-100 transition-colors text-sm"
-                          >
-                            {item}
-                          </Link>
-                        </li>
-                      );
+                      // Handle items that are strings (for Connect section) vs objects (for Events/Grievance)
+                      if (typeof item === 'string') {
+                        const path = `/${category.id}`;
+                        return item === "Join Us" ? (
+                          <li key={index}>
+                            <button
+                              onClick={() => {
+                                setShowRegisterForm(true);
+                                setIsMenuOpen(false);
+                              }}
+                              className="text-left py-1 text-white hover:text-cyan-100 transition-colors text-sm"
+                            >
+                              {item}
+                            </button>
+                          </li>
+                        ) : (
+                          <li key={index}>
+                            <Link
+                              to={path}
+                              onClick={() => setIsMenuOpen(false)}
+                              className="block text-left py-1 text-white hover:text-cyan-100 transition-colors text-sm"
+                            >
+                              {item}
+                            </Link>
+                          </li>
+                        );
+                      } else {
+                        // For items with path property
+                        return (
+                          <li key={index}>
+                            <Link
+                              to={item.path}
+                              onClick={() => setIsMenuOpen(false)}
+                              className="block text-left py-1 text-white hover:text-cyan-100 transition-colors text-sm"
+                            >
+                              {item.name}
+                            </Link>
+                          </li>
+                        );
+                      }
                     })}
                   </ul>
                 </div>
