@@ -1,43 +1,18 @@
 import { useEffect, useState } from 'react';
-import { Calendar, Clock, MapPin, CheckCircle, XCircle, Clock4, X } from 'lucide-react';
+import { Calendar, Clock, MapPin, CheckCircle, XCircle, Clock4 } from 'lucide-react';
 import { useGrievance } from '../../context/GrievanceContext';
+import GrievanceDetailModal from '../../pages/GrievanceDetailModal';
 
 const GrievancesComponent = () => {
-  
   const [activeTab, setActiveTab] = useState('pending');
-  const [note, setNote] = useState('');
   const [selectedGrievance, setSelectedGrievance] = useState(null);
-  const [noteSubmitted, setNoteSubmitted] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   const { grievances, loading, fetchGrievances } = useGrievance();
 
   useEffect(() => {
     fetchGrievances();
   }, []);
-  // useEffect(() => {
-  //     fetchEvents();
-  //     fetchGrievances();
-  //   }, []);
-    useEffect(()=>{
-      console.log("grievances",grievances)
-    },[grievances])
-
-  const handleNoteSubmit = (e) => {
-    e.preventDefault();
-    if (!note.trim() || !selectedGrievance) return;
-
-    console.log('Note submitted:', {
-      grievanceId: selectedGrievance._id,
-      resolutionNote: note.trim()
-    });
-
-    setNoteSubmitted(true);
-    setTimeout(() => {
-      setNoteSubmitted(false);
-      setNote('');
-      setSelectedGrievance(null);
-    }, 3000);
-  };
 
   const filteredGrievances = grievances.filter(grievance => grievance.status === activeTab);
 
@@ -55,6 +30,11 @@ const GrievancesComponent = () => {
       case 'rejected': return <XCircle className="w-4 h-4 text-red-500" />;
       default: return <Clock4 className="w-4 h-4 text-yellow-500" />;
     }
+  };
+
+  const handleCardClick = (grievance) => {
+    setSelectedGrievance(grievance);
+    setShowDetailModal(true);
   };
 
   return (
@@ -92,7 +72,8 @@ const GrievancesComponent = () => {
             return (
               <div
                 key={grievance._id}
-                className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => handleCardClick(grievance)}
               >
                 <div className="p-4">
                   <div className="flex justify-between items-start mb-2">
@@ -128,15 +109,6 @@ const GrievancesComponent = () => {
                     </div>
                     <span className="text-gray-500">By: {grievance.applicant}</span>
                   </div>
-
-                  {grievance.status === 'resolved' && (
-                    <button
-                      onClick={() => setSelectedGrievance(grievance)}
-                      className="mt-3 w-full py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md text-sm font-medium"
-                    >
-                      View Resolution
-                    </button>
-                  )}
                 </div>
               </div>
             );
@@ -144,55 +116,12 @@ const GrievancesComponent = () => {
         </div>
       )}
 
-      {/* Resolution Notes Modal */}
-      {selectedGrievance && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-md p-6 shadow-xl">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold">Resolution Notes</h3>
-              <button
-                onClick={() => {
-                  setSelectedGrievance(null);
-                  setNote('');
-                }}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="mb-4">
-              <h4 className="font-medium text-gray-800 mb-1">{selectedGrievance.grievanceName}</h4>
-              <p className="text-sm text-gray-600">
-                {new Date(selectedGrievance.programDate).toLocaleDateString()} • {selectedGrievance.mandal}
-              </p>
-              <p className="mt-2 text-gray-700 text-sm">{selectedGrievance.description}</p>
-            </div>
-
-            {noteSubmitted ? (
-              <div className="p-4 bg-green-50 text-green-700 rounded-md text-center">
-                Resolution noted. Thank you!
-              </div>
-            ) : (
-              <form onSubmit={handleNoteSubmit}>
-                <textarea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="Write resolution note..."
-                  className="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows={4}
-                  required
-                />
-                <button
-                  type="submit"
-                  className="mt-4 w-full bg-[#00B8DB] hover:bg-[#6eb7c6] text-white py-2 rounded-md font-medium"
-                >
-                  Submit Note
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
+      {/* Grievance Detail Modal */}
+      {showDetailModal && (
+        <GrievanceDetailModal
+          grievance={selectedGrievance}
+          onClose={() => setShowDetailModal(false)}
+        />
       )}
     </div>
   );

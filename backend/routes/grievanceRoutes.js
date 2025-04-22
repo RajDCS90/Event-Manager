@@ -8,6 +8,7 @@ const {
   deleteGrievance
 } = require('../controllers/grievanceController');
 const { protect } = require('../middlewares/authMiddleware');
+const upload = require('../middlewares/upload');
 
 router.get('/', getAllGrievances);
 // Protect all routes
@@ -17,7 +18,7 @@ router.use(protect);
 router.use(checkTableAccess('grievance'));
 
 router.post('/', createGrievance);
-router.put('/:id', updateGrievance);
-router.delete('/:id', deleteGrievance);
+router.put('/:id',upload.single('image'),  updateGrievance);
+router.delete('/:id',deleteGrievance);
 
 module.exports = router;

@@ -17,6 +17,12 @@ export default function Header({
   setShowRegisterForm,
 }) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token); // set to true if token exists
+  }, []);
+
 
   const openLoginModal = () => {
     setIsLoginModalOpen(true);
@@ -111,12 +117,22 @@ export default function Header({
               >
                 Mera Saansad
               </Link>
-              <button
-                onClick={openLoginModal}
-                className="text-gray-700 hover:text-indigo-700 transition-colors"
-              >
-                Login
-              </button>
+              {isLoggedIn ? (
+                <Link
+                  to="/dashboard"
+                  className="text-gray-700 hover:text-indigo-700 transition-colors"
+                >
+                  Dashboard
+                </Link>
+              ) : (
+                <button
+                  onClick={openLoginModal}
+                  className="text-gray-700 hover:text-indigo-700 transition-colors"
+                >
+                  Login
+                </button>
+              )}
+
             </div>
 
             <div className="flex md:hidden items-center space-x-4">
@@ -133,9 +149,8 @@ export default function Header({
         {/* Dropdown Menu */}
         <div
           id="dropdown-menu"
-          className={`bg-cyan-500 w-full transition-all duration-300 ease-in-out overflow-hidden ${
-            isMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
-          }`}
+          className={`bg-cyan-500 w-full transition-all duration-300 ease-in-out overflow-hidden ${isMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
+            }`}
         >
           <div className="container mx-auto px-4 py-6">
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-6">

@@ -2,13 +2,17 @@ import { MessageSquare } from "lucide-react";
 import SectionHeader from "./SectionHeader";
 import GrievanceCard from "./GrievanceCard";
 import { useGrievance } from "../../context/GrievanceContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import GrievanceDetailModal from "../../pages/GrievanceDetailModal";
+// import GrievanceDetailModal from "./GrievanceDetailModal";
 
 export default function GrievancesSection() {
   const {
     grievances,
     fetchGrievances,
   } = useGrievance();
+
+  const [selectedGrievance, setSelectedGrievance] = useState(null);
 
   useEffect(() => {
     fetchGrievances();
@@ -35,9 +39,21 @@ export default function GrievancesSection() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {upcomingGrievances.map((item, index) => (
-            <GrievanceCard key={index} item={item} />
+            <GrievanceCard 
+              key={index} 
+              item={item}
+              onClick={() => setSelectedGrievance(item)}
+            />
           ))}
         </div>
+
+        {/* Modal */}
+        {selectedGrievance && (
+          <GrievanceDetailModal 
+            grievance={selectedGrievance} 
+            onClose={() => setSelectedGrievance(null)} 
+          />
+        )}
       </div>
     </section>
   );

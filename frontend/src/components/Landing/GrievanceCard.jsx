@@ -1,8 +1,8 @@
 import { UserPlus, Share2 } from "lucide-react";
 
-export default function GrievanceCard({ item }) {
+export default function GrievanceCard({ item , onClick}) {
   return (
-    <div className="group relative overflow-hidden rounded-md shadow-md bg-white hover:shadow-xl transition-all duration-300">
+    <div className="group relative overflow-hidden rounded-md shadow-md bg-white hover:shadow-xl transition-all duration-300" onClick={onClick}>
       <div className="overflow-hidden">
         <img
           src={item.imageUrl || 'https://images.pexels.com/photos/716276/pexels-photo-716276.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'}
