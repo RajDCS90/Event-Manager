@@ -9,8 +9,7 @@ const PartyYouthTable = () => {
     updateMember,
     deleteMember,
   } = usePartyAndYouth();
-
-  const [filteredMembers, setFilteredMembers] = useState([]);
+  const [filteredMembers, setFilteredMembers] = useState([]); // Add back for frontend search
   const [currentUser] = useState({ role: "admin" });
   const [searchTerm, setSearchTerm] = useState("");
   const [mandalFilter, setMandalFilter] = useState("");
@@ -19,36 +18,35 @@ const PartyYouthTable = () => {
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
 
+  // Remove filteredMembers state as we'll use members directly
+  // Remove handleFiltering function as filtering will be done in backend
+
   useEffect(() => {
+    // Initial fetch without filters
     fetchMembers();
   }, []);
 
   useEffect(() => {
-    handleFiltering();
-  }, [members, searchTerm, mandalFilter, designationFilter]);
+    // Debounce the filtering to avoid too many requests
+      fetchMembers({
+        mandal: mandalFilter,
+        designation: designationFilter
+      });
+  }, [ mandalFilter, designationFilter]);
 
-  const handleFiltering = () => {
-    let filtered = [...members];
-
+  // Frontend search
+  useEffect(() => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (m) =>
-          m.name?.toLowerCase().includes(term) ||
-          m.aadharNo?.toLowerCase().includes(term)
+      const filtered = members.filter(m => 
+        m.name?.toLowerCase().includes(term) || 
+        m.aadharNo?.toLowerCase().includes(term)
       );
+      setFilteredMembers(filtered);
+    } else {
+      setFilteredMembers(members);
     }
-
-    if (mandalFilter) {
-      filtered = filtered.filter((m) => m.address?.mandal === mandalFilter);
-    }
-
-    if (designationFilter) {
-      filtered = filtered.filter((m) => m.designation === designationFilter);
-    }
-
-    setFilteredMembers(filtered);
-  };
+  }, [searchTerm, members]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -60,6 +58,8 @@ const PartyYouthTable = () => {
       await updateMember(editingId, editForm);
       setEditingId(null);
       setEditForm({});
+      // Refresh the data after update
+      fetchMembers();
     } catch (error) {
       console.error("Error updating member:", error);
     }
@@ -74,6 +74,8 @@ const PartyYouthTable = () => {
     if (confirm("Are you sure you want to delete this member?")) {
       try {
         await deleteMember(id);
+        // Refresh the data after delete
+        fetchMembers();
       } catch (error) {
         console.error("Error deleting member:", error);
       }
@@ -88,7 +90,10 @@ const PartyYouthTable = () => {
     "Mandal 4",
     "Mandal 5",
   ];
-  const designationOptions = [...new Set(members.map((m) => m.designation))];
+  const designationOptions = [
+    "Member",
+    "Volunteer",
+  ];
 
   return (
     <div className="mt-6">
@@ -111,7 +116,7 @@ const PartyYouthTable = () => {
           onChange={(e) => setMandalFilter(e.target.value)}
           className="p-2 border border-gray-300 rounded w-full"
         >
-          <option value="">Filter by Mandal</option>
+          <option value="">All Mandals</option>
           {mandalOptions.map((mandal, index) => (
             <option key={index} value={mandal}>
               {mandal}
@@ -124,7 +129,7 @@ const PartyYouthTable = () => {
           onChange={(e) => setDesignationFilter(e.target.value)}
           className="p-2 border border-gray-300 rounded w-full"
         >
-          <option value="">Filter by Designation</option>
+          <option value="">All Designations</option>
           {designationOptions.map((designation, index) => (
             <option key={index} value={designation}>
               {designation}
@@ -283,7 +288,7 @@ const PartyYouthTable = () => {
         </table>
       </div>
 
-      {filteredMembers.length === 0 && (
+      {members.length === 0 && (
         <div className="text-center py-4 text-gray-500">No members found</div>
       )}
     </div>

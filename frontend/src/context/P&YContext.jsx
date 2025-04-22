@@ -12,7 +12,17 @@ export const PartyAndYouthProvider = ({ children }) => {
   const fetchMembers = async (filters = {}) => {
     try {
       setLoading(true);
-      const response = await api.get('/party-members');
+      
+      // Convert filters object to query parameters
+      const params = new URLSearchParams();
+      
+      // if (filters.search) params.append('search', filters.search);
+      if (filters.mandal) params.append('mandal', filters.mandal);
+      if (filters.designation) params.append('designation', filters.designation);
+      
+      // Make the API call with query parameters
+      const response = await api.get(`/party-members?${params.toString()}`);
+      
       console.log('Party members response:', response);
       setMembers(response.data);
       setError(null);

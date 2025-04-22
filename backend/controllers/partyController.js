@@ -3,14 +3,25 @@ const PartyAndYouth = require('../models/PartyAndYouth');
 // Get all party members (filtered by query params)
 exports.getAllPartyMembers = async (req, res) => {
   try {
+    const { search, mandal, designation } = req.query;
     const filters = {};
     
-    // Updated: Apply nested field filter
-    if (req.query.mandal) {
-      filters['address.mandal'] = req.query.mandal;
+    // Text search (name or aadharNo)
+    if (search) {
+      filters.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { aadharNo: { $regex: search, $options: 'i' } }
+      ];
     }
-    if (req.query.designation) {
-      filters.designation = req.query.designation;
+
+    // Mandal filter (nested field)
+    if (mandal) {
+      filters['address.mandal'] = mandal;
+    }
+
+    // Designation filter
+    if (designation) {
+      filters.designation = designation;
     }
 
     const members = await PartyAndYouth.find(filters);

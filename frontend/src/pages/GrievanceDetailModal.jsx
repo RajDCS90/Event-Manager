@@ -1,4 +1,5 @@
 import { Calendar, MapPin, Clock, User, X, ChevronLeft, MessageSquare } from 'lucide-react';
+import { useEffect } from 'react';
 
 export default function GrievanceDetailModal({ grievance, onClose }) {
   if (!grievance) return null;
@@ -14,7 +15,9 @@ export default function GrievanceDetailModal({ grievance, onClose }) {
     imageUrl,
     grievanceType,
   } = grievance;
-
+  useEffect(()=>{
+    console.log("imh",grievance);
+  },[grievance])
   const formattedDate = new Date(programDate).toLocaleDateString(undefined, {
     weekday: 'long',
     year: 'numeric',

@@ -75,7 +75,7 @@ const PartyYouthForm = ({ onClose }) => {
   return (
     <div className="bg-white rounded-lg w-full">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-gray-800">Add New Event</h2>
+        <h2 className="text-xl font-semibold text-gray-800">Add Party Youth</h2>
       </div>
   
       <form onSubmit={handleSubmit} className="space-y-4">
