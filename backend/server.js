@@ -12,6 +12,7 @@ dotenv.config();
 const userRoutes = require('./routes/userRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const grievanceRoutes = require('./routes/grievanceRoutes');
+const socialMedia = require('./routes/socialMediaRoutes');
 const partyRoutes = require('./routes/partyRoutes');
 const uploadDir = require('./utils/fileUpload');
 
@@ -33,6 +34,7 @@ console.log('Static files served from:', uploadDir);
 app.use('/api/auth', userRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/grievances', grievanceRoutes);
+app.use('/api/social-media', socialMedia);
 app.use('/api/party-members', partyRoutes);
 
 // Test route

@@ -29,16 +29,16 @@ const Modal = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="relative bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4 md:p-6">
+      <div className="relative bg-white rounded-lg w-full max-w-full sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-5xl max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
-          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 p-2"
+          className="sticky top-3 float-right text-gray-500 hover:text-gray-700 p-2 z-10 bg-white/80 rounded-full"
           aria-label="Close"
         >
           <X size={24} />
         </button>
-        <div className="pt-8 px-4 pb-4">
+        <div className="px-4 sm:px-6 lg:px-8 py-6">
           {children}
         </div>
       </div>
@@ -74,7 +74,7 @@ const Dashboard = () => {
       {activeTab === "events" &&
         currentUser?.assignedTables?.includes("event") && (
           <>
-            <div className="bg-gray-100 p-3 md:p-4 rounded-lg mb-4">
+            <div className="bg-gray-100 p-3 md:p-4  rounded-lg mb-4">
               <UpcomingEvents />
             </div>
 

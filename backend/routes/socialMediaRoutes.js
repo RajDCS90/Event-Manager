@@ -6,7 +6,7 @@ const { checkAdmin, protect } = require('../middlewares/authMiddleware');
 
 router.use(protect);
 // Only essential routes
-router.post('/upload', checkAdmin, socialMediaController.createAndPostContent);
+router.post('/post', checkAdmin, socialMediaController.createAndPostContent);
 router.get('/recent', checkAdmin, socialMediaController.getRecentPosts);
 
 module.exports = router;

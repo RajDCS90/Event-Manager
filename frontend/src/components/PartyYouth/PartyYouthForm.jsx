@@ -73,21 +73,19 @@ const PartyYouthForm = ({ onClose }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg w-full max-w-6xl p-4 sm:p-6 shadow-2xl mx-auto overflow-y-auto max-h-screen">
+    <div className="bg-white rounded-lg w-full">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-gray-800">Add Party/Youth Member</h2>
+        <h2 className="text-xl font-semibold text-gray-800">Add New Event</h2>
       </div>
-
+  
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <FormInput
-            label="Aadhar Number"
-            name="aadharNo"
-            value={formData.aadharNo}
+            label="Event Name"
+            name="eventName"
+            value={formData.eventName}
             onChange={handleChange}
             required
-            type="number"
-            maxLength="12"
           />
           <FormInput
             label="Name"

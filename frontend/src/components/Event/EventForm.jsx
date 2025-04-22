@@ -103,13 +103,13 @@ const EventForm = ({ onClose }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg w-full max-w-6xl p-4 sm:p-6 shadow-2xl mx-auto overflow-y-auto max-h-screen">
+    <div className="bg-white rounded-lg w-full">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-gray-800">Add New Event</h2>
       </div>
-  
+
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <FormInput
             label="Event Name"
             name="eventName"
@@ -197,7 +197,7 @@ const EventForm = ({ onClose }) => {
             required
           />
         </div>
-  
+
         <FormInput
           label="Event Description"
           name="description"
@@ -206,7 +206,7 @@ const EventForm = ({ onClose }) => {
           type="textarea"
           required
         />
-  
+
         <div className="border-t pt-4">
           <h3 className="text-md font-medium text-gray-800 mb-3">
             Event Address
@@ -253,7 +253,7 @@ const EventForm = ({ onClose }) => {
             />
           </div>
         </div>
-  
+
         <div className="flex justify-end gap-2 pt-4">
           <button
             type="button"
@@ -264,7 +264,7 @@ const EventForm = ({ onClose }) => {
           </button>
           <button
             type="submit"
-            className="bg-blue-600 text-white px-4 py-1.5 rounded-md hover:bg-blue-700 disabled:opapost office-50"
+            className="bg-blue-600 text-white px-4 py-1.5 rounded-md hover:bg-blue-700 disabled:opacity-50"
             disabled={loading}
           >
             {loading ? "Submitting..." : "Add Event"}
@@ -273,7 +273,6 @@ const EventForm = ({ onClose }) => {
       </form>
     </div>
   );
-  
 };
 
 export default EventForm;
