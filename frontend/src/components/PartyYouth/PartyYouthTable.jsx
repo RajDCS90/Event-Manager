@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Edit, Trash, Phone, MessageSquare } from "lucide-react";
 import { usePartyAndYouth } from "../../context/P&YContext";
+import axios from "axios";
 
 const PartyYouthTable = () => {
   const {
@@ -31,7 +32,10 @@ const PartyYouthTable = () => {
   const [messageModal, setMessageModal] = useState({
     isOpen: false,
     phoneNumbers: [],
-    message: ""
+    message: "",
+    sending: false,
+    error: null,
+    success: false
   });
 
   useEffect(() => {
@@ -48,8 +52,8 @@ const PartyYouthTable = () => {
   useEffect(() => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      const filtered = members.filter(m => 
-        m.name?.toLowerCase().includes(term) || 
+      const filtered = members.filter(m =>
+        m.name?.toLowerCase().includes(term) ||
         m.aadharNo?.toLowerCase().includes(term)
       );
       setFilteredMembers(filtered);
@@ -94,20 +98,34 @@ const PartyYouthTable = () => {
   const openBulkMessageModal = () => {
     const phoneNumbers = filteredMembers
       .filter(member => member.whatsappNo)
-      .map(member => member.whatsappNo);
-    
+      .map(member => ({
+        phone: member.whatsappNo,
+        name: member.name
+      }));
+
+    if (phoneNumbers.length === 0) {
+      alert("No members with WhatsApp numbers in the current filter");
+      return;
+    }
+
     setMessageModal({
       isOpen: true,
       phoneNumbers,
-      message: ""
+      message: "",
+      sending: false,
+      error: null,
+      success: false
     });
   };
 
-  const openIndividualMessageModal = (phoneNumber) => {
+  const openIndividualMessageModal = (phoneNumber, name) => {
     setMessageModal({
       isOpen: true,
-      phoneNumbers: [phoneNumber],
-      message: ""
+      phoneNumbers: [{ phone: phoneNumber, name }],
+      message: "",
+      sending: false,
+      error: null,
+      success: false
     });
   };
 
@@ -115,37 +133,57 @@ const PartyYouthTable = () => {
     setMessageModal({
       isOpen: false,
       phoneNumbers: [],
-      message: ""
+      message: "",
+      sending: false,
+      error: null,
+      success: false
     });
   };
 
   const handleMessageChange = (e) => {
     setMessageModal(prev => ({
       ...prev,
-      message: e.target.value
+      message: e.target.value,
+      error: null,
+      success: false
     }));
   };
 
-  const sendWhatsAppMessages = () => {
-    const { phoneNumbers, message } = messageModal;
-    if (!message.trim()) {
-      alert("Please enter a message");
+  const sendWhatsAppMessages = async () => {
+    if (!messageModal.message.trim()) {
+      setMessageModal(prev => ({ ...prev, error: "Please enter a message" }));
       return;
     }
-
-    // For demo, we'll just log the messages
-    // In a real app, you would integrate with WhatsApp API
-    phoneNumbers.forEach(phone => {
-      const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-      console.log("Would send to:", phone, "Message:", message);
-      console.log("WhatsApp URL:", whatsappUrl);
+  
+    try {
+      setMessageModal(prev => ({ ...prev, sending: true, error: null }));
       
-      // Uncomment to actually open WhatsApp
-      // window.open(whatsappUrl, '_blank');
-    });
-
-    alert(`Message prepared for ${phoneNumbers.length} recipient(s). In a real app, this would send the messages.`);
-    closeMessageModal();
+      // Call the new backend API endpoint
+      const response = await axios.post('http://localhost:5000/api/whatsapp/send-custom-messages', {
+        phoneNumbers: messageModal.phoneNumbers.map(p => p.phone),
+        message: messageModal.message
+      });
+      console.log('reees',response)
+  
+      setMessageModal(prev => ({
+        ...prev,
+        sending: false,
+        success: true,
+        error: null
+      }));
+      
+      setTimeout(() => {
+        closeMessageModal();
+      }, 2000);
+    } catch (error) {
+      console.error('Error sending WhatsApp messages:', error);
+      setMessageModal(prev => ({
+        ...prev,
+        sending: false,
+        success: false,
+        error: error.response?.data?.message || "Failed to send messages"
+      }));
+    }
   };
 
   const mandalOptions = [
@@ -216,10 +254,10 @@ const PartyYouthTable = () => {
               <th className="py-3 px-4 text-left text-sm font-semibold">
                 <div className="flex items-center">
                   <span>Actions</span>
-                  <button 
+                  <button
                     onClick={openBulkMessageModal}
                     className="ml-2 p-1 rounded-full bg-green-100 text-green-600 hover:bg-green-200"
-                    title="Send message to all filtered members"
+                    title="Send WhatsApp message to all filtered members"
                   >
                     <WhatsAppIcon size={16} />
                   </button>
@@ -356,7 +394,7 @@ const PartyYouthTable = () => {
                               <Phone size={16} />
                             </a>
                             <button
-                              onClick={() => openIndividualMessageModal(member.whatsappNo)}
+                              onClick={() => openIndividualMessageModal(member.whatsappNo, member.name)}
                               className="text-green-600 hover:text-green-800"
                               title="Send WhatsApp message"
                             >
@@ -383,27 +421,56 @@ const PartyYouthTable = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold mb-4">
-              Send WhatsApp Message ({messageModal.phoneNumbers.length} recipients)
+              {messageModal.phoneNumbers.length > 1
+                ? `Send WhatsApp Message to ${messageModal.phoneNumbers.length} recipients`
+                : `Send WhatsApp Message to ${messageModal.phoneNumbers[0]?.name || 'recipient'}`}
             </h3>
+
+            {messageModal.error && (
+              <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">
+                {messageModal.error}
+              </div>
+            )}
+
+            {messageModal.success && (
+              <div className="mb-4 p-2 bg-green-100 text-green-700 rounded">
+                Messages sent successfully!
+              </div>
+            )}
+
             <textarea
               value={messageModal.message}
               onChange={handleMessageChange}
               className="w-full p-3 border border-gray-300 rounded mb-4"
               rows={5}
               placeholder="Type your message here..."
+              disabled={messageModal.sending}
             />
+
             <div className="flex justify-end space-x-3">
               <button
                 onClick={closeMessageModal}
                 className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                disabled={messageModal.sending}
               >
                 Cancel
               </button>
               <button
                 onClick={sendWhatsAppMessages}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center"
+                disabled={messageModal.sending}
               >
-                Send Message
+                {messageModal.sending ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Sending...
+                  </>
+                ) : (
+                  `Send ${messageModal.phoneNumbers.length > 1 ? `(${messageModal.phoneNumbers.length})` : ''}`
+                )}
               </button>
             </div>
           </div>

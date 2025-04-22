@@ -117,4 +117,52 @@ const sendMorningReminders = async (req, res) => {
   }
 };
 
-module.exports = { sendMorningReminders };
+// Add this new function to your existing controller
+const sendCustomMessages = async (req, res) => {
+  try {
+    const { phoneNumbers, message } = req.body;
+    
+    if (!phoneNumbers || !phoneNumbers.length) {
+      return res.status(400).json({ success: false, message: 'No phone numbers provided' });
+    }
+    
+    if (!message || !message.trim()) {
+      return res.status(400).json({ success: false, message: 'Message cannot be empty' });
+    }
+
+    const results = {
+      success: [],
+      failures: []
+    };
+
+    // Send to each number
+    for (const phone of phoneNumbers) {
+      try {
+        await sendWhatsAppMessage(phone, message);
+        results.success.push(phone);
+      } catch (error) {
+        results.failures.push({
+          phone,
+          error: error.message
+        });
+      }
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'WhatsApp messages sent', 
+      stats: {
+        total: phoneNumbers.length,
+        sent: results.success.length,
+        failed: results.failures.length
+      },
+      failures: results.failures
+    });
+  } catch (error) {
+    console.error('Error sending custom WhatsApp messages:', error);
+    res.status(500).json({ success: false, message: 'Error sending messages', error: error.message });
+  }
+};
+
+// Update your exports to include the new function
+module.exports = { sendMorningReminders, sendWhatsAppMessage, sendCustomMessages };

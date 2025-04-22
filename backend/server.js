@@ -14,6 +14,7 @@ const eventRoutes = require('./routes/eventRoutes');
 const grievanceRoutes = require('./routes/grievanceRoutes');
 const socialMedia = require('./routes/socialMediaRoutes');
 const partyRoutes = require('./routes/partyRoutes');
+const reminderRoutes = require('./routes/reminderRoutes')
 const uploadDir = require('./utils/fileUpload');
 
 const app = express();
@@ -36,6 +37,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/grievances', grievanceRoutes);
 app.use('/api/social-media', socialMedia);
 app.use('/api/party-members', partyRoutes);
+app.use('/api/whatsapp',reminderRoutes)
 
 // Test route
 app.get('/', (req, res) => {
