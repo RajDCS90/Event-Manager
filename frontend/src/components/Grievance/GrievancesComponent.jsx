@@ -14,13 +14,6 @@ const GrievancesComponent = () => {
   useEffect(() => {
     fetchGrievances();
   }, []);
-  // useEffect(() => {
-  //     fetchEvents();
-  //     fetchGrievances();
-  //   }, []);
-    useEffect(()=>{
-      console.log("grievances",grievances)
-    },[grievances])
 
   const handleNoteSubmit = (e) => {
     e.preventDefault();
