@@ -52,8 +52,12 @@ async function postToFacebook(post) {
     
     let result;
     if (post.mediaType === 'image') {
+      // Get the local file path
+      const localFilePath = post.mediaUrl.replace('http://localhost:5000/', '');
+      
+      // Use the file stream instead of URL
       result = await FB.api(`/${pageId}/photos`, 'POST', {
-        url: post.mediaUrl,
+        source: fs.createReadStream(localFilePath),
         caption: `${post.title}\n\n${post.description}`
       });
     } else {
@@ -106,32 +110,186 @@ async function postToTwitter(post) {
   }
 }
 
-// Post to Instagram
 async function postToInstagram(post) {
   try {
-    const ig = new IgApiClient();
-    ig.state.generateDevice(process.env.INSTAGRAM_USERNAME);
+    const instagramAccountId = process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID;
+    const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
     
-    await ig.account.login(process.env.INSTAGRAM_USERNAME, process.env.INSTAGRAM_PASSWORD);
+    // Get the local file path
+    const localFilePath = post.mediaUrl.replace('http://localhost:5000/', '');
     
-    let result;
     if (post.mediaType === 'image') {
-      result = await ig.publish.photo({
-        file: fs.readFileSync(post.mediaUrl.replace('http://localhost:5000/', '')),
-        caption: `${post.title}\n\n${post.description}`
-      });
-    } else {
-      result = await ig.publish.video({
-        video: fs.readFileSync(post.mediaUrl.replace('http://localhost:5000/', '')),
-        coverImage: fs.readFileSync('uploads/thumbnail.jpg'), // You need a thumbnail for videos
-        caption: `${post.title}\n\n${post.description}`
-      });
+      // For images, use the container approach with a URL
+      // Instead of creating FormData, we'll use a direct URL approach
+      
+      // First upload the image to Facebook's servers
+      const buffer = fs.readFileSync(localFilePath);
+      const base64Image = buffer.toString('base64');
+      
+      // Create container with base64 image data
+      const createMediaResponse = await axios.post(
+        `https://graph.facebook.com/v18.0/${instagramAccountId}/media`,
+        {
+          image_url: `data:image/jpeg;base64,${base64Image}`,
+          caption: `${post.title}\n\n${post.description}`,
+          access_token: accessToken
+        }
+      );
+      
+      const mediaContainerId = createMediaResponse.data.id;
+      
+      // Publish the media
+      const publishResponse = await axios.post(
+        `https://graph.facebook.com/v18.0/${instagramAccountId}/media_publish`,
+        {
+          creation_id: mediaContainerId,
+          access_token: accessToken
+        }
+      );
+      
+      return {
+        success: true,
+        postId: publishResponse.data.id
+      };
+    } else if (post.mediaType === 'video') {
+      // For videos, we'll use a URL-based approach
+      const express = require('express');
+      const app = express();
+      const port = 3001; // Choose an available port
+      
+      // Serve the uploads directory
+      app.use('/temp-media', express.static(path.dirname(localFilePath)));
+      
+      // Start server
+      const server = app.listen(port);
+      
+      try {
+        // Get the public URL (this assumes your server is accessible from the internet)
+        // You might need to use a service like ngrok to expose your local server
+        const publicUrl = `http://your-public-ip:${port}/temp-media/${path.basename(localFilePath)}`;
+        
+        // Create container for video
+        const createMediaResponse = await axios.post(
+          `https://graph.facebook.com/v18.0/${instagramAccountId}/media`,
+          {
+            media_type: 'VIDEO',
+            video_url: publicUrl,
+            caption: `${post.title}\n\n${post.description}`,
+            access_token: accessToken
+          }
+        );
+        
+        const mediaContainerId = createMediaResponse.data.id;
+        
+        // Poll until container is ready
+        let isReady = false;
+        let retryCount = 0;
+        const maxRetries = 30; // Max retries (about 1 minute with 2-second intervals)
+        
+        while (!isReady && retryCount < maxRetries) {
+          const statusResponse = await axios.get(
+            `https://graph.facebook.com/v18.0/${mediaContainerId}`,
+            {
+              params: {
+                fields: 'status_code',
+                access_token: accessToken
+              }
+            }
+          );
+          
+          if (statusResponse.data.status_code === 'FINISHED') {
+            isReady = true;
+          } else if (['ERROR', 'EXPIRED'].includes(statusResponse.data.status_code)) {
+            throw new Error(`Video processing failed: ${statusResponse.data.status_code}`);
+          } else {
+            retryCount++;
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        }
+        
+        if (!isReady) {
+          throw new Error('Video processing timed out');
+        }
+        
+        // Publish the media
+        const publishResponse = await axios.post(
+          `https://graph.facebook.com/v18.0/${instagramAccountId}/media_publish`,
+          {
+            creation_id: mediaContainerId,
+            access_token: accessToken
+          }
+        );
+        
+        return {
+          success: true,
+          postId: publishResponse.data.id
+        };
+      } finally {
+        // Always close the temporary server
+        server.close();
+      }
     }
-    
-    return { success: true, postId: result.media.id };
   } catch (error) {
-    console.error('Instagram posting error:', error);
-    return { success: false, error: error.message };
+    console.error('Instagram Graph API error:', error.response?.data || error);
+    return {
+      success: false,
+      error: error.response?.data?.error?.message || error.message
+    };
+  }
+}
+
+// OPTION 3: If you don't want to expose your server, use a base64 approach for smaller images
+async function postToInstagramWithBase64(post) {
+  try {
+    const instagramAccountId = process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID;
+    const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
+    
+    // Get the local file path
+    const localFilePath = post.mediaUrl.replace('http://localhost:5000/', '');
+    
+    if (post.mediaType === 'image') {
+      // Convert image to base64
+      const imageBuffer = fs.readFileSync(localFilePath);
+      const base64Image = imageBuffer.toString('base64');
+      
+      // Create container with base64 image data
+      const createMediaResponse = await axios.post(
+        `https://graph.facebook.com/v18.0/${instagramAccountId}/media`,
+        {
+          image_url: `data:image/jpeg;base64,${base64Image}`,
+          caption: `${post.title}\n\n${post.description}`,
+          access_token: accessToken
+        }
+      );
+      
+      const mediaContainerId = createMediaResponse.data.id;
+      
+      // Publish the media
+      const publishResponse = await axios.post(
+        `https://graph.facebook.com/v18.0/${instagramAccountId}/media_publish`,
+        {
+          creation_id: mediaContainerId,
+          access_token: accessToken
+        }
+      );
+      
+      return {
+        success: true,
+        postId: publishResponse.data.id
+      };
+    } else {
+      // For videos, base64 is not recommended due to size limitations
+      return {
+        success: false,
+        error: "Base64 encoding not supported for videos due to size constraints"
+      };
+    }
+  } catch (error) {
+    console.error('Instagram Graph API error:', error.response?.data || error);
+    return {
+      success: false,
+      error: error.response?.data?.error?.message || error.message
+    };
   }
 }
 
