@@ -238,57 +238,66 @@ async function postToInstagram(post) {
   }
 }
 
-// OPTION 3: If you don't want to expose your server, use a base64 approach for smaller images
-async function postToInstagramWithBase64(post) {
+async function postToYoutube(post) {
   try {
-    const instagramAccountId = process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID;
-    const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
-    
+    // Set up OAuth2 client
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.YOUTUBE_CLIENT_ID,
+      process.env.YOUTUBE_CLIENT_SECRET,
+      process.env.YOUTUBE_REDIRECT_URI
+    );
+
+    // Set credentials
+    oauth2Client.setCredentials({
+      refresh_token: process.env.YOUTUBE_REFRESH_TOKEN
+    });
+
+    const youtube = google.youtube({
+      version: 'v3',
+      auth: oauth2Client
+    });
+
+    // Only allow video uploads for YouTube
+    if (post.mediaType !== 'video') {
+      throw new Error('Only video uploads are supported for YouTube');
+    }
+
     // Get the local file path
     const localFilePath = post.mediaUrl.replace('http://localhost:5000/', '');
+
+    // Set up video metadata
+    const videoMetadata = {
+      part: 'snippet,status',
+      requestBody: {
+        snippet: {
+          title: post.title,
+          description: post.description,
+          tags: post.tags || [],
+          categoryId: '22' // People & Blogs category, change as needed
+        },
+        status: {
+          privacyStatus: 'private' // or 'unlisted', 'private'
+        }
+      },
+      media: {
+        body: fs.createReadStream(localFilePath)
+      }
+    };
+
+    // Upload the video
+    const response = await youtube.videos.insert(videoMetadata);
     
-    if (post.mediaType === 'image') {
-      // Convert image to base64
-      const imageBuffer = fs.readFileSync(localFilePath);
-      const base64Image = imageBuffer.toString('base64');
-      
-      // Create container with base64 image data
-      const createMediaResponse = await axios.post(
-        `https://graph.facebook.com/v18.0/${instagramAccountId}/media`,
-        {
-          image_url: `data:image/jpeg;base64,${base64Image}`,
-          caption: `${post.title}\n\n${post.description}`,
-          access_token: accessToken
-        }
-      );
-      
-      const mediaContainerId = createMediaResponse.data.id;
-      
-      // Publish the media
-      const publishResponse = await axios.post(
-        `https://graph.facebook.com/v18.0/${instagramAccountId}/media_publish`,
-        {
-          creation_id: mediaContainerId,
-          access_token: accessToken
-        }
-      );
-      
-      return {
-        success: true,
-        postId: publishResponse.data.id
-      };
-    } else {
-      // For videos, base64 is not recommended due to size limitations
-      return {
-        success: false,
-        error: "Base64 encoding not supported for videos due to size constraints"
-      };
-    }
+    return {
+      success: true,
+      postId: response.data.id,
+      videoUrl: `https://www.youtube.com/watch?v=${response.data.id}`
+    };
+
   } catch (error) {
-    console.error('Instagram Graph API error:', error.response?.data || error);
+    console.error('YouTube posting error:', error);
     return {
       success: false,
-      error: error.response?.data?.error?.message || error.message
+      error: error.message || 'An error occurred during YouTube upload'
     };
   }
 }
@@ -305,7 +314,7 @@ exports.createAndPostContent = async (req, res) => {
         return res.status(400).json({ success: false, message: 'Please upload a media file' });
       }
 
-      const { title, description, platforms } = req.body;
+      const { title, description, platforms, tags } = req.body;
       
       if (!title || !description || !platforms) {
         return res.status(400).json({ success: false, message: 'Please provide title, description, and platforms' });
@@ -326,6 +335,7 @@ exports.createAndPostContent = async (req, res) => {
         mediaType: req.fileType,
         mediaUrl,
         platforms: parsedPlatforms,
+        tags: tags ? JSON.parse(tags) : [],
         createdBy: req.user._id
       });
 
@@ -345,13 +355,25 @@ exports.createAndPostContent = async (req, res) => {
           case 'instagram':
             result = await postToInstagram(post);
             break;
+          case 'youtube':
+            // Only allow video uploads for YouTube
+            if (post.mediaType !== 'video') {
+              result = {
+                success: false,
+                error: 'Only video uploads are supported for YouTube'
+              };
+            } else {
+              result = await postToYoutube(post);
+            }
+            break;
         }
 
         // Update post status
         post.postStatus[platform] = {
           posted: result.success,
           postId: result.success ? result.postId : undefined,
-          errorMessage: result.success ? undefined : result.error
+          errorMessage: result.success ? undefined : result.error,
+          videoUrl: (platform === 'youtube' && result.success) ? result.videoUrl : undefined
         };
       }
 
@@ -372,7 +394,6 @@ exports.createAndPostContent = async (req, res) => {
     });
   }
 };
-
 // Get recent posts (for confirmation only)
 exports.getRecentPosts = async (req, res) => {
   try {
