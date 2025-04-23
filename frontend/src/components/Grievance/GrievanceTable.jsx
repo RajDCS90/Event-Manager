@@ -6,7 +6,7 @@ import StatusBadge from '../common/StatusBadge';
 import { useGrievance } from '../../context/GrievanceContext';
 import GrievanceEditModal from './GrievanceEditModal';
 
-const GrievanceTable = () => {
+const GrievanceTable = ({ skipInitialFetch = false }) => {
   const { grievances, loading, error, deleteGrievance, fetchGrievances } = useGrievance();
   const { currentUser } = useAuth();
 
@@ -24,8 +24,10 @@ const GrievanceTable = () => {
   const mandals = [...new Set(grievances.map(g => g.mandal))];
 
   useEffect(() => {
+    if (!skipInitialFetch) {
     fetchGrievancesWithFilters();
-  }, [statusFilter, mandalFilter, dateFilter]);
+    }
+  }, [statusFilter, mandalFilter, dateFilter,skipInitialFetch]);
   useEffect(() => {
     // Initialize filteredGrievances with the full list when grievances change
     setFilteredGrievances(grievances);
