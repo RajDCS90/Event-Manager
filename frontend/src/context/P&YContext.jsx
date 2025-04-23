@@ -16,7 +16,7 @@ export const PartyAndYouthProvider = ({ children }) => {
       // Convert filters object to query parameters
       const params = new URLSearchParams();
       
-      // if (filters.search) params.append('search', filters.search);
+      // if ( filters.search) params.append('search', filters.search);
       if (filters.mandal) params.append('mandal', filters.mandal);
       if (filters.designation) params.append('designation', filters.designation);
       
@@ -43,9 +43,12 @@ export const PartyAndYouthProvider = ({ children }) => {
       const response = await api.post('/party-members', memberData);
       setMembers(prev => [...prev, response.data]);
       setError(null);
+      notify('Member created successfully!', 'success');
       return response.data;
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to register member');
+      const errorMessage = err.response?.data?.message || 'Failed to create member';
+      setError(errorMessage);
+      notify(errorMessage, 'error');
       throw err;
     } finally {
       setLoading(false);
@@ -63,9 +66,12 @@ export const PartyAndYouthProvider = ({ children }) => {
         )
       );
       setError(null);
+      notify('Member updated successfully!', 'success');
       return response.data;
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update member');
+      const errorMessage = err.response?.data?.message || 'Failed to update member';
+      setError(errorMessage);
+      notify(errorMessage, 'error');
       throw err;
     } finally {
       setLoading(false);
@@ -79,8 +85,11 @@ export const PartyAndYouthProvider = ({ children }) => {
       await api.delete(`/party-members/${memberId}`);
       setMembers(prev => prev.filter(member => member._id !== memberId));
       setError(null);
+      notify('Member deleted successfully!', 'success');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to delete member');
+      const errorMessage = err.response?.data?.message || 'Failed to delete member';
+      setError(errorMessage);
+      notify(errorMessage, 'error');
       throw err;
     } finally {
       setLoading(false);

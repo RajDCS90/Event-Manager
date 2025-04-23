@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import api, { putWithFormData } from '../services/api';
+import { useToast } from './ToastContext';
 
 const EventContext = createContext();
 
@@ -13,6 +14,7 @@ export const EventProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { notify } = useToast(); // Get the notify function from ToastContext
 
   // Memoized fetchEvents with useCallback
   const fetchEvents = useCallback(async (filters = {}, page = 1, limit = 100) => {
@@ -56,9 +58,12 @@ export const EventProvider = ({ children }) => {
       const response = await api.post('/events', eventData);
       await fetchEvents({}, pagination.page, pagination.limit);
       setError(null);
+      notify('Event created successfully!', 'success');
       return response.data;
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create event');
+      const errorMessage = err.response?.data?.message || 'Failed to create event';
+      setError(errorMessage);
+      notify(errorMessage, 'error');
       throw err;
     } finally {
       setLoading(false);
@@ -83,9 +88,12 @@ export const EventProvider = ({ children }) => {
       
       await fetchEvents({}, pagination.page, pagination.limit);
       setError(null);
+      notify('Event updated successfully!', 'success');
       return response.data;
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update event');
+      const errorMessage = err.response?.data?.message || 'Failed to update event';
+      setError(errorMessage);
+      notify(errorMessage, 'error');
       throw err;
     } finally {
       setLoading(false);
@@ -100,8 +108,11 @@ export const EventProvider = ({ children }) => {
       await api.delete(`/events/${eventId}`);
       await fetchEvents({}, pagination.page, pagination.limit);
       setError(null);
+      notify('Event deleted successfully!', 'success');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to delete event');
+      const errorMessage = err.response?.data?.message || 'Failed to delete event';
+      setError(errorMessage);
+      notify(errorMessage, 'error');
       throw err;
     } finally {
       setLoading(false);

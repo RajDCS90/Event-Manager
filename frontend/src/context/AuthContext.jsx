@@ -8,6 +8,7 @@ import {
   updateUser,
   deleteUser,
 } from '../services/api';
+import { useToast } from './ToastContext';
 
 // Create Context
 const AuthContext = createContext(null);
@@ -21,6 +22,8 @@ export const AuthProvider = ({ children }) => {
   const [activeTab, setActiveTab] = useState(''); // Added activeTab state
   const navigate = useNavigate();
   const location = useLocation();
+  const { notify } = useToast(); // Get the notify function from ToastContext
+
 
   // Set active tab based on current URL path
   useEffect(() => {
@@ -131,10 +134,13 @@ export const AuthProvider = ({ children }) => {
       }
       
       navigate('/dashboard/home');
+      notify('User logged in successfully!', 'success');
       return userWithoutToken;
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
-      throw err;
+      const errorMessage = err.response?.data?.message || 'Login Failed';
+      setError(errorMessage);
+      console.log("error",error)
+      notify(errorMessage, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -144,6 +150,7 @@ export const AuthProvider = ({ children }) => {
   const logout = useCallback(() => {
     clearAuthData();
     navigate('/');
+    notify('User logged out successfully!', 'success');
   }, [navigate]);
 
   // Set active tab function
@@ -187,10 +194,8 @@ export const AuthProvider = ({ children }) => {
         setCurrentUser(updatedUser);
         localStorage.setItem('user', JSON.stringify(updatedUser));
       }
-      
       return updatedUser;
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update user');
       throw err;
     }
   };
@@ -205,7 +210,6 @@ export const AuthProvider = ({ children }) => {
         logout();
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to delete user');
       throw err;
     }
   };

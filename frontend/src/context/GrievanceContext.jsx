@@ -1,6 +1,7 @@
 // src/context/GrievanceContext.jsx
 import { createContext, useContext, useEffect, useState } from 'react';
 import api from '../services/api';
+import { useToast } from './ToastContext';
 
 const GrievanceContext = createContext();
 
@@ -10,7 +11,8 @@ export const GrievanceProvider = ({ children }) => {
   const [grievances, setGrievances] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const { notify } = useToast(); // Get the notify function from ToastContext
+  
   const fetchGrievances = async (filters = {}) => {
     try {
       setLoading(true);
@@ -38,10 +40,12 @@ export const GrievanceProvider = ({ children }) => {
       const res = await api.post('/grievances', data);
       setGrievances(prev => [...prev, res.data]);
       setError(null);
+      notify('Grievance created successfully!', 'success');
       return res.data;
     } catch (err) {
-      console.error('Failed to add grievance:', err);
-      setError(err.response?.data?.message || 'Failed to add grievance');
+      const errorMessage = err.response?.data?.message || 'Failed to create grievance';
+      setError(errorMessage);
+      notify(errorMessage, 'error');
       throw err;
     } finally {
       setLoading(false);
@@ -56,10 +60,12 @@ export const GrievanceProvider = ({ children }) => {
         prev.map(g => (g._id === id ? res.data : g))
       );
       setError(null);
+      notify('Grievance updated successfully!', 'success');
       return res.data;
     } catch (err) {
-      console.error('Failed to update grievance:', err);
-      setError(err.response?.data?.message || 'Failed to update grievance');
+      const errorMessage = err.response?.data?.message || 'Failed to update grievance';
+      setError(errorMessage);
+      notify(errorMessage, 'error');
       throw err;
     } finally {
       setLoading(false);
@@ -72,9 +78,11 @@ export const GrievanceProvider = ({ children }) => {
       await api.delete(`/grievances/${id}`);
       setGrievances(prev => prev.filter(g => g._id !== id));
       setError(null);
+      notify('Grievance deleted successfully!', 'success');
     } catch (err) {
-      console.error('Failed to delete grievance:', err);
-      setError(err.response?.data?.message || 'Failed to delete grievance');
+      const errorMessage = err.response?.data?.message || 'Failed to delete grievance';
+      setError(errorMessage);
+      notify(errorMessage, 'error');
       throw err;
     } finally {
       setLoading(false);
