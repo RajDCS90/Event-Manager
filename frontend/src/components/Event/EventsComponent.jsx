@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Calendar, Clock, MapPin, CheckCircle, XCircle, Clock4, X, Image as ImageIcon } from 'lucide-react';
 import { useEvents } from '../../context/EventContext';
 import { motion } from 'framer-motion';
+import EventDetail from '../../pages/EventDetail';
 
 const EventsComponent = ({ defaultTab }) => {
   const [activeTab, setActiveTab] = useState(defaultTab || 'upcoming');
   const [feedback, setFeedback] = useState('');
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
 
   const { events, loading, fetchEvents } = useEvents();
@@ -100,10 +102,15 @@ const EventsComponent = ({ defaultTab }) => {
     visible: { opacity: 1, y: 0 }
   };
 
+  const handleCardClick = (event) => {
+    setSelectedEvent(event);
+    setShowDetailModal(true);
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-4">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-        <motion.h2 
+        <motion.h2
           className="text-2xl font-bold text-gray-800 mb-4 md:mb-0"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -111,7 +118,7 @@ const EventsComponent = ({ defaultTab }) => {
         >
           Events
         </motion.h2>
-        <motion.div 
+        <motion.div
           className="flex space-x-2"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -119,21 +126,19 @@ const EventsComponent = ({ defaultTab }) => {
         >
           <button
             onClick={() => setActiveTab('upcoming')}
-            className={`px-6 py-2 rounded-full transition-all duration-300 font-medium ${
-              activeTab === 'upcoming' 
-                ? 'bg-[#00B8DB] text-white shadow-md' 
+            className={`px-6 py-2 rounded-full transition-all duration-300 font-medium ${activeTab === 'upcoming'
+                ? 'bg-[#00B8DB] text-white shadow-md'
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
+              }`}
           >
             Upcoming Events
           </button>
           <button
             onClick={() => setActiveTab('past')}
-            className={`px-6 py-2 rounded-full transition-all duration-300 font-medium ${
-              activeTab === 'past' 
-                ? 'bg-[#00B8DB] text-white shadow-md' 
+            className={`px-6 py-2 rounded-full transition-all duration-300 font-medium ${activeTab === 'past'
+                ? 'bg-[#00B8DB] text-white shadow-md'
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
+              }`}
           >
             Past Events
           </button>
@@ -145,7 +150,7 @@ const EventsComponent = ({ defaultTab }) => {
           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#00B8DB]"></div>
         </div>
       ) : filteredEvents.length === 0 ? (
-        <motion.div 
+        <motion.div
           className="text-center py-16 bg-gray-50 rounded-lg border border-gray-100 shadow-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -171,10 +176,11 @@ const EventsComponent = ({ defaultTab }) => {
                 transition={{ duration: 0.4, delay: index * 0.1 }}
                 whileHover={{ y: -5, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
                 className="rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 bg-white border border-gray-100"
+                onClick={() => handleCardClick(event)}
               >
                 <div className="relative h-48 overflow-hidden">
-                  <img 
-                    src={imageUrl} 
+                  <img
+                    src={imageUrl}
                     alt={event.eventName}
                     className="w-full h-full object-cover transition-all duration-500 hover:scale-110"
                   />
@@ -235,13 +241,13 @@ const EventsComponent = ({ defaultTab }) => {
 
       {/* Feedback Modal */}
       {selectedEvent && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
         >
-          <motion.div 
+          <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
@@ -275,7 +281,7 @@ const EventsComponent = ({ defaultTab }) => {
             </div>
 
             {feedbackSubmitted ? (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="p-6 bg-green-50 text-green-700 rounded-lg text-center"
@@ -306,6 +312,13 @@ const EventsComponent = ({ defaultTab }) => {
           </motion.div>
         </motion.div>
       )}
+
+      {showDetailModal && (
+              <EventDetail
+                event={selectedEvent}
+                onClose={() => setShowDetailModal(false)}
+              />
+            )}
     </div>
   );
 };
