@@ -193,10 +193,12 @@ const PartyYouthTable = () => {
     "Mandal 4",
     "Mandal 5",
   ];
-  const designationOptions = [
-    "Member",
-    "Volunteer",
-  ];
+  // const designationOptions = [
+  //   "Member",
+  //   "Volunteer",
+  // ];
+  const designationOptions = [...new Set(members.map(g => g.designation))];
+
 
   return (
     <div className="mt-6">
