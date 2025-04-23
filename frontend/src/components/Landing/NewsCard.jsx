@@ -29,9 +29,9 @@ export default function NewsCard({ item }) {
             </a>
           </div>
         </div>
-        <a href="#" className="text-white underline text-sm mt-1 hover:text-blue-200 transition-colors duration-300">
-          Read More
-        </a>
+        <p href="#" className="text-white  text-sm mt-1 hover:text-blue-200 transition-colors duration-300">
+          {item.type}
+        </p>
       </div>
     </div>
   );
