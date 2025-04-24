@@ -41,7 +41,7 @@ const Login = ({ isOpen, onClose }) => {
       await login(formData);
       onClose(); // Close modal on successful login
     } catch (err) {
-      // Error is already handled in AuthProvider
+      console.log(err)
     }
   };
 

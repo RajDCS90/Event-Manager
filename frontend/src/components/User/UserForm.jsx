@@ -3,9 +3,12 @@ import { useState } from 'react';
 import { createUser } from '../../services/api';
 import FormInput from '../common/FormInput';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 const UserForm = ({ onUserCreated }) => {
   const { currentUser } = useAuth();
+    const { notify } = useToast(); // Get the notify function from ToastContext
+  
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -57,8 +60,11 @@ const UserForm = ({ onUserCreated }) => {
       if (onUserCreated) onUserCreated(); // 👈 trigger table refresh
       // Reset success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000);
+      notify('User updated successfully!', 'success');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create user');
+      const errorMessage = err.response?.data?.message || 'Failed to update user';
+      setError(errorMessage);
+      notify(errorMessage, 'error');
     } finally {
       setIsSubmitting(false);
     }

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { getUsers, deleteUser, updateUser, updateUserPassword } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 const UserTable = ({ refresh }) => {
+  const { notify } = useToast(); // Get the notify function from ToastContext 
   const { currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
@@ -61,8 +63,11 @@ const UserTable = ({ refresh }) => {
         const updated = users.filter((user) => user._id !== id);
         setUsers(updated);
         setFilteredUsers(updated);
+        notify('User deleted successfully!', 'success');
       } catch (err) {
-        setError(err.response?.data?.message || 'Failed to delete user');
+        const errorMessage = err.response?.data?.message || 'Failed to delete User';
+      setError(errorMessage);
+      notify(errorMessage, 'error');
       }
     }
   };
@@ -111,20 +116,25 @@ const UserTable = ({ refresh }) => {
       setUsers(updatedList);
       setFilteredUsers(updatedList);
       setEditUserId(null);
+      notify('User updated successfully!', 'success');
     } catch (err) {
-      alert(err.response?.data?.message || 'Update failed');
+      const errorMessage = err.response?.data?.message || 'Failed to update user';
+      setError(errorMessage);
+      notify(errorMessage, 'error');
     }
   };
 
   const handlePasswordSubmit = async (userId) => {
     try {
       const res = await updateUserPassword(userId, newPassword);
-      console.log('res of changepas',res)
+      console.log('res of changepas', res)
       setEditingPasswordUserId(null);
       setNewPassword('');
-      alert('Password updated successfully');
+      notify('User password updated successfully!', 'success');
     } catch (err) {
-      alert(err.response?.data?.message || 'Password update failed');
+      const errorMessage = err.response?.data?.message || 'Failed to update user password';
+      setError(errorMessage);
+      notify(errorMessage, 'error');
     }
   };
 
