@@ -22,9 +22,13 @@ const SocialMediaPostSchema = new mongoose.Schema({
   },
   platforms: [{
     type: String,
-    enum: ['facebook', 'twitter', 'instagram'],
+    enum: ['facebook', 'twitter', 'instagram', 'youtube'], // Added YouTube to allowed platforms
     required: true
   }],
+  tags: {
+    type: [String], // Added tags array for YouTube videos
+    default: []
+  },
   postStatus: {
     facebook: {
       posted: { type: Boolean, default: false },
@@ -40,15 +44,19 @@ const SocialMediaPostSchema = new mongoose.Schema({
       posted: { type: Boolean, default: false },
       postId: String,
       errorMessage: String
+    },
+    youtube: { // Added YouTube status
+      posted: { type: Boolean, default: false },
+      postId: String,
+      videoUrl: String, // YouTube video URL
+      errorMessage: String
     }
   },
-
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   }
 }, { timestamps: true });
-
 
 module.exports = mongoose.model('SocialMediaPost', SocialMediaPostSchema);

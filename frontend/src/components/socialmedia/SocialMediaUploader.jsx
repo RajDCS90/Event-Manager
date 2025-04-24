@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Upload, X, Image, Video, File, Facebook, Instagram, Twitter, FileText } from 'lucide-react';
+import { Upload, X, Image, Video, File, Facebook, Instagram, Twitter, Youtube, FileText } from 'lucide-react';
 import { useSocialMedia } from '../../context/SocialMediaContext';
 
 const SocialMediaUploader = () => {
@@ -8,6 +8,7 @@ const SocialMediaUploader = () => {
     { id: 'facebook', name: 'Facebook', icon: <Facebook className="w-4 h-4 mr-2" /> },
     { id: 'instagram', name: 'Instagram', icon: <Instagram className="w-4 h-4 mr-2" /> },
     { id: 'twitter', name: 'Twitter', icon: <Twitter className="w-4 h-4 mr-2" /> },
+    { id: 'youtube', name: 'YouTube', icon: <Youtube className="w-4 h-4 mr-2" /> }, // Added YouTube
   ];
 
   // Get context functions and state
@@ -19,9 +20,11 @@ const SocialMediaUploader = () => {
   const [description, setDescription] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
+  const [tags, setTags] = useState(''); // Added for YouTube tags
+  const [showTagsInput, setShowTagsInput] = useState(false); // To control tags input visibility
   const fileInputRef = useRef(null);
 
-  // Handle file selection
+  // Handle file change
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
@@ -49,11 +52,14 @@ const SocialMediaUploader = () => {
 
   // Handle platform selection
   const togglePlatform = (platformId) => {
-    setSelectedPlatforms(prev => 
-      prev.includes(platformId)
-        ? prev.filter(id => id !== platformId)
-        : [...prev, platformId]
-    );
+    const newSelectedPlatforms = selectedPlatforms.includes(platformId)
+      ? selectedPlatforms.filter(id => id !== platformId)
+      : [...selectedPlatforms, platformId];
+    
+    setSelectedPlatforms(newSelectedPlatforms);
+    
+    // Show tags input if YouTube is selected, hide otherwise
+    setShowTagsInput(newSelectedPlatforms.includes('youtube'));
   };
 
   // Remove a selected file
@@ -86,8 +92,21 @@ const SocialMediaUploader = () => {
       setTitle('');
       setDescription('');
       setSelectedPlatforms([]);
+      setTags('');
+      setShowTagsInput(false);
     }
   }, [successMessage]);
+
+  // Show warning if YouTube is selected but no video file is selected
+  const youtubeWithoutVideo = () => {
+    if (selectedPlatforms.includes('youtube')) {
+      const hasVideo = selectedMedia.some(media => media.type && media.type.startsWith('video/'));
+      if (!hasVideo) {
+        return true;
+      }
+    }
+    return false;
+  };
 
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -101,6 +120,17 @@ const SocialMediaUploader = () => {
         media: selectedMedia,
         platforms: selectedPlatforms
       };
+      
+      // Add tags for YouTube if provided
+      if (tags && selectedPlatforms.includes('youtube')) {
+        // Split tags by comma and trim whitespace
+        const tagArray = tags
+          .split(',')
+          .map(tag => tag.trim())
+          .filter(tag => tag.length > 0);
+          
+        postData.tags = tagArray;
+      }
       
       await createPost(postData);
     } catch (err) {
@@ -172,6 +202,13 @@ const SocialMediaUploader = () => {
             />
           </div>
           
+          {/* YouTube Warning */}
+          {selectedPlatforms.includes('youtube') && (
+            <div className="mt-2 p-2 bg-yellow-100 text-yellow-800 rounded-md text-sm">
+              <p>Note: YouTube only supports video uploads. Please select a video file to post to YouTube.</p>
+            </div>
+          )}
+          
           {/* Preview Section */}
           {previewUrls.length > 0 && (
             <div className="mt-4">
@@ -237,6 +274,21 @@ const SocialMediaUploader = () => {
             rows={4}
           />
         </div>
+
+        {/* YouTube Tags Section - Only show when YouTube is selected */}
+        {showTagsInput && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-2 text-gray-700">YouTube Tags</h3>
+            <input
+              type="text"
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              placeholder="Add tags for your YouTube video (comma separated)..."
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <p className="text-xs text-gray-500 mt-1">Example: social media, marketing, tutorial</p>
+          </div>
+        )}
 
         {/* Platform Selection Section */}
         <div className="mb-6">
