@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Edit, Trash, Phone, MessageSquare } from "lucide-react";
 import { usePartyAndYouth } from "../../context/P&YContext";
 import axios from "axios";
+import MandalManagementModal from "./MandalManagementModal";
 
 const PartyYouthTable = () => {
   const {
@@ -10,6 +11,7 @@ const PartyYouthTable = () => {
     updateMember,
     deleteMember,
   } = usePartyAndYouth();
+  const [isMandalModalOpen, setIsMandalModalOpen] = useState(false);
   const [filteredMembers, setFilteredMembers] = useState([]);
   const [currentUser] = useState({ role: "admin" });
   const [searchTerm, setSearchTerm] = useState("");
@@ -154,24 +156,24 @@ const PartyYouthTable = () => {
       setMessageModal(prev => ({ ...prev, error: "Please enter a message" }));
       return;
     }
-  
+
     try {
       setMessageModal(prev => ({ ...prev, sending: true, error: null }));
-      
+
       // Call the new backend API endpoint
       const response = await axios.post('http://localhost:5000/api/whatsapp/send-custom-messages', {
         phoneNumbers: messageModal.phoneNumbers.map(p => p.phone),
         message: messageModal.message
       });
-      console.log('reees',response)
-  
+      console.log('reees', response)
+
       setMessageModal(prev => ({
         ...prev,
         sending: false,
         success: true,
         error: null
       }));
-      
+
       setTimeout(() => {
         closeMessageModal();
       }, 2000);
@@ -202,9 +204,20 @@ const PartyYouthTable = () => {
 
   return (
     <div className="mt-6">
-      <h2 className="text-xl font-semibold mb-4">
-        Party & Youth Affair Records
-      </h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold mb-4">
+          Party & Youth Affair Records
+        </h2>
+        <button
+          onClick={() => setIsMandalModalOpen(true)}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+          </svg>
+          Mandal Management
+        </button>
+      </div>
 
       {/* Filters */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -478,6 +491,13 @@ const PartyYouthTable = () => {
           </div>
         </div>
       )}
+
+      {/* {isMandalModalOpen && (
+        <MandalManagementModal
+          isOpen={isMandalModalOpen}
+          onClose={() => setIsMandalModalOpen(false)}
+        />
+      )} */}
     </div>
   );
 };

@@ -35,7 +35,9 @@ export const AuthProvider = ({ children }) => {
       setActiveTab('partyYouth');
     } else if (location.pathname.includes('/dashboard/users')) {
       setActiveTab('userManagement');
-    } else if (location.pathname.includes('/dashboard/home')) {
+    } else if (location.pathname.includes('/dashboard/mandals')) {
+      setActiveTab('mandalManagement');
+    } else if (location.pathname.includes('/dashboard/mandal')) {
       setActiveTab('');
     }
   }, [location.pathname]);
@@ -131,6 +133,8 @@ export const AuthProvider = ({ children }) => {
         setActiveTab('partyYouth');
       } else if (userWithoutToken.role === 'admin') {
         setActiveTab('userManagement');
+      } else if (userWithoutToken.role === 'admin') {
+        setActiveTab('mandalManagement');
       }
       
       navigate('/dashboard/home');

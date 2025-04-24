@@ -52,6 +52,16 @@ const DesktopMenu = ({ menuRef, currentUser, activeTab, handleTabClick }) => {
             User Management
           </button>
         )}
+        {currentUser?.role === 'admin' && (
+          <button
+            className={`w-full text-left block px-4 py-2 text-sm ${
+              activeTab === 'mandalManagement' ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
+            }`}
+            onClick={() => handleTabClick('mandalManagement')}
+          >
+            Mandal Management
+          </button>
+        )}
       </div>
     </div>
   );
