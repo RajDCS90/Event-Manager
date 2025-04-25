@@ -159,7 +159,7 @@ const SocialMediaUploader = () => {
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">Social Media Content Uploader</h2>
+      <h2 className="text-3xl text-center font-bold mb-6 text-black-500">Social Media Content Uploader</h2>
       
       {/* Success Message */}
       {successMessage && (
@@ -186,7 +186,7 @@ const SocialMediaUploader = () => {
         <div className="mb-6">
           <h3 className="text-lg font-semibold mb-3 text-gray-700">Upload Media</h3>
           <div 
-            className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors"
+            className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-orange-500 transition-colors"
             onClick={triggerFileInput}
           >
             <Upload className="mx-auto w-8 h-8 text-gray-400 mb-2" />
@@ -259,7 +259,7 @@ const SocialMediaUploader = () => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Add a title for your post..."
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-300"
           />
         </div>
 
@@ -270,7 +270,7 @@ const SocialMediaUploader = () => {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Add a description for your post..."
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-300 focus:border-transparent"
             rows={4}
           />
         </div>
@@ -341,7 +341,7 @@ const SocialMediaUploader = () => {
         <button
           type="submit"
           disabled={selectedMedia.length === 0 || selectedPlatforms.length === 0 || loading}
-          className={`w-full py-3 px-4 rounded-md text-white font-medium ${selectedMedia.length === 0 || selectedPlatforms.length === 0 || loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} transition-colors`}
+          className={`w-full py-3 px-4 rounded-md text-white font-medium ${selectedMedia.length === 0 || selectedPlatforms.length === 0 || loading ? 'bg-orange-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} transition-colors`}
         >
           {loading ? (
             <span className="flex items-center justify-center">

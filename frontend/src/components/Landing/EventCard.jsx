@@ -15,7 +15,7 @@ export default function EventCard({ item, onClick }) {
         <h3 className="font-medium">{item.title}</h3>
       </div>
       {/* Overlay that slides up 20% on hover */}
-      <div className="absolute bottom-0 left-0 right-0 bg-orange-700 text-white p-4 transform translate-y-full group-hover:translate-y-[6%] transition-transform duration-300 flex flex-col">
+      <div className="absolute bottom-0 left-0 right-0 bg-orange-700 text-white p-4 transform translate-y-full group-hover:translate-y-[0%] transition-transform duration-300 flex flex-col">
         <div className="flex justify-between items-center mb-2">
           <p className="text-sm">
             {item.date} - {item.location}

@@ -228,7 +228,7 @@ export default function RegistrationForm({ setShowRegisterForm }) {
           <div>
             <button
               type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded font-medium transition-all duration-300 hover:shadow-lg"
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded font-medium transition-all duration-300 hover:shadow-lg"
             >
               Register Member
             </button>

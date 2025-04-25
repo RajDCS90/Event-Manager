@@ -1,4 +1,4 @@
-import { Download } from "lucide-react";
+import { CalendarDays, Download } from "lucide-react";
 import SectionHeader from "./SectionHeader";
 import NewsCard from "./NewsCard";
 import { useEvents } from "../../context/EventContext";
@@ -85,9 +85,9 @@ export default function NewsSection() {
     <section className="py-12 bg-white">
       <div className="container mx-auto px-4">
         <SectionHeader 
-          icon={<Download size={20} className="text-white" />} 
+          icon={<CalendarDays size={20} className="text-white" />} 
           title="Past Events & Grievances" 
-          bgColor="bg-teal-500"
+          bgColor="bg-orange-500"
         />
 
         {pastItems.length > 0 ? (

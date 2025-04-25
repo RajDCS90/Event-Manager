@@ -95,8 +95,8 @@ const CustomCalendar = ({ selectedDate, setSelectedDate, events, grievances }) =
             key={index}
             className={`
               relative h-10 flex items-center justify-center text-sm rounded-md
-              ${!day.day ? 'text-gray-300' : 'cursor-pointer hover:bg-gray-100'}
-              ${day.date === formatDate(selectedDate) ? 'bg-blue-100 text-blue-600 font-bold' : ''}
+              ${!day.day ? 'text-gray-300' : 'cursor-pointer hover:bg-orange-100'}
+              ${day.date === formatDate(selectedDate) ? 'bg-orange-100 text-orange-800 font-bold' : ''}
               transition-all duration-200
             `}
             onClick={() => day.day && setSelectedDate(new Date(day.date))}
