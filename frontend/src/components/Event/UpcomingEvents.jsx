@@ -135,7 +135,7 @@ const UpcomingEvents = () => {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="p-4 bg-gray-50 rounded-xl"
+      className="p-4  rounded-xl"
     >
       <div className="flex justify-between items-center mb-4">
         <motion.h2 
