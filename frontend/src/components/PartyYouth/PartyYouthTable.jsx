@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { Edit, Trash, Phone, MessageSquare } from "lucide-react";
+import { Edit, Trash, Phone, MessageSquare, Check } from "lucide-react";
 import { usePartyAndYouth } from "../../context/P&YContext";
 import axios from "axios";
-import MandalManagementModal from "./MandalManagementModal";
 
 const PartyYouthTable = () => {
   const {
@@ -10,13 +9,17 @@ const PartyYouthTable = () => {
     fetchMembers,
     updateMember,
     deleteMember,
+    reactivateMember
   } = usePartyAndYouth();
-  const [isMandalModalOpen, setIsMandalModalOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState(""); // "active" | "inactive" | ""
   const [filteredMembers, setFilteredMembers] = useState([]);
   const [currentUser] = useState({ role: "admin" });
   const [searchTerm, setSearchTerm] = useState("");
   const [mandalFilter, setMandalFilter] = useState("");
   const [designationFilter, setDesignationFilter] = useState("");
+  const [selectedMembers, setSelectedMembers] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+
   const WhatsAppIcon = ({ size = 16, className = "" }) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -47,9 +50,11 @@ const PartyYouthTable = () => {
   useEffect(() => {
     fetchMembers({
       mandal: mandalFilter,
-      designation: designationFilter
+      designation: designationFilter,
+      status: statusFilter
     });
-  }, [mandalFilter, designationFilter]);
+  }, [mandalFilter, designationFilter, statusFilter]);
+
 
   useEffect(() => {
     if (searchTerm) {
@@ -62,7 +67,20 @@ const PartyYouthTable = () => {
     } else {
       setFilteredMembers(members);
     }
+    // Reset select all when members change
+    setSelectAll(false);
+    setSelectedMembers([]);
   }, [searchTerm, members]);
+
+  // Handle select all checkbox
+  useEffect(() => {
+    if (selectAll) {
+      const selectableMembers = filteredMembers.filter(member => member.whatsappNo);
+      setSelectedMembers(selectableMembers.map(member => member._id));
+    } else {
+      setSelectedMembers([]);
+    }
+  }, [selectAll, filteredMembers]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -96,17 +114,31 @@ const PartyYouthTable = () => {
     }
   };
 
+  // Toggle selection for a single member
+  const toggleMemberSelection = (memberId, hasWhatsApp) => {
+    if (!hasWhatsApp) return;
+
+    setSelectedMembers(prev =>
+      prev.includes(memberId)
+        ? prev.filter(id => id !== memberId)
+        : [...prev, memberId]
+    );
+  };
+
   // WhatsApp message functions
   const openBulkMessageModal = () => {
-    const phoneNumbers = filteredMembers
-      .filter(member => member.whatsappNo)
-      .map(member => ({
-        phone: member.whatsappNo,
-        name: member.name
-      }));
+    // Use selected members if any, otherwise use all filtered members with WhatsApp numbers
+    const membersToUse = selectedMembers.length > 0
+      ? filteredMembers.filter(member => selectedMembers.includes(member._id) && member.whatsappNo)
+      : filteredMembers.filter(member => member.whatsappNo);
+
+    const phoneNumbers = membersToUse.map(member => ({
+      phone: member.whatsappNo,
+      name: member.name
+    }));
 
     if (phoneNumbers.length === 0) {
-      alert("No members with WhatsApp numbers in the current filter");
+      alert("No members with WhatsApp numbers selected");
       return;
     }
 
@@ -195,10 +227,6 @@ const PartyYouthTable = () => {
     "Mandal 4",
     "Mandal 5",
   ];
-  // const designationOptions = [
-  //   "Member",
-  //   "Volunteer",
-  // ];
   const designationOptions = [...new Set(members.map(g => g.designation))];
 
 
@@ -208,15 +236,15 @@ const PartyYouthTable = () => {
         <h2 className="text-xl font-semibold mb-4">
           Party & Youth Affair Records
         </h2>
-        <button
-          onClick={() => setIsMandalModalOpen(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-          </svg>
-          Mandal Management
-        </button>
+        {selectedMembers.length > 0 && (
+          <button
+            onClick={openBulkMessageModal}
+            className="flex items-center bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          >
+            <WhatsAppIcon className="mr-2" />
+            Send to {selectedMembers.length} selected
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -243,6 +271,17 @@ const PartyYouthTable = () => {
         </select>
 
         <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="p-2 border border-gray-300 rounded w-full"
+        >
+          <option value="">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+
+
+        <select
           value={designationFilter}
           onChange={(e) => setDesignationFilter(e.target.value)}
           className="p-2 border border-gray-300 rounded w-full"
@@ -261,6 +300,15 @@ const PartyYouthTable = () => {
         <table className="min-w-full table-auto">
           <thead className="bg-gray-100">
             <tr>
+              <th className="py-3 px-4 text-left text-sm font-semibold">
+                <input
+                  type="checkbox"
+                  checked={selectAll}
+                  onChange={(e) => setSelectAll(e.target.checked)}
+                  className="mr-2"
+                />
+                Select
+              </th>
               <th className="py-3 px-4 text-left text-sm font-semibold">Aadhar No</th>
               <th className="py-3 px-4 text-left text-sm font-semibold">Name</th>
               <th className="py-3 px-4 text-left text-sm font-semibold">WhatsApp No</th>
@@ -281,148 +329,164 @@ const PartyYouthTable = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredMembers.map((member) => (
-              <tr key={member._id} className="border-b hover:bg-gray-50">
-                <td className="py-3 px-4 text-sm">
-                  {editingId === member._id ? (
-                    <input
-                      name="aadharNo"
-                      value={editForm.aadharNo || ""}
-                      onChange={handleInputChange}
-                      className="p-1 border rounded w-full"
-                    />
-                  ) : (
-                    member.aadharNo || "-"
-                  )}
-                </td>
-                <td className="py-3 px-4 text-sm">
-                  {editingId === member._id ? (
-                    <input
-                      name="name"
-                      value={editForm.name || ""}
-                      onChange={handleInputChange}
-                      className="p-1 border rounded w-full"
-                    />
-                  ) : (
-                    member.name || "-"
-                  )}
-                </td>
-                <td className="py-3 px-4 text-sm">
-                  {editingId === member._id ? (
-                    <input
-                      name="whatsappNo"
-                      value={editForm.whatsappNo || ""}
-                      onChange={handleInputChange}
-                      className="p-1 border rounded w-full"
-                    />
-                  ) : (
-                    member.whatsappNo || "-"
-                  )}
-                </td>
-                <td className="py-3 px-4 text-sm">
-                  {editingId === member._id ? (
-                    <input
-                      name="designation"
-                      value={editForm.designation || ""}
-                      onChange={handleInputChange}
-                      className="p-1 border rounded w-full"
-                    />
-                  ) : (
-                    member.designation || "-"
-                  )}
-                </td>
-                <td className="py-3 px-4 text-sm">
-                  {editingId === member._id ? (
-                    <select
-                      name="address.mandal"
-                      value={editForm.address?.mandal || ""}
-                      onChange={(e) =>
-                        setEditForm((prev) => ({
-                          ...prev,
-                          address: {
-                            ...prev.address,
-                            mandal: e.target.value,
-                          },
-                        }))
-                      }
-                      className="p-1 border rounded w-full"
-                    >
-                      <option value="">Select Mandal</option>
-                      {mandalOptions.map((mandal, idx) => (
-                        <option key={idx} value={mandal}>
-                          {mandal}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    member.address?.mandal || "-"
-                  )}
-                </td>
+            {filteredMembers.map((member) => {
+              const hasWhatsApp = !!member.whatsappNo;
+              const isSelected = selectedMembers.includes(member._id);
 
-                <td className="py-3 px-4 text-sm">
-                  <div className="flex space-x-2">
+              return (
+                <tr key={member._id} className={`border-b hover:bg-gray-50 ${member.isActive === false ? 'bg-gray-100' : ''}`}>
+                  <td className="py-3 px-4 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleMemberSelection(member._id, hasWhatsApp)}
+                      disabled={!hasWhatsApp}
+                      className={`mr-2 ${!hasWhatsApp ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    />
+                    {isSelected && hasWhatsApp && <Check className="inline text-green-600" size={16} />}
+                  </td>
+                  <td className="py-3 px-4 text-sm">
                     {editingId === member._id ? (
-                      <>
-                        <button
-                          onClick={handleSaveEdit}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={handleCancelEdit}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          Cancel
-                        </button>
-                      </>
+                      <input
+                        name="aadharNo"
+                        value={editForm.aadharNo || ""}
+                        onChange={handleInputChange}
+                        className="p-1 border rounded w-full"
+                      />
                     ) : (
-                      <>
-                        {currentUser.role === "admin" && (
-                          <>
-                            <button
-                              onClick={() => {
-                                setEditingId(member._id);
-                                setEditForm(member);
-                              }}
-                              className="text-green-600 hover:text-green-800"
-                            >
-                              <Edit size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(member._id)}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              <Trash size={16} />
-                            </button>
-                          </>
-                        )}
-                        {member.whatsappNo && (
-                          <>
-                            <a
-                              href={`https://wa.me/${member.whatsappNo}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-green-600 hover:text-green-800"
-                              title="Open WhatsApp chat"
-                            >
-                              <Phone size={16} />
-                            </a>
-                            <button
-                              onClick={() => openIndividualMessageModal(member.whatsappNo, member.name)}
-                              className="text-green-600 hover:text-green-800"
-                              title="Send WhatsApp message"
-                            >
-                              <WhatsAppIcon size={16} />
-                            </button>
-                          </>
-                        )}
-                      </>
+                      member.aadharNo || "-"
                     )}
-                  </div>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="py-3 px-4 text-sm">
+                    {editingId === member._id ? (
+                      <input
+                        name="name"
+                        value={editForm.name || ""}
+                        onChange={handleInputChange}
+                        className="p-1 border rounded w-full"
+                      />
+                    ) : (
+                      member.name || "-"
+                    )}
+                  </td>
+                  <td className="py-3 px-4 text-sm">
+                    {editingId === member._id ? (
+                      <input
+                        name="whatsappNo"
+                        value={editForm.whatsappNo || ""}
+                        onChange={handleInputChange}
+                        className="p-1 border rounded w-full"
+                      />
+                    ) : (
+                      member.whatsappNo || "-"
+                    )}
+                  </td>
+                  <td className="py-3 px-4 text-sm">
+                    {editingId === member._id ? (
+                      <input
+                        name="designation"
+                        value={editForm.designation || ""}
+                        onChange={handleInputChange}
+                        className="p-1 border rounded w-full"
+                      />
+                    ) : (
+                      member.designation || "-"
+                    )}
+                  </td>
+                  <td className="py-3 px-4 text-sm">
+                    {editingId === member._id ? (
+                      <select
+                        name="address.mandal"
+                        value={editForm.address?.mandal || ""}
+                        onChange={(e) =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            address: {
+                              ...prev.address,
+                              mandal: e.target.value,
+                            },
+                          }))
+                        }
+                        className="p-1 border rounded w-full"
+                      >
+                        <option value="">Select Mandal</option>
+                        {mandalOptions.map((mandal, idx) => (
+                          <option key={idx} value={mandal}>
+                            {mandal}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      member.address?.mandal || "-"
+                    )}
+                  </td>
+
+                  <td className="py-3 px-4 text-sm">
+                    <div className="flex space-x-2">
+                      {editingId === member._id ? (
+                        <>
+                          <button
+                            onClick={handleSaveEdit}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={handleCancelEdit}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          {currentUser.role === "admin" && (
+                            <>
+                              <button
+                                onClick={() => {
+                                  setEditingId(member._id);
+                                  setEditForm(member);
+                                }}
+                                className="text-green-600 hover:text-green-800"
+                              >
+                                <Edit size={16} />
+                              </button>
+                              {member.isActive === false ? (
+                                <button
+                                  onClick={() => reactivateMember(member._id)}
+                                  className="text-blue-600 hover:text-blue-800"
+                                  title="Reactivate member"
+                                >
+                                  Reactivate
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleDelete(member._id)}
+                                  className="text-red-600 hover:text-red-800"
+                                >
+                                  <Trash size={16} />
+                                </button>
+                              )}
+                            </>
+                          )}
+                          {hasWhatsApp && (
+                            <>
+                              <button
+                                onClick={() => openIndividualMessageModal(member.whatsappNo, member.name)}
+                                className="text-green-600 hover:text-green-800"
+                                title="Send WhatsApp message"
+                              >
+                                <WhatsAppIcon size={16} />
+                              </button>
+                            </>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -491,13 +555,6 @@ const PartyYouthTable = () => {
           </div>
         </div>
       )}
-
-      {/* {isMandalModalOpen && (
-        <MandalManagementModal
-          isOpen={isMandalModalOpen}
-          onClose={() => setIsMandalModalOpen(false)}
-        />
-      )} */}
     </div>
   );
 };

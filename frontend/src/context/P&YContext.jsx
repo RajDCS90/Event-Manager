@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api';
+import { useToast } from './ToastContext';
 
 const PartyAndYouthContext = createContext();
 
@@ -7,6 +8,8 @@ export const PartyAndYouthProvider = ({ children }) => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { notify } = useToast(); // Get the notify function from ToastContext
+  
 
   // Fetch all members (with optional filters)
   const fetchMembers = async (filters = {}) => {
@@ -17,6 +20,7 @@ export const PartyAndYouthProvider = ({ children }) => {
       const params = new URLSearchParams();
       
       // if ( filters.search) params.append('search', filters.search);
+      if (filters.status) params.append("status", filters.status);
       if (filters.mandal) params.append('mandal', filters.mandal);
       if (filters.designation) params.append('designation', filters.designation);
       
@@ -96,6 +100,30 @@ export const PartyAndYouthProvider = ({ children }) => {
     }
   };
 
+  // Reactivate an inactive member
+const reactivateMember = async (memberId) => {
+  try {
+    setLoading(true);
+    const response = await api.put(`/party-members/reactivate/${memberId}`);
+    setMembers(prev =>
+      prev.map(member =>
+        member._id === memberId ? response.data.member : member
+      )
+    );
+    setError(null);
+    notify('Member reactivated successfully!', 'success');
+    return response.data.member;
+  } catch (err) {
+    const errorMessage = err.response?.data?.message || 'Failed to reactivate member';
+    setError(errorMessage);
+    notify(errorMessage, 'error');
+    throw err;
+  } finally {
+    setLoading(false);
+  }
+};
+
+
   // Filter members by various criteria
   const filterMembers = (filters = {}) => {
     return members.filter(member => {
@@ -117,6 +145,7 @@ export const PartyAndYouthProvider = ({ children }) => {
         createMember,
         updateMember,
         deleteMember,
+        reactivateMember, 
         filterMembers
       }}
     >

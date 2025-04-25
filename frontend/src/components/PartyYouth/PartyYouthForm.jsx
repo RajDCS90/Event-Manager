@@ -93,7 +93,7 @@ const PartyYouthForm = ({ onClose }) => {
     },
   });
 
-  const [villageOptions, setVillageOptions] = useState([]);
+  const [villageOptions, setVillageOptions] = useState(['ecwe','wecw']);
 
   // Get mandal options from the mandalData keys
   const mandalOptions = Object.keys(mandalData);

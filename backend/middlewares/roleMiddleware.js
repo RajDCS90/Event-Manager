@@ -1,4 +1,5 @@
 const checkTableAccess = (requiredTable) => (req, res, next) => {
+  console.log("object",requiredTable);
   if (!req.user) {
     return res.status(401).json({ message: 'Unauthorized - No user information' });
   }
