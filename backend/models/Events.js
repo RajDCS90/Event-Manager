@@ -69,11 +69,6 @@ const EventSchema = new mongoose.Schema({
     required: false
   },
   address: {
-    village: {
-      type: String,
-      trim: true,
-      // required: true
-    },
     postOffice: {
       type: String,
       trim: true,
@@ -94,8 +89,9 @@ const EventSchema = new mongoose.Schema({
       required: true
     },
     mandal: {
-      type: String,
-      // required: true
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Mandal', // This assumes you have a Mandal model
+      required: true
     }
   },
   createdBy: {

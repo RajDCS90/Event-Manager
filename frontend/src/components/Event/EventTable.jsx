@@ -17,25 +17,29 @@ const EventTable = ({ skipInitialFetch = false }) => {
   const [filters, setFilters] = useState({
     eventType: "",
     status: "",
-    mandal: "",
     venue: "",
     dateRange: {
       eventDate: "",
+      startDate: "",
+      endDate: ""
     },
-    village: "",
-    postOffice: "",
-    policeStation: "",
-    pincode: "",
+    address: {
+      mandal: "",
+      area: "",
+      village: "",
+      booth: "",
+      postOffice: "",
+      policeStation: "",
+      pincode: "",
+    }
   });
 
-  // Initial fetch - now with skipInitialFetch option
   useEffect(() => {
     if (!skipInitialFetch) {
       fetchEvents();
     }
   }, [skipInitialFetch, fetchEvents]);
 
-  // Update filtered events when events change
   useEffect(() => {
     applySearchFilter(events, searchTerm);
   }, [events]);
@@ -53,7 +57,7 @@ const EventTable = ({ skipInitialFetch = false }) => {
           event.eventName.toLowerCase().includes(lowercaseTerm) ||
           event.venue.toLowerCase().includes(lowercaseTerm) ||
           event.requesterName.toLowerCase().includes(lowercaseTerm) ||
-          event.mandal.toLowerCase().includes(lowercaseTerm)
+          (event.address?.mandal?.toLowerCase()?.includes(lowercaseTerm) || "")
       )
     );
   };
@@ -81,67 +85,77 @@ const EventTable = ({ skipInitialFetch = false }) => {
     }
   };
 
- // In the applyFilters function:
-const applyFilters = async () => {
-  try {
-    // Prepare filter object for API
-    const apiFilters = {};
+  const applyFilters = async () => {
+    try {
+      // Prepare filter object for API
+      const apiFilters = {
+        ...filters
+      };
 
-    if (filters.eventType) apiFilters.eventType = filters.eventType;
-    if (filters.status) apiFilters.status = filters.status;
-    if (filters.mandal) apiFilters.mandal = filters.mandal;
-    if (filters.venue) apiFilters.venue = filters.venue;
-    
-    // Handle date range
-    if (filters.dateRange) {
-      apiFilters.dateRange = {};
-      if (filters.dateRange.eventDate) {
-        apiFilters.dateRange.eventDate = filters.dateRange.eventDate;
+      // Clean up empty filters
+      Object.keys(apiFilters).forEach(key => {
+        if (apiFilters[key] === "" || (typeof apiFilters[key] === "object" && Object.values(apiFilters[key]).every(val => val === ""))) {
+          delete apiFilters[key];
+        }
+      });
+
+      // Clean up address object
+      if (apiFilters.address) {
+        Object.keys(apiFilters.address).forEach(key => {
+          if (apiFilters.address[key] === "") {
+            delete apiFilters.address[key];
+          }
+        });
+        
+        if (Object.keys(apiFilters.address).length === 0) {
+          delete apiFilters.address;
+        }
       }
-      if (filters.dateRange.startDate && filters.dateRange.endDate) {
-        apiFilters.dateRange.startDate = filters.dateRange.startDate;
-        apiFilters.dateRange.endDate = filters.dateRange.endDate;
+
+      // Clean up dateRange object
+      if (apiFilters.dateRange) {
+        Object.keys(apiFilters.dateRange).forEach(key => {
+          if (apiFilters.dateRange[key] === "") {
+            delete apiFilters.dateRange[key];
+          }
+        });
+        
+        if (Object.keys(apiFilters.dateRange).length === 0) {
+          delete apiFilters.dateRange;
+        }
       }
+
+      await fetchEvents(apiFilters);
+      setSearchTerm("");
+    } catch (error) {
+      console.error("Error applying filters:", error);
+      alert("Failed to apply filters. Please try again.");
     }
-
-    if (filters.village) apiFilters.village = filters.village;
-    if (filters.postOffice) apiFilters.postOffice = filters.postOffice;
-    if (filters.policeStation) apiFilters.policeStation = filters.policeStation;
-    if (filters.pincode) apiFilters.pincode = filters.pincode;
-
-    await fetchEvents(apiFilters);
-    setSearchTerm("");
-  } catch (error) {
-    console.error("Error applying filters:", error);
-    alert("Failed to apply filters. Please try again.");
-  }
-};
+  };
 
   const resetFilters = async () => {
     setShowFilters(false);
-
-    const defaultFilters = {
+    setFilters({
       eventType: "",
       status: "",
-      mandal: "",
       venue: "",
       dateRange: {
         eventDate: "",
+        startDate: "",
+        endDate: ""
       },
-      village: "",
-      postOffice: "",
-      policeStation: "",
-      pincode: "",
-    };
-
-    const isFiltersEmpty = JSON.stringify(filters) === JSON.stringify(defaultFilters);
-    
-    setFilters(defaultFilters);
+      address: {
+        mandal: "",
+        area: "",
+        village: "",
+        booth: "",
+        postOffice: "",
+        policeStation: "",
+        pincode: "",
+      }
+    });
     setSearchTerm("");
-
-    if (!isFiltersEmpty) {
-      await fetchEvents();
-    }
+    await fetchEvents();
   };
 
   const handleEditClick = (event) => {
