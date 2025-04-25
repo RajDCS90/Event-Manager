@@ -3,7 +3,7 @@ import SectionHeader from "./SectionHeader";
 import GrievanceCard from "./GrievanceCard";
 import { useGrievance } from "../../context/GrievanceContext";
 import { useEffect, useState } from "react";
-import GrievanceDetailModal from "../../pages/GrievanceDetailModal";
+import GrievanceDetailModal from "../Grievance/GrievanceDetailModal";
 // import GrievanceDetailModal from "./GrievanceDetailModal";
 
 export default function GrievancesSection() {
