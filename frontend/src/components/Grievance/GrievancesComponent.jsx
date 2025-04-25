@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Calendar, Clock, MapPin, CheckCircle, XCircle, Clock4, X, Image as ImageIcon } from 'lucide-react';
 import { useGrievance } from '../../context/GrievanceContext';
 import { motion } from 'framer-motion';
-import GrievanceDetailModal from '../../pages/GrievanceDetailModal';
+import GrievanceDetailModal from './GrievanceDetailModal';
 
 const GrievancesComponent = ({ defaultTab }) => {
   const [activeTab, setActiveTab] = useState(defaultTab || 'upcoming');

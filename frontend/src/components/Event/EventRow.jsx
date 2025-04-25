@@ -1,77 +1,76 @@
-import { format, parseISO } from "date-fns";
-import { Edit, Trash, MapPin, User, Calendar, Clock } from "lucide-react";
-import StatusBadge from "../common/StatusBadge";
+import { useState } from "react";
+import { Edit, Trash } from "lucide-react";
+import EventDetail from "../Landing/EventDetail";
 
 const EventRow = ({ event, onEdit, onDelete }) => {
-  const formatDate = (dateString) => {
-    try {
-      return format(parseISO(dateString), "PP");
-    } catch {
-      return dateString;
-    }
-  };
-
-  const formatTime = (timeString) => {
-    if (!timeString) return "";
-    const [hours, minutes] = timeString.split(":");
-    const hourNum = parseInt(hours, 10);
-    const period = hourNum >= 12 ? "PM" : "AM";
-    const displayHour = hourNum % 12 || 12;
-    return `${displayHour}:${minutes} ${period}`;
-  };
+  const [showDetail, setShowDetail] = useState(false);
 
   return (
-    <tr className="hover:bg-gray-50">
-      <td className="px-6 py-4 whitespace-nowrap">
-        <div className="font-medium text-gray-900">{event.eventName}</div>
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap">
-        <span className="capitalize">{event.eventType}</span>
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap">
-        <div className="flex items-center">
-          <MapPin size={16} className="mr-1 text-gray-400" />
-          {event.venue}
-        </div>
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap">
-        <div>
-          <div className="flex items-center">
-            <Calendar size={16} className="mr-1 text-gray-400" />
-            {formatDate(event.eventDate)}
-          </div>
-          <div className="text-sm text-gray-500 flex items-center">
-            <Clock size={14} className="mr-1 text-gray-400" />
-            {formatTime(event.startTime)} - {formatTime(event.endTime)}
-          </div>
-        </div>
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap">
-        <StatusBadge status={event.status} />
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap">
-        <div className="flex items-center">
-          <User size={16} className="mr-1 text-gray-400" />
+    <>
+      <tr className="hover:bg-gray-50">
+        <td className="px-6 py-4 whitespace-nowrap">
+          <button
+            onClick={() => setShowDetail(true)}
+            className="text-blue-600 hover:text-blue-800 hover:underline"
+          >
+            {event.eventName}
+          </button>
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap capitalize">
+          {event.eventType}
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">{event.venue}</td>
+        <td className="px-6 py-4 whitespace-nowrap">
+          {new Date(event.eventDate).toLocaleDateString()} | {event.startTime} - {event.endTime}
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">
+          <span className={`px-2 py-1 rounded-full text-xs ${
+            event.status === 'completed' ? 'bg-green-100 text-green-800' :
+            event.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+            'bg-gray-100 text-gray-800'
+          }`}>
+            {event.status}
+          </span>
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">
           {event.requesterName}
-        </div>
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">
-        <div className="flex items-center space-x-2">
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
           <button
             onClick={() => onEdit(event)}
-            className="text-blue-600 hover:text-blue-900"
+            className="text-green-600 hover:text-green-900"
           >
-            <Edit size={16} />
+            <Edit className="h-5 w-5" />
           </button>
           <button
             onClick={() => onDelete(event._id)}
             className="text-red-600 hover:text-red-900"
           >
-            <Trash size={16} />
+            <Trash className="h-5 w-5" />
           </button>
+        </td>
+      </tr>
+
+      {/* Render the modal outside the table structure */}
+      {showDetail && (
+        <div className="fixed inset-0 z-50">
+          <EventDetail 
+            event={{
+              ...event,
+              title: event.eventName,
+              date: new Date(event.eventDate).toLocaleDateString(),
+              time: `${event.startTime} - ${event.endTime}`,
+              location: event.venue,
+              description: event.description,
+              image: event.imageUrl || 'https://via.placeholder.com/800x400',
+              gallery: event.gallery || [],
+              address: event.address
+            }} 
+            onClose={() => setShowDetail(false)} 
+          />
         </div>
-      </td>
-    </tr>
+      )}
+    </>
   );
 };
 

@@ -1,33 +1,41 @@
-import { useEffect, useState } from 'react';
-import { format, parseISO, addDays } from 'date-fns';
-import { useAuth } from '../../context/AuthContext';
-import { Edit, Trash, Calendar, Clock, MapPin, User, Search } from 'lucide-react';
-import StatusBadge from '../common/StatusBadge';
-import { useGrievance } from '../../context/GrievanceContext';
-import GrievanceEditModal from './GrievanceEditModal';
+import { useEffect, useState } from "react";
+import { format, parseISO, addDays } from "date-fns";
+import { useAuth } from "../../context/AuthContext";
+import {
+  Edit,
+  Trash,
+  User,
+  Search,
+} from "lucide-react";
+import StatusBadge from "../common/StatusBadge";
+import { useGrievance } from "../../context/GrievanceContext";
+import GrievanceEditModal from "./GrievanceEditModal";
+import GrievanceDetailModal from "./GrievanceDetailModal";
 
 const GrievanceTable = ({ skipInitialFetch = false }) => {
-  const { grievances, loading, error, deleteGrievance, fetchGrievances } = useGrievance();
-  const { currentUser } = useAuth();
+  const { grievances, loading, error, deleteGrievance, fetchGrievances } =
+    useGrievance();
 
   const [filteredGrievances, setFilteredGrievances] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedGrievance, setSelectedGrievance] = useState(null);
-  
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [editModal, setEditModal] = useState(false);
+
   // Filter states
-  const [statusFilter, setStatusFilter] = useState('');
-  const [mandalFilter, setMandalFilter] = useState('');
-  const [dateOption, setDateOption] = useState('single'); // 'single', 'today', '7days', '30days', 'custom'
+  const [statusFilter, setStatusFilter] = useState("");
+  const [mandalFilter, setMandalFilter] = useState("");
+  const [dateOption, setDateOption] = useState("single");
   const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
   const [dateRange, setDateRange] = useState({
-    programDate: '',
-    startDate: '',
-    endDate: ''
+    programDate: "",
+    startDate: "",
+    endDate: "",
   });
 
   // Extract unique values for filter dropdowns
-  const statuses = [...new Set(grievances.map(g => g.status))];
-  const mandals = [...new Set(grievances.map(g => g.mandal))];
+  const statuses = [...new Set(grievances.map((g) => g.status))];
+  const mandals = [...new Set(grievances.map((g) => g.mandal))];
 
   useEffect(() => {
     if (!skipInitialFetch) {
@@ -43,33 +51,32 @@ const GrievanceTable = ({ skipInitialFetch = false }) => {
     const filters = {};
     if (statusFilter) filters.status = statusFilter;
     if (mandalFilter) filters.mandal = mandalFilter;
-    
-    // Handle date filters based on selected option
-    if (dateOption === 'single' && dateRange.programDate) {
+
+    if (dateOption === "single" && dateRange.programDate) {
       filters.programDate = dateRange.programDate;
-    } else if (['today', '7days', '30days', 'custom'].includes(dateOption)) {
+    } else if (["today", "7days", "30days", "custom"].includes(dateOption)) {
       if (dateRange.startDate && dateRange.endDate) {
         filters.startDate = dateRange.startDate;
         filters.endDate = dateRange.endDate;
       }
     }
-    
+
     fetchGrievances(filters);
   };
 
   const formatDate = (dateString) => {
     try {
-      return format(parseISO(dateString), 'PP');
+      return format(parseISO(dateString), "PP");
     } catch {
       return dateString;
     }
   };
 
   const formatTime = (timeString) => {
-    if (!timeString) return '';
-    const [hours, minutes] = timeString.split(':');
+    if (!timeString) return "";
+    const [hours, minutes] = timeString.split(":");
     const hourNum = parseInt(hours, 10);
-    const period = hourNum >= 12 ? 'PM' : 'AM';
+    const period = hourNum >= 12 ? "PM" : "AM";
     const displayHour = hourNum % 12 || 12;
     return `${displayHour}:${minutes} ${period}`;
   };
@@ -77,14 +84,15 @@ const GrievanceTable = ({ skipInitialFetch = false }) => {
   const handleSearch = (e) => {
     const term = e.target.value.toLowerCase();
     setSearchTerm(term);
-    if (term === '') {
+    if (term === "") {
       setFilteredGrievances(grievances);
     } else {
       setFilteredGrievances(
-        grievances.filter((grievance) =>
-          grievance.grievanceName.toLowerCase().includes(term) ||
-          grievance.applicant.toLowerCase().includes(term) ||
-          grievance.assignedTo.toLowerCase().includes(term)
+        grievances.filter(
+          (grievance) =>
+            grievance.grievanceName.toLowerCase().includes(term) ||
+            grievance.applicant.toLowerCase().includes(term) ||
+            grievance.assignedTo.toLowerCase().includes(term)
         )
       );
     }
@@ -101,54 +109,49 @@ const GrievanceTable = ({ skipInitialFetch = false }) => {
   const handleDateOptionChange = (e) => {
     const option = e.target.value;
     setDateOption(option);
-    
+
     const today = new Date();
     let startDate, endDate;
 
     switch (option) {
       case "today":
-        // Set to today
         setDateRange({
           programDate: format(today, "yyyy-MM-dd"),
           startDate: format(today, "yyyy-MM-dd"),
-          endDate: format(today, "yyyy-MM-dd")
+          endDate: format(today, "yyyy-MM-dd"),
         });
         setShowCustomDatePicker(false);
         break;
       case "7days":
-        // Set to next 7 days
         startDate = today;
-        endDate = addDays(today, 6); // 7 days including today
+        endDate = addDays(today, 6);
         setDateRange({
           programDate: "",
           startDate: format(startDate, "yyyy-MM-dd"),
-          endDate: format(endDate, "yyyy-MM-dd")
+          endDate: format(endDate, "yyyy-MM-dd"),
         });
         setShowCustomDatePicker(false);
         break;
       case "30days":
-        // Set to next 30 days
         startDate = today;
-        endDate = addDays(today, 29); // 30 days including today
+        endDate = addDays(today, 29);
         setDateRange({
           programDate: "",
           startDate: format(startDate, "yyyy-MM-dd"),
-          endDate: format(endDate, "yyyy-MM-dd")
+          endDate: format(endDate, "yyyy-MM-dd"),
         });
         setShowCustomDatePicker(false);
         break;
       case "custom":
-        // Show custom date picker
         setShowCustomDatePicker(true);
         break;
       case "single":
       default:
-        // Reset to single date only
         setShowCustomDatePicker(false);
         setDateRange({
           programDate: "",
           startDate: "",
-          endDate: ""
+          endDate: "",
         });
         break;
     }
@@ -156,43 +159,51 @@ const GrievanceTable = ({ skipInitialFetch = false }) => {
 
   const handleDateRangeChange = (e) => {
     const { name, value } = e.target;
-    setDateRange(prev => ({
+    setDateRange((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const resetFilters = () => {
-    setStatusFilter('');
-    setMandalFilter('');
-    setDateOption('single');
+    setStatusFilter("");
+    setMandalFilter("");
+    setDateOption("single");
     setShowCustomDatePicker(false);
     setDateRange({
-      programDate: '',
-      startDate: '',
-      endDate: ''
+      programDate: "",
+      startDate: "",
+      endDate: "",
     });
-    setSearchTerm('');
+    setSearchTerm("");
     fetchGrievances();
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this grievance?')) {
+    if (window.confirm("Are you sure you want to delete this grievance?")) {
       try {
         await deleteGrievance(id);
         fetchGrievancesWithFilters();
       } catch (error) {
-        console.error('Error deleting grievance:', error);
-        alert(error.message || 'Failed to delete grievance');
+        console.error("Error deleting grievance:", error);
+        alert(error.message || "Failed to delete grievance");
       }
     }
+  };
+
+  const openDetailModal = (grievance) => {
+    setSelectedGrievance(grievance);
+    setDetailModalOpen(true);
+    setEditModal(false); // Explicitly close edit modal when opening detail modal
   };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-          <h2 className="text-2xl font-semibold text-gray-800">Grievance Management</h2>
+          <h2 className="text-2xl font-semibold text-gray-800">
+            Grievance Management
+          </h2>
           <div className="mt-4 md:mt-0">
             <div className="relative">
               <input
@@ -208,39 +219,49 @@ const GrievanceTable = ({ skipInitialFetch = false }) => {
             </div>
           </div>
         </div>
-        
+
         {/* Filter controls */}
         <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Status
+            </label>
             <select
               value={statusFilter}
               onChange={handleStatusFilterChange}
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">All Status</option>
-              {statuses.map(status => (
-                <option key={status} value={status}>{status}</option>
+              {statuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
               ))}
             </select>
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Mandal</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Mandal
+            </label>
             <select
               value={mandalFilter}
               onChange={handleMandalFilterChange}
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">All Mandals</option>
-              {mandals.map(mandal => (
-                <option key={mandal} value={mandal}>{mandal}</option>
+              {mandals.map((mandal) => (
+                <option key={mandal} value={mandal}>
+                  {mandal}
+                </option>
               ))}
             </select>
           </div>
-          
+
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Date Range
+            </label>
             <select
               value={dateOption}
               onChange={handleDateOptionChange}
@@ -257,7 +278,9 @@ const GrievanceTable = ({ skipInitialFetch = false }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
               {dateOption === "single" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Program Date</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Program Date
+                  </label>
                   <input
                     type="date"
                     name="programDate"
@@ -268,10 +291,13 @@ const GrievanceTable = ({ skipInitialFetch = false }) => {
                 </div>
               )}
 
-              {(showCustomDatePicker || ["7days", "30days"].includes(dateOption)) && (
+              {(showCustomDatePicker ||
+                ["7days", "30days"].includes(dateOption)) && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Start Date
+                    </label>
                     <input
                       type="date"
                       name="startDate"
@@ -281,7 +307,9 @@ const GrievanceTable = ({ skipInitialFetch = false }) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      End Date
+                    </label>
                     <input
                       type="date"
                       name="endDate"
@@ -322,27 +350,53 @@ const GrievanceTable = ({ skipInitialFetch = false }) => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Grievance Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mandal</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Applicant</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Program Date & Time</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned To</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Grievance Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Type
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Mandal
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Applicant
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Program Date & Time
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Assigned To
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredGrievances.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="px-6 py-4 text-center text-gray-500">
+                  <td
+                    colSpan="8"
+                    className="px-6 py-4 text-center text-gray-500"
+                  >
                     No grievances found
                   </td>
                 </tr>
               ) : (
                 filteredGrievances.map((grievance) => (
                   <tr key={grievance._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">{grievance.grievanceName}</td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => openDetailModal(grievance)}
+                        className="text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        {grievance.grievanceName}
+                      </button>
+                    </td>
                     <td className="px-6 py-4 capitalize">{grievance.type}</td>
                     <td className="px-6 py-4 capitalize">{grievance.mandal}</td>
                     <td className="px-6 py-4 flex items-center">
@@ -350,13 +404,21 @@ const GrievanceTable = ({ skipInitialFetch = false }) => {
                       {grievance.applicant}
                     </td>
                     <td className="px-6 py-4">
-                      {formatDate(grievance.programDate)} at {formatTime(grievance.startTime)} - {formatTime(grievance.endTime)}
+                      {formatDate(grievance.programDate)} at{" "}
+                      {formatTime(grievance.startTime)} -{" "}
+                      {formatTime(grievance.endTime)}
                     </td>
-                    <td className="px-6 py-4"><StatusBadge status={grievance.status} /></td>
+                    <td className="px-6 py-4">
+                      <StatusBadge status={grievance.status} />
+                    </td>
                     <td className="px-6 py-4">{grievance.assignedTo}</td>
                     <td className="px-6 py-4 text-right space-x-2">
                       <button
-                        onClick={() => setSelectedGrievance(grievance)}
+                        onClick={() => {
+                          setSelectedGrievance(grievance);
+                          setEditModal(true);
+                          setDetailModalOpen(false); // Explicitly close detail modal when opening edit modal
+                        }}
                         className="text-green-600 hover:text-green-900"
                       >
                         <Edit className="h-5 w-5" />
@@ -376,13 +438,26 @@ const GrievanceTable = ({ skipInitialFetch = false }) => {
         </div>
       )}
 
-      {selectedGrievance && (
+      {editModal && selectedGrievance && (
         <GrievanceEditModal
           grievance={selectedGrievance}
-          isOpen={!!selectedGrievance}
-          onClose={() => setSelectedGrievance(null)}
+          isOpen={editModal}
+          onClose={() => {
+            setEditModal(false);
+            setSelectedGrievance(null);
+          }}
           onSave={(updatedGrievance) => {
-        
+            setEditModal(false);
+            setSelectedGrievance(null);
+          }}
+        />
+      )}
+
+      {detailModalOpen && selectedGrievance && (
+        <GrievanceDetailModal
+          grievance={selectedGrievance}
+          onClose={() => {
+            setDetailModalOpen(false);
             setSelectedGrievance(null);
           }}
         />

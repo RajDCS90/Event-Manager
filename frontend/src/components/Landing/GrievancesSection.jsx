@@ -1,7 +1,9 @@
 import { CheckCircle2, Clock, MessageSquare } from "lucide-react";
 import SectionHeader from "./SectionHeader";
 import { useGrievance } from "../../context/GrievanceContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+// import GrievanceDetailModal from "../../pages/GrievanceDetailModal";
+// import GrievanceDetailModal from "./GrievanceDetailModal";
 
 export default function GrievancesSection() {
   const { grievances, fetchGrievances } = useGrievance();
