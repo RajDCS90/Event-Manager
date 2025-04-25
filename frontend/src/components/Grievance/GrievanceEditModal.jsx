@@ -1,21 +1,20 @@
 import { useState, useEffect } from "react";
 import { Calendar, Clock, X, Upload, Trash2 } from "lucide-react";
 import { useGrievance } from "../../context/GrievanceContext";
+import { useMandal } from "../../context/MandalContext";
 
 const GrievanceEditModal = ({ grievance, isOpen, onClose, onSave }) => {
   const { updateGrievance } = useGrievance();
+  const { mandals, fetchMandals } = useMandal();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [grievanceImage, setGrievanceImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
-  const mandalOptions = [
-    "Mandal 1",
-    "Mandal 2",
-    "Mandal 3",
-    "Mandal 4",
-    "Mandal 5",
-  ];
+  // State for hierarchical address options
+  const [areaOptions, setAreaOptions] = useState([]);
+  const [villageOptions, setVillageOptions] = useState([]);
+  const [boothOptions, setBoothOptions] = useState([]);
 
   const [formData, setFormData] = useState({
     grievanceName: '',
@@ -28,12 +27,24 @@ const GrievanceEditModal = ({ grievance, isOpen, onClose, onSave }) => {
     description: '',
     assignedTo: '',
     resolutionNotes: '',
-    mandal: ''
+    address: {
+      mandal: '',
+      area: '',
+      village: '',
+      booth: '',
+      postOffice: '',
+      policeStation: '',
+      pincode: ''
+    }
   });
-  
+
+  useEffect(() => {
+    fetchMandals();
+  }, []);
+
   useEffect(() => {
     if (grievance) {
-      setFormData({
+      const initialData = {
         grievanceName: grievance.grievanceName || '',
         type: grievance.type || 'complaint',
         applicant: grievance.applicant || '',
@@ -44,18 +55,97 @@ const GrievanceEditModal = ({ grievance, isOpen, onClose, onSave }) => {
         description: grievance.description || '',
         assignedTo: grievance.assignedTo || '',
         resolutionNotes: grievance.resolutionNotes || '',
-        mandal: grievance.mandal || ''
-      });
-  
+        address: {
+          mandal: grievance.address?.mandal || '',
+          area: grievance.address?.area || '',
+          village: grievance.address?.village || '',
+          booth: grievance.address?.booth || '',
+          postOffice: grievance.address?.postOffice || '',
+          policeStation: grievance.address?.policeStation || '',
+          pincode: grievance.address?.pincode || ''
+        }
+      };
+
+      setFormData(initialData);
+
+      // Set options based on initial data
+      if (initialData.address.mandal) {
+        const selectedMandal = mandals.find(m => m.mandalName === initialData.address.mandal);
+        setAreaOptions(selectedMandal?.areas || []);
+      }
+      if (initialData.address.area) {
+        const selectedArea = areaOptions.find(a => a.name === initialData.address.area);
+        setVillageOptions(selectedArea?.villages || []);
+      }
+      if (initialData.address.village) {
+        const selectedVillage = villageOptions.find(v => v.name === initialData.address.village);
+        setBoothOptions(selectedVillage?.booths || []);
+      }
+
       if (grievance.imageUrl) {
         setImagePreview(grievance.imageUrl);
       }
     }
-  }, [grievance]);
+  }, [grievance, mandals]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddressChange = (e) => {
+    const { name, value } = e.target;
+    
+    setFormData(prev => ({
+      ...prev,
+      address: {
+        ...prev.address,
+        [name]: value,
+      },
+    }));
+
+    // Dynamic filtering logic
+    if (name === "mandal") {
+      const selectedMandal = mandals.find(m => m.mandalName === value);
+      setAreaOptions(selectedMandal?.areas || []);
+      setVillageOptions([]);
+      setBoothOptions([]);
+      setFormData(prev => ({
+        ...prev,
+        address: {
+          ...prev.address,
+          area: "",
+          village: "",
+          booth: "",
+        },
+      }));
+    }
+
+    if (name === "area") {
+      const selectedArea = areaOptions.find(a => a.name === value);
+      setVillageOptions(selectedArea?.villages || []);
+      setBoothOptions([]);
+      setFormData(prev => ({
+        ...prev,
+        address: {
+          ...prev.address,
+          village: "",
+          booth: "",
+        },
+      }));
+    }
+
+    if (name === "village") {
+      const selectedVillage = villageOptions.find(v => v.name === value);
+      setBoothOptions(selectedVillage?.booths || []);
+      setFormData(prev => ({
+        ...prev,
+        address: {
+          ...prev.address,
+          booth: "",
+        },
+      }));
+    }
   };
 
   const handleImageChange = (e) => {
@@ -96,8 +186,15 @@ const GrievanceEditModal = ({ grievance, isOpen, onClose, onSave }) => {
       const formDataObj = new FormData();
       // Append all form fields
       Object.keys(formData).forEach((key) => {
-        if (formData[key]) {
+        if (key !== 'address' && formData[key]) {
           formDataObj.append(key, formData[key]);
+        }
+      });
+
+      // Append address fields
+      Object.keys(formData.address).forEach((key) => {
+        if (formData.address[key]) {
+          formDataObj.append(`address[${key}]`, formData.address[key]);
         }
       });
 
@@ -190,36 +287,143 @@ const GrievanceEditModal = ({ grievance, isOpen, onClose, onSave }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Mandal
+                Applicant
               </label>
-              <select
-                name="mandal"
-                value={formData.mandal}
+              <input
+                name="applicant"
+                value={formData.applicant}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                 disabled={isSubmitting}
-              >
-                <option value="">Select Mandal</option>
-                {mandalOptions.map((mandal, index) => (
-                  <option key={index} value={mandal}>
-                    {mandal}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Applicant
-            </label>
-            <input
-              name="applicant"
-              value={formData.applicant}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-              disabled={isSubmitting}
-            />
+          {/* Address Section */}
+          <div className="border-t pt-4">
+            <h3 className="text-md font-medium text-gray-800 mb-3">Address Details</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Mandal
+                </label>
+                <select
+                  name="mandal"
+                  value={formData.address.mandal}
+                  onChange={handleAddressChange}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  disabled={isSubmitting}
+                >
+                  <option value="">Select Mandal</option>
+                  {mandals.map((mandal) => (
+                    <option key={mandal._id} value={mandal.mandalName}>
+                      {mandal.mandalName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Area
+                </label>
+                <select
+                  name="area"
+                  value={formData.address.area}
+                  onChange={handleAddressChange}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  disabled={!formData.address.mandal || isSubmitting}
+                >
+                  <option value="">Select Area</option>
+                  {areaOptions.map((area) => (
+                    <option key={area.name} value={area.name}>
+                      {area.name} ({area.type})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Village
+                </label>
+                <select
+                  name="village"
+                  value={formData.address.village}
+                  onChange={handleAddressChange}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  disabled={!formData.address.area || isSubmitting}
+                >
+                  <option value="">Select Village</option>
+                  {villageOptions.map((village) => (
+                    <option key={village.name} value={village.name}>
+                      {village.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Booth
+                </label>
+                <select
+                  name="booth"
+                  value={formData.address.booth}
+                  onChange={handleAddressChange}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  disabled={!formData.address.village || isSubmitting}
+                >
+                  <option value="">Select Booth</option>
+                  {boothOptions.map((booth) => (
+                    <option key={booth.number} value={booth.number}>
+                      {booth.number}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Post Office
+                </label>
+                <input
+                  name="postOffice"
+                  value={formData.address.postOffice}
+                  onChange={handleAddressChange}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  disabled={isSubmitting}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Police Station
+                </label>
+                <input
+                  name="policeStation"
+                  value={formData.address.policeStation}
+                  onChange={handleAddressChange}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  disabled={isSubmitting}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Pincode
+                </label>
+                <input
+                  name="pincode"
+                  value={formData.address.pincode}
+                  onChange={handleAddressChange}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  pattern="[0-9]{6}"
+                  maxLength="6"
+                  disabled={isSubmitting}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
