@@ -86,13 +86,13 @@ const Login = ({ isOpen, onClose }) => {
       >
         {/* Header */}
         <div className="flex justify-between items-center p-5 border-b">
-          <h2 className="text-2xl font-bold text-indigo-900">Login</h2>
+          <h2 className="text-2xl font-bold text-black-900">Login</h2>
           <button 
             onClick={() => {
               setIsAnimating(false);
               setTimeout(() => onClose(), 300);
             }}
-            className="text-gray-500 hover:text-gray-700 focus:outline-none"
+            className="text-orange-600 hover:text-gray-700 focus:outline-none"
           >
             <X size={24} />
           </button>
@@ -147,8 +147,8 @@ const Login = ({ isOpen, onClose }) => {
                 disabled={authLoading}
                 className={`w-full px-4 py-3 rounded-lg text-white font-medium ${
                   authLoading 
-                    ? 'bg-indigo-400 cursor-not-allowed' 
-                    : 'bg-indigo-600 hover:bg-indigo-700'
+                    ? 'bg-orange-500 cursor-not-allowed' 
+                    : 'bg-orange-600 hover:bg-orange-700'
                 } transition-colors shadow-md`}
               >
                 {authLoading ? 'Logging in...' : 'Login'}

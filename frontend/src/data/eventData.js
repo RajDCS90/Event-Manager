@@ -113,19 +113,19 @@ export const eventItems = [
   export const slides = [
     {
       image:
-        "https://images.pexels.com/photos/3856027/pexels-photo-3856027.jpeg?auto=compress&cs=tinysrgb&w=600",
+        "/corousel1",
       title: "Let's Script the Rise of a New India Together",
       cta: "Join Me",
     },
     {
       image:
-        "https://images.pexels.com/photos/3184289/pexels-photo-3184289.jpeg?auto=compress&cs=tinysrgb&w=600",
+        "/corousel2",
       title: "Building a Stronger Nation",
       cta: "Learn More",
     },
     {
       image:
-        "https://images.pexels.com/photos/3184289/pexels-photo-3184289.jpeg?auto=compress&cs=tinysrgb&w=600",
+        "corousel3",
       title: "Progress for All",
       cta: "See Vision",
     },

@@ -132,11 +132,11 @@ export default function EventsAndGrievancesPage() {
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
             {/* Selected date header */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6">
+            <div className="bg-gradient-to-r from-orange-600 to-orange-400 text-white p-6">
               <div className="flex justify-between items-center">
                 <div>
                   <h2 className="text-3xl font-bold">{day}</h2>
-                  <p className="text-blue-100">
+                  <p className="text-white-100">
                     {month} {year}
                   </p>
                 </div>
@@ -147,7 +147,7 @@ export default function EventsAndGrievancesPage() {
                       newDate.setDate(newDate.getDate() - 1);
                       setSelectedDate(newDate);
                     }}
-                    className="p-1 rounded-full hover:bg-blue-700 transition-colors"
+                    className="p-1 rounded-full hover:bg-orange-800 transition-colors"
                   >
                     <ChevronLeft size={20} />
                   </button>
@@ -157,18 +157,18 @@ export default function EventsAndGrievancesPage() {
                       newDate.setDate(newDate.getDate() + 1);
                       setSelectedDate(newDate);
                     }}
-                    className="p-1 rounded-full hover:bg-blue-700 transition-colors"
+                    className="p-1 rounded-full hover:bg-orange-800 transition-colors"
                   >
                     <ChevronRight size={20} />
                   </button>
                 </div>
               </div>
               <div className="mt-4">
-                <div className="flex space-x-1 bg-blue-800 bg-opacity-30 rounded-lg p-1 w-fit">
+                <div className="flex space-x-1 bg-orange-800 bg-opacity-30 rounded-lg p-1 w-fit">
                   <button
                     className={`px-4 py-1 rounded-md transition-colors ${
                       activeTab === "all"
-                        ? "bg-white text-blue-700"
+                        ? "bg-white text-orange-800"
                         : "text-white"
                     }`}
                     onClick={() => setActiveTab("all")}
@@ -178,7 +178,7 @@ export default function EventsAndGrievancesPage() {
                   <button
                     className={`px-4 py-1 rounded-md transition-colors ${
                       activeTab === "events"
-                        ? "bg-white text-blue-700"
+                        ? "bg-white  text-orange-800"
                         : "text-white"
                     }`}
                     onClick={() => setActiveTab("events")}
@@ -188,7 +188,7 @@ export default function EventsAndGrievancesPage() {
                   <button
                     className={`px-4 py-1 rounded-md transition-colors ${
                       activeTab === "grievances"
-                        ? "bg-white text-blue-700"
+                        ? "bg-white  text-orange-800"
                         : "text-white"
                     }`}
                     onClick={() => setActiveTab("grievances")}

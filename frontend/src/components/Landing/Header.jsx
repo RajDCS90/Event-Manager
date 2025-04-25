@@ -41,14 +41,14 @@ export default function Header({
         { name: "Past Events", path: "/events?tab=past" }
       ],
     },
-    {
-      title: "GRIEVANCE",
-      id: "grievance",
-      items: [
-        { name: "Upcoming Grievance", path: "/grievance?tab=upcoming" },
-        { name: "Past Grievance", path: "/grievance?tab=past" }
-      ],
-    },
+    // {
+    //   title: "GRIEVANCE",
+    //   id: "grievance",
+    //   items: [
+    //     { name: "Upcoming Grievance", path: "/grievance?tab=upcoming" },
+    //     { name: "Past Grievance", path: "/grievance?tab=past" }
+    //   ],
+    // },
     {
       title: "CONNECT",
       id: "connect",
@@ -94,30 +94,38 @@ export default function Header({
                 <Menu size={24} />
               </button>
               <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
-                <span className="text-xl sm:text-2xl md:text-3xl font-bold text-indigo-900 text-center sm:text-left">
-                  Prakash Chandra Sethi
-                </span>
-                <span className="text-sm sm:text-base text-gray-600 text-center sm:text-left">
+                <div className="flex items-center justify-center sm:justify-start space-x-2">
+                  <img
+                    src="/bjp-logo-png.png" // Replace with actual path or URL to the Padma flower
+                    alt="BJP Logo"
+                    className="w-9 h-9 sm:w-13 sm:h-13"
+                  />
+                  <span className="text-xl sm:text-2xl md:text-3xl font-bold text-orange-600">
+                    Prakash Chandra Sethi
+                  </span>
+                </div>
+                <span className="text-sm sm:text-base text-white-600 text-center sm:text-left">
                   (MLA Cuttack Sadar)
                 </span>
               </div>
+
             </div>
 
             <div className="hidden md:flex items-center space-x-4">
               <button
                 id="menu-button"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="mr-2"
+                className="mr-2 text-orange-800"
                 aria-label="Toggle menu"
               >
                 {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
-              <Link
+              {/* <Link
                 to="/"
-                className="text-gray-700 hover:text-indigo-700 transition-colors"
+                className="text-orange-500 hover:text-black-700 transition-colors"
               >
                 Mera Saansad
-              </Link>
+              </Link> */}
               {isLoggedIn ? (
                 <Link
                   to="/dashboard"
@@ -128,7 +136,7 @@ export default function Header({
               ) : (
                 <button
                   onClick={openLoginModal}
-                  className="text-gray-700 hover:text-indigo-700 transition-colors"
+                  className="text-black-700 font-bold hover:text-orange-700 transition-colors"
                 >
                   Login
                 </button>
@@ -150,7 +158,7 @@ export default function Header({
         {/* Dropdown Menu - Updated to handle different item formats */}
         <div
           id="dropdown-menu"
-          className={`bg-cyan-500 w-full transition-all duration-300 ease-in-out overflow-hidden ${isMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
+          className={`bg-gradient-to-b from-orange-500 to-orange-600 w-full transition-all duration-300 ease-in-out overflow-hidden ${isMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
             }`}
         >
           <div className="container mx-auto px-4 py-6">
@@ -216,7 +224,7 @@ export default function Header({
                     key={index}
                     className="bg-white p-2 rounded-2xl shadow-md hover:shadow-lg transition duration-200 hover:scale-105"
                   >
-                    <Icon size={24} className="text-blue-600" />
+                    <Icon size={24} className="text-orange-500" />
                   </div>
                 )
               )}

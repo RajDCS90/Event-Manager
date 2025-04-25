@@ -130,19 +130,26 @@ const Navbar = () => {
   return (
     <>
       {/* Main Header */}
-      <header className="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-md">
+      <header className="bg-gradient-to-r from-orange-500 to-orange-700 text-white shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link
               to="/dashboard/home"
-              className="hover:text-blue-200 transition "
+              className="hover:text-blue-200 transition flex items-center space-x-2"
             >
-              <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-white">
-                Prakash Chandra Sethi
-                <span className="text-xs ml-1 text-gray-300 ">
+              <img
+                src="/bjp-logo-png.png"
+                alt="BJP Logo"
+                className="w-9 h-9 sm:w-11 sm:h-11"
+              />
+              <div className="flex flex-col">
+                <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-white leading-none">
+                  Prakash Chandra Sethi
+                </h1>
+                <span className="text-xs sm:text-sm text-white">
                   (MLA Cuttack Sadar)
                 </span>
-              </h1>
+              </div>
             </Link>
 
             {/* Desktop Navigation */}
@@ -151,20 +158,21 @@ const Navbar = () => {
               <Link
                 to="/dashboard/home"
                 onClick={() => handleTabChange("")}
-                className={`px-4 py-2 ${location.pathname.includes("/dashboard/home")
-                    ? "bg-blue-800"
-                    : "bg-blue-700 hover:bg-blue-800"
-                  } rounded-md text-white font-medium transition-colors`}
+                className={`px-4 py-2 rounded-md text-white font-medium transition-all duration-300 transform ${location.pathname.includes("/dashboard/home")
+                  ? "bg-orange-600 shadow-lg"
+                  : "bg-orange-500 hover:bg-orange-700 hover:shadow-lg hover:scale-105"
+                  }`}
               >
                 Dashboard
               </Link>
 
+
               {/* Social Media Link */}
               <Link
                 to="/social-media"
-                className={`px-4 py-2 ${location.pathname.includes("/social-media")
-                    ? "bg-blue-800"
-                    : "bg-blue-700 hover:bg-blue-800"
+                className={`px-4 py-2 rounded-md text-white font-medium transition-all duration-300 transform ${location.pathname.includes("/social-media")
+                  ? "bg-orange-600 shadow-md"
+                  : "bg-orange-500 hover:bg-orange-700 hover:shadow-lg hover:scale-105"
                   } rounded-md text-white font-medium transition-colors`}
               >
                 Social Media
@@ -175,7 +183,7 @@ const Navbar = () => {
                 <button
                   ref={desktopMenuButtonRef}
                   onClick={toggleDesktopMenu}
-                  className="flex items-center space-x-1 px-4 py-2 bg-blue-700 hover:bg-blue-800 rounded-md text-white font-medium transition-colors"
+                  className="flex items-center space-x-1 px-4 py-2 bg-orange-500 hover:bg-orange-700 rounded-md text-white font-medium transition-colors"
                 >
                   <Menu size={18} />
                   <span>Menu</span>
@@ -199,7 +207,7 @@ const Navbar = () => {
 
               {/* Desktop Welcome Text */}
               {currentUser && (
-                <div className="px-3 py-2 border-l border-blue-500 text-blue-100">
+                <div className="px-3 py-2 border-l border-orange-800 text-white-100">
                   Welcome, {currentUser.username}
                 </div>
               )}
@@ -311,8 +319,8 @@ const CustomMobileMenu = ({
               handleTabClick("");
             }}
             className={`flex items-center px-3 py-3 mb-1 rounded-md ${location.pathname.includes("/dashboard/home")
-                ? "bg-blue-100 text-blue-700"
-                : "text-gray-700 hover:bg-gray-100"
+              ? "bg-blue-100 text-blue-700"
+              : "text-gray-700 hover:bg-gray-100"
               }`}
           >
             <Home size={20} className="mr-3" />
@@ -327,8 +335,8 @@ const CustomMobileMenu = ({
               toggleMenu({ stopPropagation: () => { } });
             }}
             className={`flex items-center mb-1 px-3 py-3 rounded-md ${location.pathname.includes("/social-media")
-                ? "bg-blue-100 text-blue-700"
-                : "text-gray-700 hover:bg-gray-100"
+              ? "bg-blue-100 text-blue-700"
+              : "text-gray-700 hover:bg-gray-100"
               }`}
           >
             <Share2 size={20} className="mr-3" />
@@ -339,8 +347,8 @@ const CustomMobileMenu = ({
           <button
             onClick={() => handleTabClick("events")}
             className={`flex items-center w-full text-left px-3 py-3 mb-1 rounded-md ${activeTab === "events"
-                ? "bg-blue-100 text-blue-700"
-                : "text-gray-700 hover:bg-gray-100"
+              ? "bg-blue-100 text-blue-700"
+              : "text-gray-700 hover:bg-gray-100"
               }`}
           >
             <span className="font-medium">Events</span>
@@ -350,8 +358,8 @@ const CustomMobileMenu = ({
           <button
             onClick={() => handleTabClick("grievance")}
             className={`flex items-center w-full text-left px-3 py-3 mb-1 rounded-md ${activeTab === "grievance"
-                ? "bg-blue-100 text-blue-700"
-                : "text-gray-700 hover:bg-gray-100"
+              ? "bg-blue-100 text-blue-700"
+              : "text-gray-700 hover:bg-gray-100"
               }`}
           >
             <span className="font-medium">Grievances</span>
@@ -361,8 +369,8 @@ const CustomMobileMenu = ({
           <button
             onClick={() => handleTabClick("partyYouth")}
             className={`flex items-center w-full text-left px-3 py-3 mb-1 rounded-md ${activeTab === "partyYouth"
-                ? "bg-blue-100 text-blue-700"
-                : "text-gray-700 hover:bg-gray-100"
+              ? "bg-blue-100 text-blue-700"
+              : "text-gray-700 hover:bg-gray-100"
               }`}
           >
             <span className="font-medium">Party Youth</span>
@@ -372,8 +380,8 @@ const CustomMobileMenu = ({
           <button
             onClick={() => handleTabClick("userManagement")}
             className={`flex items-center w-full text-left px-3 py-3 mb-1 rounded-md ${activeTab === "userManagement"
-                ? "bg-blue-100 text-blue-700"
-                : "text-gray-700 hover:bg-gray-100"
+              ? "bg-blue-100 text-blue-700"
+              : "text-gray-700 hover:bg-gray-100"
               }`}
           >
             <span className="font-medium">User Management</span>
@@ -382,8 +390,8 @@ const CustomMobileMenu = ({
           <button
             onClick={() => handleTabClick("mandalManagement")}
             className={`flex items-center w-full text-left px-3 py-3 mb-1 rounded-md ${activeTab === "mandalManagement"
-                ? "bg-blue-100 text-blue-700"
-                : "text-gray-700 hover:bg-gray-100"
+              ? "bg-blue-100 text-blue-700"
+              : "text-gray-700 hover:bg-gray-100"
               }`}
           >
             <span className="font-medium">Mandal Management</span>

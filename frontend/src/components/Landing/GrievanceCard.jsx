@@ -9,11 +9,11 @@ export default function GrievanceCard({ item , onClick}) {
           className="w-full h-48 object-cover transition-all duration-700 group-hover:scale-110 group-hover:rotate-1"
         />
       </div>
-      <div className="p-4 bg-red-600 text-white">
+      <div className="p-4 bg-orange-700 text-white">
         <h3 className="font-medium">{item.grievanceName}</h3>
       </div>
       {/* Overlay that slides up 35% on hover */}
-      <div className="absolute bottom-0 left-0 right-0 bg-red-700 text-white p-4 transform translate-y-full group-hover:translate-y-[6%] transition-transform duration-500 flex flex-col">
+      <div className="absolute bottom-0 left-0 right-0 bg-orange-600 text-white p-4 transform translate-y-full group-hover:translate-y-[6%] transition-transform duration-500 flex flex-col">
         <div className="flex justify-between items-center mb-2">
           <p className="text-sm">
             {item.startTime} - {item.endTime} / {item.mandal}

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import EventDetail from "./EventDetail";
 import HeroCarousel from "../components/Landing/HeroCarousel";
-import ContactBanner from "../components/Landing/ContactBanner";
+// import ContactBanner from "../components/Landing/ContactB  anner";
 import NewsSection from "../components/Landing/NewsSection";
 import EventsSection from "../components/Landing/EventsSection";
 import GrievancesSection from "../components/Landing/GrievancesSection";
@@ -17,7 +17,7 @@ const LandingPage = () => {
   return (
     <>
       <HeroCarousel />
-      <ContactBanner />
+      {/* <ContactBanner /> */}
       <NewsSection />
       <EventsSection setSelectedEvent={setSelectedEvent} />
       <GrievancesSection />
