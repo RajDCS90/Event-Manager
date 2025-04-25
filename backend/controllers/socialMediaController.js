@@ -6,6 +6,38 @@ const axios = require('axios');
 const { TwitterApi } = require('twitter-api-v2');
 const { IgApiClient } = require('instagram-private-api');
 const { FB } = require('fb');
+const { google } = require('googleapis');
+
+// YouTube OAuth utility functions
+function generateYouTubeAuthUrl() {
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.YOUTUBE_CLIENT_ID,
+    process.env.YOUTUBE_CLIENT_SECRET,
+    process.env.YOUTUBE_REDIRECT_URI
+  );
+  
+  const scopes = [
+    'https://www.googleapis.com/auth/youtube.upload',
+    'https://www.googleapis.com/auth/youtube'
+  ];
+  
+  return oauth2Client.generateAuthUrl({
+    access_type: 'offline',
+    scope: scopes,
+    prompt: 'consent' // Force consent screen to get a refresh token
+  });
+}
+
+async function getYouTubeTokens(code) {
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.YOUTUBE_CLIENT_ID,
+    process.env.YOUTUBE_CLIENT_SECRET,
+    process.env.YOUTUBE_REDIRECT_URI
+  );
+  
+  const { tokens } = await oauth2Client.getToken(code);
+  return tokens;
+}
 
 // Set up multer for file uploads
 const storage = multer.diskStorage({
@@ -252,6 +284,21 @@ async function postToYoutube(post) {
       refresh_token: process.env.YOUTUBE_REFRESH_TOKEN
     });
 
+    // Test token validity before continuing
+    try {
+      await oauth2Client.getAccessToken();
+    } catch (tokenError) {
+      console.error('YouTube token error:', tokenError);
+      if (tokenError.message.includes('invalid_grant')) {
+        return {
+          success: false,
+          error: 'YouTube authorization has expired. Please reauthorize the application.',
+          requiresReauth: true
+        };
+      }
+      throw tokenError;
+    }
+
     const youtube = google.youtube({
       version: 'v3',
       auth: oauth2Client
@@ -355,17 +402,27 @@ exports.createAndPostContent = async (req, res) => {
           case 'instagram':
             result = await postToInstagram(post);
             break;
-          case 'youtube':
-            // Only allow video uploads for YouTube
-            if (post.mediaType !== 'video') {
-              result = {
-                success: false,
-                error: 'Only video uploads are supported for YouTube'
-              };
-            } else {
-              result = await postToYoutube(post);
-            }
-            break;
+            case 'youtube':
+              // Only allow video uploads for YouTube
+              if (post.mediaType !== 'video') {
+                result = {
+                  success: false,
+                  error: 'Only video uploads are supported for YouTube'
+                };
+              } else {
+                result = await postToYoutube(post);
+                
+                // Check if reauthorization is required
+                if (!result.success && result.requiresReauth) {
+                  post.postStatus[platform] = {
+                    posted: false,
+                    errorMessage: result.error,
+                    needsReauthorization: true
+                  };
+                  continue; // Skip to next platform
+                }
+              }
+              break;
         }
 
         // Update post status
@@ -417,3 +474,61 @@ exports.getRecentPosts = async (req, res) => {
   }
 };
 
+// Generate YouTube OAuth URL
+exports.getYouTubeAuthUrl = async (req, res) => {
+  try {
+    const authUrl = generateYouTubeAuthUrl();
+    res.status(200).json({
+      success: true,
+      authUrl
+    });
+  } catch (error) {
+    console.error('Error generating YouTube auth URL:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate YouTube authorization URL',
+      error: error.message
+    });
+  }
+};
+
+// Handle YouTube OAuth callback
+exports.handleYouTubeCallback = async (req, res) => {
+  try {
+    const { code } = req.query;
+    
+    if (!code) {
+      return res.status(400).json({
+        success: false,
+        message: 'Authorization code is missing'
+      });
+    }
+    
+    const tokens = await getYouTubeTokens(code);
+    
+    // Instead of showing tokens in response, you might want to store them
+    // securely in your database or environment variables
+    
+    // For demonstration purposes only - in production, don't send tokens to frontend
+    res.status(200).json({
+      success: true,
+      message: 'YouTube authorization successful',
+      tokens: {
+        access_token: tokens.access_token ? '(token received)' : '(not received)',
+        refresh_token: tokens.refresh_token ? '(token received)' : '(not received)',
+        expiry_date: tokens.expiry_date
+      }
+    });
+    
+    // Log tokens for you to copy to your .env file
+    console.log('YouTube Tokens:', tokens);
+    
+  } catch (error) {
+    console.error('Error handling YouTube callback:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to complete YouTube authorization',
+      error: error.message
+    });
+  }
+};
