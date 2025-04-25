@@ -22,6 +22,7 @@ import Dashboard from "./components/Dashboard/Dashboard";
 import { SocialMediaProvider } from "./context/SocialMediaContext";
 import { ToastProvider } from "./context/ToastContext";
 import { ToastContainer } from "react-toastify";
+import { MandalProvider } from "./context/MandalContext";
 
 // Create wrapper components to handle URL parameters
 const EventsWithParams = () => {
@@ -45,6 +46,7 @@ function App() {
     <Router>
       <ToastProvider>
         <AuthProvider>
+        <MandalProvider>
           <SocialMediaProvider>
             <GrievanceProvider>
               <EventProvider>
@@ -132,6 +134,7 @@ function App() {
               </EventProvider>
             </GrievanceProvider>
           </SocialMediaProvider>
+          </MandalProvider>
         </AuthProvider>
       </ToastProvider>
     </Router>

@@ -10,6 +10,7 @@ import UpcomingEvents from "../Event/UpcomingEvents";
 import UpcomingGrievances from "../Grievance/UpcomingGrievances";
 import { useState, useEffect } from "react";
 import { X, Plus, Menu } from "lucide-react";
+import MandalManagementModal from "../PartyYouth/MandalManagementModal";
 
 // Modal with improved mobile handling
 const Modal = ({ isOpen, onClose, children }) => {
@@ -20,12 +21,12 @@ const Modal = ({ isOpen, onClose, children }) => {
     } else {
       document.body.style.overflow = "auto";
     }
-    
+
     return () => {
       document.body.style.overflow = "auto";
     };
   }, [isOpen]);
-  
+
   if (!isOpen) return null;
 
   return (
@@ -59,10 +60,10 @@ const Dashboard = () => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    
+
     return () => {
       window.removeEventListener('resize', checkMobile);
     };
@@ -126,6 +127,13 @@ const Dashboard = () => {
           <UserManagement />
         </div>
       )}
+
+      {activeTab === "mandalManagement" && currentUser?.role === "admin" && (
+        <div className="bg-white p-3 md:p-4 rounded-lg shadow overflow-x-auto">
+          <MandalManagementModal />
+        </div>
+      )}
+
 
       {/* FLOATING BUTTONS - positioned differently for mobile */}
       {activeTab === "events" && currentUser?.assignedTables?.includes("event") && (

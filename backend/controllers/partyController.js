@@ -3,10 +3,9 @@ const PartyAndYouth = require('../models/PartyAndYouth');
 // Get all party members (filtered by query params)
 exports.getAllPartyMembers = async (req, res) => {
   try {
-    const { search, mandal, designation } = req.query;
+    const { search, mandal, designation, status } = req.query;
     const filters = {};
-    
-    // Text search (name or aadharNo)
+
     if (search) {
       filters.$or = [
         { name: { $regex: search, $options: 'i' } },
@@ -14,15 +13,23 @@ exports.getAllPartyMembers = async (req, res) => {
       ];
     }
 
-    // Mandal filter (nested field)
     if (mandal) {
       filters['address.mandal'] = mandal;
     }
 
-    // Designation filter
     if (designation) {
       filters.designation = designation;
     }
+
+    // ✅ Apply status filter if provided, otherwise default to active
+    if (status === 'inactive') {
+      filters.isActive = false;
+    } else {
+      // default to active if status is not provided or is 'active'
+      filters.isActive = true;
+    }
+
+    console.log("filters", filters);
 
     const members = await PartyAndYouth.find(filters);
     res.json(members);
@@ -72,13 +79,36 @@ exports.updatePartyMember = async (req, res) => {
 // Delete party member
 exports.deletePartyMember = async (req, res) => {
   try {
-    const member = await PartyAndYouth.findByIdAndDelete(req.params.id);
+    const member = await PartyAndYouth.findByIdAndUpdate(
+      req.params.id,
+      { isActive: false },
+      { new: true }
+    );
 
     if (!member) {
       return res.status(404).json({ message: 'Member not found' });
     }
 
-    res.json({ message: 'Member deleted successfully' });
+    res.json({ message: 'Member deactivated successfully', member });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Reactivate (make active) an inactive party member
+exports.reactivatePartyMember = async (req, res) => {
+  try {
+    const member = await PartyAndYouth.findByIdAndUpdate(
+      req.params.id,
+      { isActive: true },
+      { new: true }
+    );
+
+    if (!member) {
+      return res.status(404).json({ message: 'Member not found' });
+    }
+
+    res.json({ message: 'Member reactivated successfully', member });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

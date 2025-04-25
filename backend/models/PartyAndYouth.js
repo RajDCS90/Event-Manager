@@ -18,6 +18,10 @@ const PartyAndYouthSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  isActive:{
+    type:Boolean,
+    default:true
+  },
   address: {
     village: {
       type: String,
