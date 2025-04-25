@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, addDays } from 'date-fns';
 import { useAuth } from '../../context/AuthContext';
-import { Edit, Trash, Calendar, Clock, MapPin, User } from 'lucide-react';
+import { Edit, Trash, Calendar, Clock, MapPin, User, Search } from 'lucide-react';
 import StatusBadge from '../common/StatusBadge';
 import { useGrievance } from '../../context/GrievanceContext';
 import GrievanceEditModal from './GrievanceEditModal';
@@ -17,19 +17,25 @@ const GrievanceTable = ({ skipInitialFetch = false }) => {
   // Filter states
   const [statusFilter, setStatusFilter] = useState('');
   const [mandalFilter, setMandalFilter] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
-  
+  const [dateOption, setDateOption] = useState('single'); // 'single', 'today', '7days', '30days', 'custom'
+  const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
+  const [dateRange, setDateRange] = useState({
+    programDate: '',
+    startDate: '',
+    endDate: ''
+  });
+
   // Extract unique values for filter dropdowns
   const statuses = [...new Set(grievances.map(g => g.status))];
   const mandals = [...new Set(grievances.map(g => g.mandal))];
 
   useEffect(() => {
     if (!skipInitialFetch) {
-    fetchGrievancesWithFilters();
+      fetchGrievancesWithFilters();
     }
-  }, [statusFilter, mandalFilter, dateFilter,skipInitialFetch]);
+  }, [statusFilter, mandalFilter, dateRange, skipInitialFetch]);
+
   useEffect(() => {
-    // Initialize filteredGrievances with the full list when grievances change
     setFilteredGrievances(grievances);
   }, [grievances]);
 
@@ -37,7 +43,16 @@ const GrievanceTable = ({ skipInitialFetch = false }) => {
     const filters = {};
     if (statusFilter) filters.status = statusFilter;
     if (mandalFilter) filters.mandal = mandalFilter;
-    if (dateFilter) filters.programDate = new Date(dateFilter);
+    
+    // Handle date filters based on selected option
+    if (dateOption === 'single' && dateRange.programDate) {
+      filters.programDate = dateRange.programDate;
+    } else if (['today', '7days', '30days', 'custom'].includes(dateOption)) {
+      if (dateRange.startDate && dateRange.endDate) {
+        filters.startDate = dateRange.startDate;
+        filters.endDate = dateRange.endDate;
+      }
+    }
     
     fetchGrievances(filters);
   };
@@ -83,34 +98,95 @@ const GrievanceTable = ({ skipInitialFetch = false }) => {
     setMandalFilter(e.target.value);
   };
 
-  const handleDateFilterChange = (e) => {
-    setDateFilter(e.target.value);
+  const handleDateOptionChange = (e) => {
+    const option = e.target.value;
+    setDateOption(option);
+    
+    const today = new Date();
+    let startDate, endDate;
+
+    switch (option) {
+      case "today":
+        // Set to today
+        setDateRange({
+          programDate: format(today, "yyyy-MM-dd"),
+          startDate: format(today, "yyyy-MM-dd"),
+          endDate: format(today, "yyyy-MM-dd")
+        });
+        setShowCustomDatePicker(false);
+        break;
+      case "7days":
+        // Set to next 7 days
+        startDate = today;
+        endDate = addDays(today, 6); // 7 days including today
+        setDateRange({
+          programDate: "",
+          startDate: format(startDate, "yyyy-MM-dd"),
+          endDate: format(endDate, "yyyy-MM-dd")
+        });
+        setShowCustomDatePicker(false);
+        break;
+      case "30days":
+        // Set to next 30 days
+        startDate = today;
+        endDate = addDays(today, 29); // 30 days including today
+        setDateRange({
+          programDate: "",
+          startDate: format(startDate, "yyyy-MM-dd"),
+          endDate: format(endDate, "yyyy-MM-dd")
+        });
+        setShowCustomDatePicker(false);
+        break;
+      case "custom":
+        // Show custom date picker
+        setShowCustomDatePicker(true);
+        break;
+      case "single":
+      default:
+        // Reset to single date only
+        setShowCustomDatePicker(false);
+        setDateRange({
+          programDate: "",
+          startDate: "",
+          endDate: ""
+        });
+        break;
+    }
+  };
+
+  const handleDateRangeChange = (e) => {
+    const { name, value } = e.target;
+    setDateRange(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const resetFilters = () => {
     setStatusFilter('');
     setMandalFilter('');
-    setDateFilter('');
+    setDateOption('single');
+    setShowCustomDatePicker(false);
+    setDateRange({
+      programDate: '',
+      startDate: '',
+      endDate: ''
+    });
     setSearchTerm('');
-    fetchGrievances(); // Fetch all grievances without filters
+    fetchGrievances();
   };
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this grievance?')) {
       try {
         await deleteGrievance(id);
-        fetchGrievancesWithFilters(); // Refresh with current filters
+        fetchGrievancesWithFilters();
       } catch (error) {
         console.error('Error deleting grievance:', error);
         alert(error.message || 'Failed to delete grievance');
       }
     }
   };
-  
-  useEffect(()=>{
-    console.log('filteredGrievances',filteredGrievances);
-  },[filteredGrievances])
-
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -127,9 +203,7 @@ const GrievanceTable = ({ skipInitialFetch = false }) => {
                 onChange={handleSearch}
               />
               <div className="absolute left-3 top-2.5 text-gray-400">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                <Search className="w-5 h-5" />
               </div>
             </div>
           </div>
@@ -165,24 +239,70 @@ const GrievanceTable = ({ skipInitialFetch = false }) => {
             </select>
           </div>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Program Date</label>
-            <input
-              type="date"
-              value={dateFilter}
-              onChange={handleDateFilterChange}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+            <select
+              value={dateOption}
+              onChange={handleDateOptionChange}
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          
-          <div className="flex items-end">
-            <button
-              onClick={resetFilters}
-              className="w-full py-2 px-4 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md transition duration-150"
             >
-              Reset Filters
-            </button>
+              <option value="single">Single Date</option>
+              <option value="today">Today</option>
+              <option value="7days">Next 7 Days</option>
+              <option value="30days">Next 30 Days</option>
+              <option value="custom">Custom Range</option>
+            </select>
+
+            {/* Date Input Fields */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+              {dateOption === "single" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Program Date</label>
+                  <input
+                    type="date"
+                    name="programDate"
+                    value={dateRange.programDate}
+                    onChange={handleDateRangeChange}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              )}
+
+              {(showCustomDatePicker || ["7days", "30days"].includes(dateOption)) && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                    <input
+                      type="date"
+                      name="startDate"
+                      value={dateRange.startDate}
+                      onChange={handleDateRangeChange}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                    <input
+                      type="date"
+                      name="endDate"
+                      value={dateRange.endDate}
+                      onChange={handleDateRangeChange}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
           </div>
+        </div>
+
+        <div className="mt-4 flex justify-end">
+          <button
+            onClick={resetFilters}
+            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md transition duration-150"
+          >
+            Reset Filters
+          </button>
         </div>
       </div>
 
@@ -262,8 +382,7 @@ const GrievanceTable = ({ skipInitialFetch = false }) => {
           isOpen={!!selectedGrievance}
           onClose={() => setSelectedGrievance(null)}
           onSave={(updatedGrievance) => {
-            // Call your update function here (e.g., API call to save it)
-            // Optional: trigger refetchGrievances() after save
+        
             setSelectedGrievance(null);
           }}
         />

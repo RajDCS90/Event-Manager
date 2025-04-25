@@ -12,11 +12,12 @@ exports.getAllGrievances = async (req, res) => {
     if (req.query.mandal) {
       filters.mandal = req.query.mandal;
     }
+
+    // Handle date filters
     if (req.query.programDate) {
-      // Handle both date string and ISO format
+      // Single date filter
       const date = new Date(req.query.programDate);
       if (!isNaN(date.getTime())) {
-        // Filter for the entire day
         const startOfDay = new Date(date);
         startOfDay.setUTCHours(0, 0, 0, 0);
         
@@ -28,16 +29,25 @@ exports.getAllGrievances = async (req, res) => {
           $lte: endOfDay
         };
       }
+    } else if (req.query.startDate && req.query.endDate) {
+      // Date range filter
+      const startDate = new Date(req.query.startDate);
+      const endDate = new Date(req.query.endDate);
+      
+      if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+        startDate.setUTCHours(0, 0, 0, 0);
+        endDate.setUTCHours(23, 59, 59, 999);
+        
+        filters.programDate = {
+          $gte: startDate,
+          $lte: endDate
+        };
+      }
     }
-
-    // For non-admin users, only show their created grievances
-    // if (req.user.role !== 'admin') {
-    //   filters.createdBy = req.user._id;
-    // }
 
     const grievances = await Grievance.find(filters)
       .populate('createdBy', 'username')
-      .sort({ programDate: 1, startTime: 1 }); // Sort by date and time
+      .sort({ programDate: 1, startTime: 1 });
 
     res.json(grievances);
   } catch (error) {

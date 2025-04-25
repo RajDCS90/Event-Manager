@@ -17,39 +17,43 @@ export const EventProvider = ({ children }) => {
   const { notify } = useToast(); // Get the notify function from ToastContext
 
   // Memoized fetchEvents with useCallback
-  const fetchEvents = useCallback(async (filters = {}, page = 1, limit = 100) => {
-    try {
-      setLoading(true);
-      
-      const params = {
-        page,
-        limit,
-        ...filters
-      };
+  // In the fetchEvents function, update the date range handling:
+const fetchEvents = useCallback(async (filters = {}, page = 1, limit = 100) => {
+  try {
+    setLoading(true);
+    
+    const params = {
+      page,
+      limit,
+      ...filters
+    };
 
-      if (filters.startDate && filters.endDate) {
-        params.dateRange = `${filters.startDate},${filters.endDate}`;
-        delete params.startDate;
-        delete params.endDate;
+    // Handle date range filters
+    if (filters.dateRange) {
+      if (filters.dateRange.eventDate) {
+        params.eventDate = filters.dateRange.eventDate;
+      } else if (filters.dateRange.startDate && filters.dateRange.endDate) {
+        params.dateRange = `${filters.dateRange.startDate},${filters.dateRange.endDate}`;
       }
-
-      const response = await api.get('/events', { params });
-      
-      setEvents(response.data.events || []);
-      setPagination({
-        page: response.data.page,
-        limit: response.data.limit,
-        total: response.data.total,
-        pages: response.data.pages
-      });
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching events:', err);
-      setError(err.response?.data?.message || 'Failed to fetch events');
-    } finally {
-      setLoading(false);
     }
-  }, []);
+
+    const response = await api.get('/events', { params });
+    
+    setEvents(response.data.events || []);
+    setPagination({
+      page: response.data.page,
+      limit: response.data.limit,
+      total: response.data.total,
+      pages: response.data.pages
+    });
+    setError(null);
+  } catch (err) {
+    console.error('Error fetching events:', err);
+    setError(err.response?.data?.message || 'Failed to fetch events');
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   // Memoized createEvent
   const createEvent = useCallback(async (eventData) => {

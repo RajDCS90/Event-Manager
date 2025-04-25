@@ -81,28 +81,41 @@ const EventTable = ({ skipInitialFetch = false }) => {
     }
   };
 
-  const applyFilters = async () => {
-    try {
-      // Prepare filter object for API
-      const apiFilters = {};
+ // In the applyFilters function:
+const applyFilters = async () => {
+  try {
+    // Prepare filter object for API
+    const apiFilters = {};
 
-      if (filters.eventType) apiFilters.eventType = filters.eventType;
-      if (filters.status) apiFilters.status = filters.status;
-      if (filters.mandal) apiFilters.mandal = filters.mandal;
-      if (filters.venue) apiFilters.venue = filters.venue;
-      if (filters.dateRange.eventDate) apiFilters.eventDate = filters.dateRange.eventDate;
-      if (filters.village) apiFilters.village = filters.village;
-      if (filters.postOffice) apiFilters.postOffice = filters.postOffice;
-      if (filters.policeStation) apiFilters.policeStation = filters.policeStation;
-      if (filters.pincode) apiFilters.pincode = filters.pincode;
-
-      await fetchEvents(apiFilters);
-      setSearchTerm("");
-    } catch (error) {
-      console.error("Error applying filters:", error);
-      alert("Failed to apply filters. Please try again.");
+    if (filters.eventType) apiFilters.eventType = filters.eventType;
+    if (filters.status) apiFilters.status = filters.status;
+    if (filters.mandal) apiFilters.mandal = filters.mandal;
+    if (filters.venue) apiFilters.venue = filters.venue;
+    
+    // Handle date range
+    if (filters.dateRange) {
+      apiFilters.dateRange = {};
+      if (filters.dateRange.eventDate) {
+        apiFilters.dateRange.eventDate = filters.dateRange.eventDate;
+      }
+      if (filters.dateRange.startDate && filters.dateRange.endDate) {
+        apiFilters.dateRange.startDate = filters.dateRange.startDate;
+        apiFilters.dateRange.endDate = filters.dateRange.endDate;
+      }
     }
-  };
+
+    if (filters.village) apiFilters.village = filters.village;
+    if (filters.postOffice) apiFilters.postOffice = filters.postOffice;
+    if (filters.policeStation) apiFilters.policeStation = filters.policeStation;
+    if (filters.pincode) apiFilters.pincode = filters.pincode;
+
+    await fetchEvents(apiFilters);
+    setSearchTerm("");
+  } catch (error) {
+    console.error("Error applying filters:", error);
+    alert("Failed to apply filters. Please try again.");
+  }
+};
 
   const resetFilters = async () => {
     setShowFilters(false);

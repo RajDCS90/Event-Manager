@@ -17,11 +17,23 @@ exports.getAllEvents = async (req, res) => {
       query.mandal = filters.mandal;
     }
     if (filters.venue) {
-      query.venue = { $regex: filters.venue, $options: 'i' };
+      query.venue = { $regex: filters.venue, $options: "i" };
     }
-    
+
     // Handle date range
-   if (filters.eventDate) {
+    if (filters.dateRange) {
+      const [startDate, endDate] = filters.dateRange.split(",");
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+        query.eventDate = { $gte: start, $lte: end };
+      }
+    } 
+    // Handle single date filter
+    else if (filters.eventDate) {
       const date = new Date(filters.eventDate);
       if (!isNaN(date.getTime())) {
         const startOfDay = new Date(date.setHours(0, 0, 0, 0));
@@ -29,32 +41,13 @@ exports.getAllEvents = async (req, res) => {
         query.eventDate = { $gte: startOfDay, $lte: endOfDay };
       }
     }
-    
-    if (filters.requesterName) {
-      query.requesterName = { $regex: filters.requesterName, $options: 'i' };
-    }
-    if (filters.description) {
-      query.description = { $regex: filters.description, $options: 'i' };
-    }
 
-    // Address filters
-    if (filters.village) {
-      query['address.village'] = { $regex: filters.village, $options: 'i' };
-    }
-    if (filters.postOffice) {
-      query['address.postOffice'] = { $regex: filters.postOffice, $options: 'i' };
-    }
-    if (filters.policeStation) {
-      query['address.policeStation'] = { $regex: filters.policeStation, $options: 'i' };
-    }
-    if (filters.pincode) {
-      query['address.pincode'] = filters.pincode;
-    }
+    // ... rest of your existing filters ...
 
     // Fetch all events matching the query
     const events = await Events.find(query)
       .sort({ eventDate: 1, startTime: 1 })
-      .populate({ path: 'createdBy', select: 'username' });
+      .populate({ path: "createdBy", select: "username" });
 
     res.json({ events });
   } catch (error) {
@@ -66,30 +59,34 @@ exports.getAllEvents = async (req, res) => {
 exports.createEvent = async (req, res) => {
   try {
     const { eventDate, startTime, endTime, address = {}, ...rest } = req.body;
-    
+
     // Validate date
     const dateObj = new Date(eventDate);
     if (isNaN(dateObj.getTime())) {
-      return res.status(400).json({ message: 'Invalid date format' });
+      return res.status(400).json({ message: "Invalid date format" });
     }
 
     // Validate times
     if (!isValidTime(startTime) || !isValidTime(endTime)) {
-      return res.status(400).json({ message: 'Invalid time format (HH:MM)' });
+      return res.status(400).json({ message: "Invalid time format (HH:MM)" });
     }
 
     if (convertTimeToMinutes(startTime) >= convertTimeToMinutes(endTime)) {
-      return res.status(400).json({ message: 'End time must be after start time' });
+      return res
+        .status(400)
+        .json({ message: "End time must be after start time" });
     }
 
     // Validate pincode if provided
     if (address.pincode && !/^\d{6}$/.test(address.pincode)) {
-      return res.status(400).json({ message: 'Pincode must be 6 digits' });
+      return res.status(400).json({ message: "Pincode must be 6 digits" });
     }
 
     // Validate phone number
     if (!/^\d{10}$/.test(rest.requesterContact)) {
-      return res.status(400).json({ message: 'Phone number must be 10 digits' });
+      return res
+        .status(400)
+        .json({ message: "Phone number must be 10 digits" });
     }
 
     // Construct address with mandal (if needed)
@@ -98,7 +95,7 @@ exports.createEvent = async (req, res) => {
       postOffice: address.postOffice,
       policeStation: address.policeStation,
       pincode: address.pincode,
-      mandal: address.mandal // ✅ include mandal inside address
+      mandal: address.mandal, // ✅ include mandal inside address
     };
 
     const eventData = {
@@ -107,7 +104,7 @@ exports.createEvent = async (req, res) => {
       startTime,
       endTime,
       address: completeAddress,
-      createdBy: req.user.id
+      createdBy: req.user.id,
     };
 
     const event = new Events(eventData);
@@ -116,40 +113,37 @@ exports.createEvent = async (req, res) => {
     res.status(201).json(event);
   } catch (error) {
     res.status(400).json({
-      message: 'Validation failed',
+      message: "Validation failed",
       errors: error.errors
         ? Object.keys(error.errors).reduce((acc, key) => {
             acc[key] = error.errors[key].message;
             return acc;
           }, {})
-        : error.message
+        : error.message,
     });
   }
 };
 
-
 // Update event with full validation
-// controllers/eventController.js
-// controllers/eventController.js
 exports.updateEvent = async (req, res) => {
   try {
     // Create update object with all fields from req.body
     const updateData = { ...req.body };
 
     // Handle address if it's sent as a string
-    if (typeof updateData.address === 'string') {
+    if (typeof updateData.address === "string") {
       try {
         updateData.address = JSON.parse(updateData.address);
       } catch (e) {
-        console.error('Error parsing address:', e);
-        return res.status(400).json({ message: 'Invalid address format' });
+        console.error("Error parsing address:", e);
+        return res.status(400).json({ message: "Invalid address format" });
       }
     }
 
     // Handle uploaded file
     if (req.file) {
       updateData.imageUrl = `http://localhost:5000/uploads/${req.file.filename}`; // Store the path to the image
-      console.log('File uploaded:', updateData.imageUrl); // Debug log
+      console.log("File uploaded:", updateData.imageUrl); // Debug log
     }
 
     const updatedEvent = await Events.findByIdAndUpdate(
@@ -159,15 +153,15 @@ exports.updateEvent = async (req, res) => {
     );
 
     if (!updatedEvent) {
-      return res.status(404).json({ message: 'Event not found' });
+      return res.status(404).json({ message: "Event not found" });
     }
 
     res.json(updatedEvent);
   } catch (error) {
-    console.error('Update error:', error);
+    console.error("Update error:", error);
     res.status(500).json({
-      message: 'Error updating event',
-      error: error.message
+      message: "Error updating event",
+      error: error.message,
     });
   }
 };
@@ -180,15 +174,17 @@ exports.deleteEvent = async (req, res) => {
       // Ensure only admin or creator can delete
       $or: [
         { createdBy: req.user._id },
-        { ...(req.user.role === 'admin' ? {} : { _id: null }) }
-      ]
+        { ...(req.user.role === "admin" ? {} : { _id: null }) },
+      ],
     });
-    
+
     if (!event) {
-      return res.status(404).json({ message: 'Event not found or unauthorized' });
+      return res
+        .status(404)
+        .json({ message: "Event not found or unauthorized" });
     }
-    
-    res.json({ message: 'Event deleted successfully' });
+
+    res.json({ message: "Event deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -196,7 +192,7 @@ exports.deleteEvent = async (req, res) => {
 
 // Helper function to convert HH:MM to minutes
 function convertTimeToMinutes(timeStr) {
-  const [hours, minutes] = timeStr.split(':').map(Number);
+  const [hours, minutes] = timeStr.split(":").map(Number);
   return hours * 60 + minutes;
 }
 

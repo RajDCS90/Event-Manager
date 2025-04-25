@@ -16,13 +16,22 @@ export const GrievanceProvider = ({ children }) => {
   const fetchGrievances = async (filters = {}) => {
     try {
       setLoading(true);
-      // Convert date filter to ISO string if it's a Date object
-      const processedFilters = { ...filters };
-      if (processedFilters.programDate instanceof Date) {
-        processedFilters.programDate = processedFilters.programDate.toISOString().split('T')[0];
+      
+      // Prepare API params
+      const params = {};
+      
+      if (filters.status) params.status = filters.status;
+      if (filters.mandal) params.mandal = filters.mandal;
+      
+      // Handle date filters
+      if (filters.programDate) {
+        params.programDate = filters.programDate;
+      } else if (filters.startDate && filters.endDate) {
+        params.startDate = filters.startDate;
+        params.endDate = filters.endDate;
       }
       
-      const query = new URLSearchParams(processedFilters).toString();
+      const query = new URLSearchParams(params).toString();
       const res = await api.get(`/grievances?${query}`);
       setGrievances(res.data);
       setError(null);
