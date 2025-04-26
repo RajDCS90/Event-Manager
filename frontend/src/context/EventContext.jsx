@@ -21,6 +21,8 @@ export const EventProvider = ({ children }) => {
 const fetchEvents = useCallback(async (filters = {}, page = 1, limit = 100) => {
   try {
     setLoading(true);
+
+    console.log(filters)
     
     const params = {
       page,

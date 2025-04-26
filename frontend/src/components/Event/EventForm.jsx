@@ -1,17 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import FormInput from "../common/FormInput";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useEvents } from "../../context/EventContext";
+import { useMandal } from "../../context/MandalContext";
 
 const EventForm = ({ onClose }) => {
-  const { createEvent, loading, error } = useEvents();
+  const { createEvent, loading } = useEvents();
+  const { mandals, fetchMandals } = useMandal();
+
   const [formData, setFormData] = useState({
     eventName: "",
     eventType: "political",
     venue: "",
     status: "pending",
-    mandal: "Mandal 1",
     requesterName: "",
     requesterContact: "",
     eventDate: new Date(),
@@ -19,20 +21,23 @@ const EventForm = ({ onClose }) => {
     endTime: "10:00",
     description: "",
     address: {
+      mandal: "",
+      area: "",
       village: "",
+      booth: "",
       postOffice: "",
       policeStation: "",
       pincode: "",
     },
   });
 
-  const mandalOptions = [
-    "Mandal 1",
-    "Mandal 2",
-    "Mandal 3",
-    "Mandal 4",
-    "Mandal 5",
-  ];
+  const [areaOptions, setAreaOptions] = useState([]);
+  const [villageOptions, setVillageOptions] = useState([]);
+  const [boothOptions, setBoothOptions] = useState([]);
+
+  useEffect(() => {
+    fetchMandals();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,6 +53,49 @@ const EventForm = ({ onClose }) => {
         [name]: value,
       },
     }));
+
+    // Dynamic filtering logic
+    if (name === "mandal") {
+      const selectedMandal = mandals.find((m) => m.mandalName === value);
+      setAreaOptions(selectedMandal?.areas || []);
+      setVillageOptions([]);
+      setBoothOptions([]);
+      setFormData((prev) => ({
+        ...prev,
+        address: {
+          ...prev.address,
+          area: "",
+          village: "",
+          booth: "",
+        },
+      }));
+    }
+
+    if (name === "area") {
+      const selectedArea = areaOptions.find((a) => a.name === value);
+      setVillageOptions(selectedArea?.villages || []);
+      setBoothOptions([]);
+      setFormData((prev) => ({
+        ...prev,
+        address: {
+          ...prev.address,
+          village: "",
+          booth: "",
+        },
+      }));
+    }
+
+    if (name === "village") {
+      const selectedVillage = villageOptions.find((v) => v.name === value);
+      setBoothOptions(selectedVillage?.booths || []);
+      setFormData((prev) => ({
+        ...prev,
+        address: {
+          ...prev.address,
+          booth: "",
+        },
+      }));
+    }
   };
 
   const handleDateChange = (date) => {
@@ -81,7 +129,6 @@ const EventForm = ({ onClose }) => {
         eventType: "political",
         venue: "",
         status: "pending",
-        mandal: "Mandal 1",
         requesterName: "",
         requesterContact: "",
         eventDate: new Date(),
@@ -89,7 +136,10 @@ const EventForm = ({ onClose }) => {
         endTime: "10:00",
         description: "",
         address: {
+          mandal: "",
+          area: "",
           village: "",
+          booth: "",
           postOffice: "",
           policeStation: "",
           pincode: "",
@@ -110,13 +160,7 @@ const EventForm = ({ onClose }) => {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <FormInput
-            label="Event Name"
-            name="eventName"
-            value={formData.eventName}
-            onChange={handleChange}
-            required
-          />
+          <FormInput label="Event Name" name="eventName" value={formData.eventName} onChange={handleChange} required />
           <FormInput
             label="Event Type"
             name="eventType"
@@ -130,13 +174,7 @@ const EventForm = ({ onClose }) => {
               { value: "welfare", label: "Welfare" },
             ]}
           />
-          <FormInput
-            label="Venue"
-            name="venue"
-            value={formData.venue}
-            onChange={handleChange}
-            required
-          />
+          <FormInput label="Venue" name="venue" value={formData.venue} onChange={handleChange} required />
           <FormInput
             label="Status"
             name="status"
@@ -150,9 +188,7 @@ const EventForm = ({ onClose }) => {
             ]}
           />
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Event Date
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Event Date</label>
             <DatePicker
               selected={formData.eventDate}
               onChange={handleDateChange}
@@ -167,7 +203,6 @@ const EventForm = ({ onClose }) => {
             type="text"
             value={formData.startTime}
             onChange={(e) => handleTimeChange(e, "startTime")}
-            pattern="([0-1]?[0-9]|2[0-3]):[0-5][0-9]"
             placeholder="HH:MM"
             required
           />
@@ -177,57 +212,63 @@ const EventForm = ({ onClose }) => {
             type="text"
             value={formData.endTime}
             onChange={(e) => handleTimeChange(e, "endTime")}
-            pattern="([0-1]?[0-9]|2[0-3]):[0-5][0-9]"
             placeholder="HH:MM"
             required
           />
-          <FormInput
-            label="Requester Name"
-            name="requesterName"
-            value={formData.requesterName}
-            onChange={handleChange}
-            required
-          />
-          <FormInput
-            label="Requester Contact"
-            name="requesterContact"
-            value={formData.requesterContact}
-            onChange={handleChange}
-            type="tel"
-            required
-          />
+          <FormInput label="Requester Name" name="requesterName" value={formData.requesterName} onChange={handleChange} required />
+          <FormInput label="Requester Contact" name="requesterContact" type="tel" value={formData.requesterContact} onChange={handleChange} required />
         </div>
 
-        <FormInput
-          label="Event Description"
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
-          type="textarea"
-          required
-        />
+        <FormInput label="Event Description" name="description" value={formData.description} onChange={handleChange} type="textarea" required />
 
         <div className="border-t pt-4">
-          <h3 className="text-md font-medium text-gray-800 mb-3">
-            Event Address
-          </h3>
+          <h3 className="text-md font-medium text-gray-800 mb-3">Event Address</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <FormInput
-              label="village Address"
-              name="village"
-              value={formData.address.village}
+              label="Mandal"
+              name="mandal"
+              type="select"
+              value={formData.address.mandal}
               onChange={handleAddressChange}
+              options={mandals.map((m) => ({ value: m.mandalName, label: m.mandalName }))}
               required
             />
             <FormInput
-              label="post office"
+              label="Area"
+              name="area"
+              type="select"
+              value={formData.address.area}
+              onChange={handleAddressChange}
+              options={areaOptions.map((a) => ({ value: a.name, label: `${a.name} (${a.type})` }))}
+              required
+            />
+            <FormInput
+              label="Village"
+              name="village"
+              type="select"
+              value={formData.address.village}
+              onChange={handleAddressChange}
+              options={villageOptions.map((v) => ({ value: v.name, label: v.name }))}
+              required
+            />
+            <FormInput
+              label="Booth"
+              name="booth"
+              type="select"
+              value={formData.address.booth}
+              onChange={handleAddressChange}
+              options={boothOptions.map((b) => ({ value: b.number, label: b.number }))}
+              required
+            />
+            <FormInput
+              label="Post Office"
               name="postOffice"
               value={formData.address.postOffice}
               onChange={handleAddressChange}
               required
             />
             <FormInput
-              label="Police station"
+              label="Police Station"
               name="policeStation"
               value={formData.address.policeStation}
               onChange={handleAddressChange}
@@ -240,15 +281,6 @@ const EventForm = ({ onClose }) => {
               onChange={handleAddressChange}
               pattern="[0-9]{6}"
               maxLength="6"
-              required
-            />
-            <FormInput
-              label="Mandal"
-              name="mandal"
-              type="select"
-              value={formData.address.mandal}
-              onChange={handleAddressChange}
-              options={mandalOptions.map((m) => ({ value: m, label: m }))}
               required
             />
           </div>

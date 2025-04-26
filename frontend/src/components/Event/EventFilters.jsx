@@ -1,22 +1,57 @@
 import { useState, useEffect } from "react";
 import { X, Calendar } from "lucide-react";
 import { format, addDays } from "date-fns";
+import { useMandal } from "../../context/MandalContext";
 
 const EventFilters = ({ filters, onFilterChange, onApplyFilters, onResetFilters, onClose }) => {
   const [dateOption, setDateOption] = useState("single");
   const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
+  const { mandals, fetchMandals } = useMandal();
   
-  const mandalOptions = [
-    "Mandal 1",
-    "Mandal 2",
-    "Mandal 3",
-    "Mandal 4",
-    "Mandal 5",
-  ];
-  
+  const [areaOptions, setAreaOptions] = useState([]);
+  const [villageOptions, setVillageOptions] = useState([]);
+  const [boothOptions, setBoothOptions] = useState([]);
+
+  useEffect(() => {
+    fetchMandals();
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     onFilterChange(name, value);
+  };
+
+  const handleAddressChange = (e) => {
+    const { name, value } = e.target;
+    onFilterChange(`address.${name}`, value);
+
+    // Dynamic filtering logic
+    if (name === "mandal") {
+      const selectedMandal = mandals.find((m) => m.mandalName === value);
+      setAreaOptions(selectedMandal?.areas || []);
+      setVillageOptions([]);
+      setBoothOptions([]);
+      // Reset dependent fields
+      onFilterChange(`address.area`, "");
+      onFilterChange(`address.village`, "");
+      onFilterChange(`address.booth`, "");
+    }
+
+    if (name === "area") {
+      const selectedArea = areaOptions.find((a) => a.name === value);
+      setVillageOptions(selectedArea?.villages || []);
+      setBoothOptions([]);
+      // Reset dependent fields
+      onFilterChange(`address.village`, "");
+      onFilterChange(`address.booth`, "");
+    }
+
+    if (name === "village") {
+      const selectedVillage = villageOptions.find((v) => v.name === value);
+      setBoothOptions(selectedVillage?.booths || []);
+      // Reset dependent field
+      onFilterChange(`address.booth`, "");
+    }
   };
 
   const handleDateOptionChange = (e) => {
@@ -75,7 +110,7 @@ const EventFilters = ({ filters, onFilterChange, onApplyFilters, onResetFilters,
         break;
     }
   };
-  
+
   return (
     <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
       <div className="flex justify-between items-center mb-4">
@@ -121,25 +156,6 @@ const EventFilters = ({ filters, onFilterChange, onApplyFilters, onResetFilters,
             <option value="pending">Pending</option>
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Mandal
-          </label>
-          <select
-            name="mandal"
-            value={filters.address?.mandal}
-            onChange={handleChange}
-            className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">Select Mandal</option>
-            {mandalOptions.map((mandal, index) => (
-              <option key={index} value={mandal}>
-                {mandal}
-              </option>
-            ))}
           </select>
         </div>
 
@@ -231,16 +247,81 @@ const EventFilters = ({ filters, onFilterChange, onApplyFilters, onResetFilters,
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
+              Mandal
+            </label>
+            <select
+              name="mandal"
+              value={filters.address?.mandal || ""}
+              onChange={handleAddressChange}
+              className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Select Mandal</option>
+              {mandals.map((mandal) => (
+                <option key={mandal._id} value={mandal.mandalName}>
+                  {mandal.mandalName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Area/Panchayat
+            </label>
+            <select
+              name="area"
+              value={filters.address?.area || ""}
+              onChange={handleAddressChange}
+              disabled={!filters.address?.mandal}
+              className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Select Area</option>
+              {areaOptions.map((area) => (
+                <option key={area.name} value={area.name}>
+                  {area.name} ({area.type})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Village
             </label>
-            <input
-              type="text"
+            <select
               name="village"
-              value={filters.village}
-              onChange={handleChange}
-              placeholder="Enter village"
+              value={filters.address?.village || ""}
+              onChange={handleAddressChange}
+              disabled={!filters.address?.area}
               className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+            >
+              <option value="">Select Village</option>
+              {villageOptions.map((village) => (
+                <option key={village.name} value={village.name}>
+                  {village.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Booth
+            </label>
+            <select
+              name="booth"
+              value={filters.address?.booth || ""}
+              onChange={handleAddressChange}
+              disabled={!filters.address?.village}
+              className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Select Booth</option>
+              {boothOptions.map((booth) => (
+                <option key={booth.number} value={booth.number}>
+                  {booth.number}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
@@ -250,8 +331,8 @@ const EventFilters = ({ filters, onFilterChange, onApplyFilters, onResetFilters,
             <input
               type="text"
               name="postOffice"
-              value={filters.postOffice}
-              onChange={handleChange}
+              value={filters.address?.postOffice || ""}
+              onChange={handleAddressChange}
               placeholder="Enter post office"
               className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
@@ -264,8 +345,8 @@ const EventFilters = ({ filters, onFilterChange, onApplyFilters, onResetFilters,
             <input
               type="text"
               name="policeStation"
-              value={filters.policeStation}
-              onChange={handleChange}
+              value={filters.address?.policeStation || ""}
+              onChange={handleAddressChange}
               placeholder="Enter police station"
               className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
@@ -278,8 +359,8 @@ const EventFilters = ({ filters, onFilterChange, onApplyFilters, onResetFilters,
             <input
               type="text"
               name="pincode"
-              value={filters.pincode}
-              onChange={handleChange}
+              value={filters.address?.pincode || ""}
+              onChange={handleAddressChange}
               placeholder="Enter pincode"
               className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />

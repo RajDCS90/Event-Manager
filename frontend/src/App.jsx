@@ -28,7 +28,7 @@ import { MandalProvider } from "./context/MandalContext";
 const EventsWithParams = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const tab = searchParams.get('tab') || 'upcoming';
+  const tab = searchParams.get("tab") || "upcoming";
 
   return <EventsComponent defaultTab={tab} />;
 };
@@ -36,7 +36,7 @@ const EventsWithParams = () => {
 const GrievancesWithParams = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const tab = searchParams.get('tab') || 'upcoming';
+  const tab = searchParams.get("tab") || "upcoming";
 
   return <GrievancesComponent defaultTab={tab} />;
 };
@@ -45,97 +45,97 @@ function App() {
   return (
     <Router>
       <ToastProvider>
-        <AuthProvider>
         <MandalProvider>
-          <SocialMediaProvider>
-            <GrievanceProvider>
-              <EventProvider>
-                <PartyAndYouthProvider>
-                  <ToastContainer />
-                  <Routes>
-                    {/* Public routes with header */}
-                    <Route
-                      path="/"
-                      element={
-                        <PublicLayout>
-                          <LandingPage />
-                        </PublicLayout>
-                      }
-                    />
+          <AuthProvider>
+            <SocialMediaProvider>
+              <GrievanceProvider>
+                <EventProvider>
+                  <PartyAndYouthProvider>
+                    <ToastContainer />
+                    <Routes>
+                      {/* Public routes with header */}
+                      <Route
+                        path="/"
+                        element={
+                          <PublicLayout>
+                            <LandingPage />
+                          </PublicLayout>
+                        }
+                      />
 
-                    <Route
-                      path="/login"
-                      element={
-                        <PublicLayout>
-                          <Login />
-                        </PublicLayout>
-                      }
-                    />
+                      <Route
+                        path="/login"
+                        element={
+                          <PublicLayout>
+                            <Login />
+                          </PublicLayout>
+                        }
+                      />
 
-                    {/* Updated to use wrapper components */}
-                    <Route
-                      path="/events"
-                      element={
-                        <PublicLayout>
-                          <EventsWithParams />
-                        </PublicLayout>
-                      }
-                    />
+                      {/* Updated to use wrapper components */}
+                      <Route
+                        path="/events"
+                        element={
+                          <PublicLayout>
+                            <EventsWithParams />
+                          </PublicLayout>
+                        }
+                      />
 
-                    <Route
-                      path="/grievance"
-                      element={
-                        <PublicLayout>
-                          <GrievancesWithParams />
-                        </PublicLayout>
-                      }
-                    />
+                      <Route
+                        path="/grievance"
+                        element={
+                          <PublicLayout>
+                            <GrievancesWithParams />
+                          </PublicLayout>
+                        }
+                      />
 
-                    {/* Redirect /dashboard to /dashboard/home route */}
-                    <Route
-                      path="/dashboard"
-                      element={<Navigate to="/dashboard/home" replace />}
-                    />
+                      {/* Redirect /dashboard to /dashboard/home route */}
+                      <Route
+                        path="/dashboard"
+                        element={<Navigate to="/dashboard/home" replace />}
+                      />
 
-                    {/* Make the EventsAndGrievancesPage render at /dashboard/home */}
-                    <Route
-                      path="/dashboard/home"
-                      element={
-                        <ProtectedRoute>
-                          <Layout>
-                            <Home />
-                          </Layout>
-                        </ProtectedRoute>
-                      }
-                    />
+                      {/* Make the EventsAndGrievancesPage render at /dashboard/home */}
+                      <Route
+                        path="/dashboard/home"
+                        element={
+                          <ProtectedRoute>
+                            <Layout>
+                              <Home />
+                            </Layout>
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="/dashboard/*"
-                      element={
-                        <ProtectedRoute>
-                          <Layout>
-                            <Dashboard />
-                          </Layout>
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/social-media"
-                      element={
-                        <ProtectedRoute>
-                          <Layout>
-                            <SocialMediaUploader />
-                          </Layout>
-                        </ProtectedRoute>
-                      }
-                    />
-                  </Routes>
-                </PartyAndYouthProvider>
-              </EventProvider>
-            </GrievanceProvider>
-          </SocialMediaProvider>
-          </MandalProvider>
-        </AuthProvider>
+                      <Route
+                        path="/dashboard/*"
+                        element={
+                          <ProtectedRoute>
+                            <Layout>
+                              <Dashboard />
+                            </Layout>
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/social-media"
+                        element={
+                          <ProtectedRoute>
+                            <Layout>
+                              <SocialMediaUploader />
+                            </Layout>
+                          </ProtectedRoute>
+                        }
+                      />
+                    </Routes>
+                  </PartyAndYouthProvider>
+                </EventProvider>
+              </GrievanceProvider>
+            </SocialMediaProvider>
+          </AuthProvider>
+        </MandalProvider>
       </ToastProvider>
     </Router>
   );
