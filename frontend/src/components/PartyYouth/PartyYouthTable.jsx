@@ -11,14 +11,27 @@ const PartyYouthTable = () => {
     deleteMember,
     reactivateMember
   } = usePartyAndYouth();
+  const [designationFilter, setDesignationFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState(""); // "active" | "inactive" | ""
   const [filteredMembers, setFilteredMembers] = useState([]);
   const [currentUser] = useState({ role: "admin" });
   const [searchTerm, setSearchTerm] = useState("");
-  const [mandalFilter, setMandalFilter] = useState("");
-  const [designationFilter, setDesignationFilter] = useState("");
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+
+  // Filter states
+  const [mandalFilter, setMandalFilter] = useState("");
+  const [wardFilter, setWardFilter] = useState("");
+  const [panchayatFilter, setPanchayatFilter] = useState("");
+  const [villageFilter, setVillageFilter] = useState("");
+  const [boothFilter, setBoothFilter] = useState("");
+
+  // Filter options
+  const [mandalOptions, setMandalOptions] = useState([]);
+  const [wardOptions, setWardOptions] = useState([]);
+  const [panchayatOptions, setPanchayatOptions] = useState([]);
+  const [villageOptions, setVillageOptions] = useState([]);
+  const [boothOptions, setBoothOptions] = useState([]);
 
   const WhatsAppIcon = ({ size = 16, className = "" }) => (
     <svg
@@ -47,30 +60,150 @@ const PartyYouthTable = () => {
     fetchMembers();
   }, []);
 
+  // Initialize filter options
   useEffect(() => {
-    fetchMembers({
-      mandal: mandalFilter,
-      designation: designationFilter,
-      status: statusFilter
-    });
-  }, [mandalFilter, designationFilter, statusFilter]);
+    if (members.length > 0) {
+      // Get unique mandals
+      const mandals = [...new Set(members.map(m => m.address?.mandal).filter(Boolean))];
+      setMandalOptions(mandals);
+      
+      // Get other filter options based on current filters
+      updateFilterOptions();
+    }
+  }, [members]);
 
+  // Update filter options when filters change
+  const updateFilterOptions = () => {
+    let filtered = members;
+    
+    // Apply current filters to get available options
+    if (mandalFilter) {
+      filtered = filtered.filter(m => m.address?.mandal === mandalFilter);
+      
+      // Get wards and panchayats for selected mandal
+      const wards = [...new Set(
+        filtered
+          .filter(m => m.address?.areaType === 'Ward')
+          .map(m => m.address?.area)
+          .filter(Boolean)
+      )];
+      setWardOptions(wards);
+      
+      const panchayats = [...new Set(
+        filtered
+          .filter(m => m.address?.areaType === 'Panchayat')
+          .map(m => m.address?.area)
+          .filter(Boolean)
+      )];
+      setPanchayatOptions(panchayats);
+    }
+    
+    if (wardFilter) {
+      filtered = filtered.filter(m => 
+        m.address?.areaType === 'Ward' && m.address?.area === wardFilter
+      );
+    }
+    
+    if (panchayatFilter) {
+      filtered = filtered.filter(m => 
+        m.address?.areaType === 'Panchayat' && m.address?.area === panchayatFilter
+      );
+    }
+    
+    // Get villages for current filters
+    const villages = [...new Set(
+      filtered.map(m => m.address?.village).filter(Boolean)
+    )];
+    setVillageOptions(villages);
+    
+    if (villageFilter) {
+      filtered = filtered.filter(m => m.address?.village === villageFilter);
+    }
+    
+    // Get booths for current filters
+    const booths = [...new Set(
+      filtered.map(m => m.address?.booth).filter(Boolean)
+    )];
+    setBoothOptions(booths);
+  };
 
+  // Apply filters when they change
   useEffect(() => {
+    updateFilterOptions();
+    
+    let filtered = members;
+    
+    // Apply status filter
+    if (statusFilter === 'active') {
+      filtered = filtered.filter(m => m.isActive !== false);
+    } else if (statusFilter === 'inactive') {
+      filtered = filtered.filter(m => m.isActive === false);
+    }
+    
+    // Apply mandal filter
+    if (mandalFilter) {
+      filtered = filtered.filter(m => m.address?.mandal === mandalFilter);
+    }
+    
+    // Apply ward filter
+    if (wardFilter) {
+      filtered = filtered.filter(m => 
+        m.address?.areaType === 'Ward' && m.address?.area === wardFilter
+      );
+    }
+    
+    // Apply panchayat filter
+    if (panchayatFilter) {
+      filtered = filtered.filter(m => 
+        m.address?.areaType === 'Panchayat' && m.address?.area === panchayatFilter
+      );
+    }
+    
+    // Apply village filter
+    if (villageFilter) {
+      filtered = filtered.filter(m => m.address?.village === villageFilter);
+    }
+    
+    // Apply booth filter
+    if (boothFilter) {
+      filtered = filtered.filter(m => m.address?.booth === boothFilter);
+    }
+    
+    // Apply name search
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      const filtered = members.filter(m =>
-        m.name?.toLowerCase().includes(term) ||
-        m.aadharNo?.toLowerCase().includes(term)
-      );
-      setFilteredMembers(filtered);
-    } else {
-      setFilteredMembers(members);
+      filtered = filtered.filter(m => 
+        m.name?.toLowerCase().includes(term))
     }
-    // Reset select all when members change
-    setSelectAll(false);
-    setSelectedMembers([]);
-  }, [searchTerm, members]);
+    
+    setFilteredMembers(filtered);
+  }, [
+    statusFilter,
+    mandalFilter,
+    wardFilter,
+    panchayatFilter,
+    villageFilter,
+    boothFilter,
+    searchTerm,
+    members
+  ]);
+
+  // Reset dependent filters when parent filter changes
+  useEffect(() => {
+    setWardFilter("");
+    setPanchayatFilter("");
+    setVillageFilter("");
+    setBoothFilter("");
+  }, [mandalFilter]);
+
+  useEffect(() => {
+    setVillageFilter("");
+    setBoothFilter("");
+  }, [wardFilter, panchayatFilter]);
+
+  useEffect(() => {
+    setBoothFilter("");
+  }, [villageFilter]);
 
   // Handle select all checkbox
   useEffect(() => {
@@ -127,7 +260,6 @@ const PartyYouthTable = () => {
 
   // WhatsApp message functions
   const openBulkMessageModal = () => {
-    // Use selected members if any, otherwise use all filtered members with WhatsApp numbers
     const membersToUse = selectedMembers.length > 0
       ? filteredMembers.filter(member => selectedMembers.includes(member._id) && member.whatsappNo)
       : filteredMembers.filter(member => member.whatsappNo);
@@ -192,7 +324,6 @@ const PartyYouthTable = () => {
     try {
       setMessageModal(prev => ({ ...prev, sending: true, error: null }));
 
-      // Call the new backend API endpoint
       const response = await axios.post('http://localhost:5000/api/whatsapp/send-custom-messages', {
         phoneNumbers: messageModal.phoneNumbers.map(p => p.phone),
         message: messageModal.message
@@ -220,15 +351,13 @@ const PartyYouthTable = () => {
     }
   };
 
-  const mandalOptions = [
-    "Mandal 1",
-    "Mandal 2",
-    "Mandal 3",
-    "Mandal 4",
-    "Mandal 5",
-  ];
-  const designationOptions = [...new Set(members.map(g => g.designation))];
+  // Function to show last 4 digits of Aadhar
+  const getMaskedAadhar = (aadharNo) => {
+    if (!aadharNo || aadharNo.length < 4) return "****";
+    return `****${aadharNo.slice(-4)}`;
+  };
 
+  const designationOptions = [...new Set(members.map(m => m.designation))];
 
   return (
     <div className="mt-6">
@@ -251,7 +380,7 @@ const PartyYouthTable = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <input
           type="text"
-          placeholder="Search by Name or Aadhar No"
+          placeholder="Search by Name"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="p-2 border border-gray-300 rounded w-full"
@@ -271,6 +400,62 @@ const PartyYouthTable = () => {
         </select>
 
         <select
+          value={wardFilter}
+          onChange={(e) => setWardFilter(e.target.value)}
+          disabled={!mandalFilter}
+          className="p-2 border border-gray-300 rounded w-full"
+        >
+          <option value="">All Wards</option>
+          {wardOptions.map((ward, index) => (
+            <option key={index} value={ward}>
+              {ward}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={panchayatFilter}
+          onChange={(e) => setPanchayatFilter(e.target.value)}
+          disabled={!mandalFilter}
+          className="p-2 border border-gray-300 rounded w-full"
+        >
+          <option value="">All Panchayats</option>
+          {panchayatOptions.map((panchayat, index) => (
+            <option key={index} value={panchayat}>
+              {panchayat}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={villageFilter}
+          onChange={(e) => setVillageFilter(e.target.value)}
+          disabled={!(wardFilter || panchayatFilter)}
+          className="p-2 border border-gray-300 rounded w-full"
+        >
+          <option value="">All Villages</option>
+          {villageOptions.map((village, index) => (
+            <option key={index} value={village}>
+              {village}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={boothFilter}
+          onChange={(e) => setBoothFilter(e.target.value)}
+          disabled={!villageFilter}
+          className="p-2 border border-gray-300 rounded w-full"
+        >
+          <option value="">All Booths</option>
+          {boothOptions.map((booth, index) => (
+            <option key={index} value={booth}>
+              {booth}
+            </option>
+          ))}
+        </select>
+
+        <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           className="p-2 border border-gray-300 rounded w-full"
@@ -279,7 +464,6 @@ const PartyYouthTable = () => {
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </select>
-
 
         <select
           value={designationFilter}
@@ -314,6 +498,8 @@ const PartyYouthTable = () => {
               <th className="py-3 px-4 text-left text-sm font-semibold">WhatsApp No</th>
               <th className="py-3 px-4 text-left text-sm font-semibold">Designation</th>
               <th className="py-3 px-4 text-left text-sm font-semibold">Mandal</th>
+              <th className="py-3 px-4 text-left text-sm font-semibold">Village</th>
+              <th className="py-3 px-4 text-left text-sm font-semibold">Booth</th>
               <th className="py-3 px-4 text-left text-sm font-semibold">
                 <div className="flex items-center">
                   <span>Actions</span>
@@ -354,7 +540,7 @@ const PartyYouthTable = () => {
                         className="p-1 border rounded w-full"
                       />
                     ) : (
-                      member.aadharNo || "-"
+                      getMaskedAadhar(member.aadharNo) || "-"
                     )}
                   </td>
                   <td className="py-3 px-4 text-sm">
@@ -394,33 +580,14 @@ const PartyYouthTable = () => {
                     )}
                   </td>
                   <td className="py-3 px-4 text-sm">
-                    {editingId === member._id ? (
-                      <select
-                        name="address.mandal"
-                        value={editForm.address?.mandal || ""}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({
-                            ...prev,
-                            address: {
-                              ...prev.address,
-                              mandal: e.target.value,
-                            },
-                          }))
-                        }
-                        className="p-1 border rounded w-full"
-                      >
-                        <option value="">Select Mandal</option>
-                        {mandalOptions.map((mandal, idx) => (
-                          <option key={idx} value={mandal}>
-                            {mandal}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      member.address?.mandal || "-"
-                    )}
+                    {member.address?.mandal || "-"}
                   </td>
-
+                  <td className="py-3 px-4 text-sm">
+                    {member.address?.village || "-"}
+                  </td>
+                  <td className="py-3 px-4 text-sm">
+                    {member.address?.booth || "-"}
+                  </td>
                   <td className="py-3 px-4 text-sm">
                     <div className="flex space-x-2">
                       {editingId === member._id ? (
@@ -491,7 +658,7 @@ const PartyYouthTable = () => {
         </table>
       </div>
 
-      {members.length === 0 && (
+      {filteredMembers.length === 0 && (
         <div className="text-center py-4 text-gray-500">No members found</div>
       )}
 
