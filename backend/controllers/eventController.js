@@ -1,7 +1,7 @@
 const Events = require("../models/Events");
 
 // Get all events with pagination and filtering
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const Mandal = require("../models/Mandal");
 
 // Helper function to convert HH:MM to minutes
@@ -20,10 +20,11 @@ exports.getAllEvents = async (req, res) => {
   try {
     const filters = req.query;
     const query = {};
-    
-    // Pagination
+
+    // Pagination - default to 30 documents when no query parameters
     const page = parseInt(filters.page) || 1;
-    const limit = parseInt(filters.limit) || 10;
+    const limit =
+      Object.keys(filters).length === 0 ? 30 : parseInt(filters.limit) || 10;
     const skip = (page - 1) * limit;
 
     // Basic filters
@@ -37,6 +38,7 @@ exports.getAllEvents = async (req, res) => {
       query.venue = { $regex: filters.venue, $options: "i" };
     }
 
+    // Date filters remain the same...
     // Handle date range in format "YYYY-MM-DD,YYYY-MM-DD"
     if (filters.dateRange) {
       const [startDate, endDate] = filters.dateRange.split(',');
@@ -63,49 +65,54 @@ exports.getAllEvents = async (req, res) => {
       }
     }
 
-    // Handle address filters with bracket notation: address[mandal], address[area], etc.
-    // First, find the Mandal document by name
-    if (filters['address[mandal]']) {
-      const mandal = await mongoose.model('Mandal').findOne({ 
-        mandalName: filters['address[mandal]'] 
+    // Handle address filters with bracket notation
+    // For mandal, we need to check if filter is by ID or name
+    if (filters["address[mandal]"]) {
+      // First try to find by name
+      const mandal = await mongoose.model("Mandal").findOne({
+        mandalName: filters["address[mandal]"],
       });
-      
+
       if (mandal) {
-        query['address.mandal'] = mandal._id;
-        
-        // Create a log for debugging hierarchical filters
-        console.log(`Found mandal: ${mandal.mandalName} with ID: ${mandal._id}`);
-        
-        // Additional area/village/booth filters
-        // These will become part of our aggregation pipeline or query conditions
-        
-        // We'll store these for potential aggregation lookups
-        const areaFilter = filters['address[area]'] || null;
-        const villageFilter = filters['address[village]'] || null;
-        const boothFilter = filters['address[booth]'] || null;
-        
-        // Store these for logging/debugging
-        if (areaFilter) console.log(`Area filter: ${areaFilter}`);
-        if (villageFilter) console.log(`Village filter: ${villageFilter}`);
-        if (boothFilter) console.log(`Booth filter: ${boothFilter}`);
-        
-        // We won't add these directly to the query as they're not fields in the Event model
-        // Instead, we'll use them for filtering after getting the events
+        query["address.mandal"] = mandal._id;
+      } else {
+        // If not found by name, maybe it's already an ID
+        query["address.mandalName"] = filters["address[mandal]"];
       }
     }
-    
-    // Handle other address fields
-    if (filters['address[postOffice]']) {
-      query['address.postOffice'] = { $regex: filters['address[postOffice]'], $options: "i" };
+
+    // Now we can directly query other address fields because they are stored in the event
+    if (filters["address[area]"]) {
+      query["address.area"] = filters["address[area]"];
     }
-    if (filters['address[policeStation]']) {
-      query['address.policeStation'] = { $regex: filters['address[policeStation]'], $options: "i" };
+
+    if (filters["address[village]"]) {
+      query["address.village"] = filters["address[village]"];
     }
-    if (filters['address[pincode]']) {
-      query['address.pincode'] = filters['address[pincode]'];
+
+    if (filters["address[booth]"]) {
+      query["address.booth"] = filters["address[booth]"];
+    }
+
+    // Other address fields
+    if (filters["address[postOffice]"]) {
+      query["address.postOffice"] = {
+        $regex: filters["address[postOffice]"],
+        $options: "i",
+      };
+    }
+    if (filters["address[policeStation]"]) {
+      query["address.policeStation"] = {
+        $regex: filters["address[policeStation]"],
+        $options: "i",
+      };
+    }
+    if (filters["address[pincode]"]) {
+      query["address.pincode"] = filters["address[pincode]"];
     }
 
     console.log("Final query:", JSON.stringify(query, null, 2));
+    console.log("Limit:", limit);
 
     // Fetch events with pagination
     const totalCount = await Events.countDocuments(query);
@@ -114,34 +121,23 @@ exports.getAllEvents = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .populate({ path: "createdBy", select: "username" })
-      .populate({ 
-        path: "address.mandal", 
-        select: "mandalName areas" 
+      .populate({
+        path: "address.mandal",
+        select: "mandalName areas",
       });
-    
-    // Now we need to filter events based on area, village, and booth if provided
-    let filteredEvents = events;
-    
-    if (filters['address[area]'] || filters['address[village]'] || filters['address[booth]']) {
-      // We might need to implement some custom filtering here
-      // This could be complex and depend on how your events are structured
-      // For now, we'll keep all events but log that additional filtering would happen
-      console.log("Additional area/village/booth filtering would happen here");
-    }
 
-    res.json({ 
-      events: filteredEvents,
+    res.json({
+      events: events,
       page,
       limit,
       totalCount,
-      totalPages: Math.ceil(totalCount / limit)
+      totalPages: Math.ceil(totalCount / limit),
     });
   } catch (error) {
     console.error("Filter error:", error);
     res.status(500).json({ message: error.message });
   }
 };
-
 
 exports.createEvent = async (req, res) => {
   try {
@@ -177,30 +173,36 @@ exports.createEvent = async (req, res) => {
     }
 
     // Find the mandal by name to get its ObjectId
-    let mandalId;
+    let mandalDoc;
     if (address.mandal) {
-      const mandal = await Mandal.findOne({ mandalName: address.mandal });
-      if (!mandal) {
+      mandalDoc = await Mandal.findOne({ mandalName: address.mandal });
+      if (!mandalDoc) {
         return res.status(400).json({ message: "Invalid mandal name" });
       }
-      mandalId = mandal._id;
     } else {
       return res.status(400).json({ message: "Mandal is required" });
     }
 
-    // Construct address with mandal ObjectId
+    // Find the area type (Panchayat or Ward)
+    const selectedArea = mandalDoc.areas.find(
+      (area) => area.name === address.area
+    );
+    if (!selectedArea) {
+      return res.status(400).json({ message: "Invalid area name" });
+    }
+
+    // Construct complete address with all hierarchical information
     const completeAddress = {
+      mandal: mandalDoc._id,
+      mandalName: address.mandal,
+      area: address.area,
+      areaType: selectedArea.type,
+      village: address.village,
+      booth: address.booth,
       postOffice: address.postOffice,
       policeStation: address.policeStation,
       pincode: address.pincode,
-      mandal: mandalId, // Use the ObjectId, not the name
     };
-
-    // You can also store area, village, booth as metadata if needed
-    // These aren't in your schema but might be useful for reference
-    if (address.area) completeAddress.area = address.area;
-    if (address.village) completeAddress.village = address.village;
-    if (address.booth) completeAddress.booth = address.booth;
 
     const eventData = {
       ...rest,
@@ -216,8 +218,8 @@ exports.createEvent = async (req, res) => {
 
     // Fetch the created event with populated mandal for the response
     const populatedEvent = await Events.findById(event._id)
-      .populate('address.mandal', 'mandalName')
-      .populate('createdBy', 'username');
+      .populate("address.mandal", "mandalName")
+      .populate("createdBy", "username");
 
     res.status(201).json(populatedEvent);
   } catch (error) {
@@ -237,88 +239,100 @@ exports.createEvent = async (req, res) => {
 // Update event with full validation
 exports.updateEvent = async (req, res) => {
   try {
-    // Create update object with all fields from req.body
-    const updateData = { ...req.body };
+    // Create update object with only fields that were explicitly sent
+    const updateData = {};
     
-    // Handle address if it's sent as a string
-    if (typeof updateData.address === "string") {
-      try {
-        updateData.address = JSON.parse(updateData.address);
-      } catch (e) {
-        console.error("Error parsing address:", e);
-        return res.status(400).json({ message: "Invalid address format" });
+    // Copy only the fields that are present in the request body
+    Object.keys(req.body).forEach(key => {
+      if (key !== 'address') {
+        updateData[key] = req.body[key];
       }
-    }
-
-    // Get the existing event to check which fields are being updated
+    });
+    
+    // Get the existing event
     const existingEvent = await Events.findById(req.params.id);
     if (!existingEvent) {
       return res.status(404).json({ message: "Event not found" });
     }
 
-    // Merge existing address with the updates
-    if (updateData.address) {
-      // Only update mandal if it's changing
-      if (updateData.address.mandal && updateData.address.mandal !== existingEvent.address.mandal.toString()) {
-        // Find the mandal by name to get its ObjectId
-        const mandal = await Mandal.findOne({ mandalName: updateData.address.mandal });
-        if (!mandal) {
-          return res.status(400).json({ message: "Invalid mandal name" });
+    // Handle address updates
+    if (req.body.address) {
+      // Parse address if it's a string (from FormData)
+      let addressUpdates = null;
+      if (typeof req.body.address === "string") {
+        try {
+          addressUpdates = JSON.parse(req.body.address);
+        } catch (e) {
+          console.error("Error parsing address:", e);
+          return res.status(400).json({ message: "Invalid address format" });
         }
-        // Replace mandal name with mandal ObjectId
-        updateData.address.mandal = mandal._id;
-      } else if (!updateData.address.mandal) {
-        // Keep existing mandal if not provided
-        updateData.address.mandal = existingEvent.address.mandal;
+      } else {
+        addressUpdates = req.body.address;
       }
 
-      // Merge the existing address with provided updates
-      updateData.address = {
-        ...existingEvent.address.toObject(),
-        ...updateData.address
-      };
+      // Only add addressUpdates if there are actual updates
+      if (addressUpdates && Object.keys(addressUpdates).length > 0) {
+        // For partial updates, merge with existing address instead of replacing it
+        const existingAddress = existingEvent.address.toObject();
+        updateData.address = { ...existingAddress };
+        
+        // Handle mandal update - special case as it's a reference
+        if (addressUpdates.mandal && addressUpdates.mandal !== existingAddress.mandalName) {
+          // Find the mandal by name to get its ObjectId
+          const mandal = await Mandal.findOne({ mandalName: addressUpdates.mandal });
+          if (!mandal) {
+            return res.status(400).json({ message: "Invalid mandal name" });
+          }
+          
+          // Set mandal ObjectId and name
+          updateData.address.mandal = mandal._id;
+          updateData.address.mandalName = addressUpdates.mandal;
+        }
+        
+        // Handle area update - special case as it requires areaType
+        if (addressUpdates.area && addressUpdates.area !== existingAddress.area) {
+          updateData.address.area = addressUpdates.area;
+          
+          // Find areaType from mandal document
+          const mandalId = updateData.address.mandal || existingAddress.mandal;
+          const mandal = await Mandal.findById(mandalId);
+          if (mandal) {
+            const selectedArea = mandal.areas.find(area => area.name === addressUpdates.area);
+            if (selectedArea) {
+              updateData.address.areaType = selectedArea.type;
+            }
+          }
+        }
+        
+        // Copy remaining address fields that were updated
+        ['village', 'booth', 'postOffice', 'policeStation', 'pincode'].forEach(field => {
+          if (addressUpdates[field] !== undefined) {
+            updateData.address[field] = addressUpdates[field];
+          }
+        });
+      }
     }
 
-    // Validate time format if provided
-    if (updateData.startTime && updateData.endTime) {
-      if (!isValidTime(updateData.startTime) || !isValidTime(updateData.endTime)) {
-        return res.status(400).json({ message: "Invalid time format (HH:MM)" });
-      }
-
-      if (convertTimeToMinutes(updateData.startTime) >= convertTimeToMinutes(updateData.endTime)) {
-        return res.status(400).json({ message: "End time must be after start time" });
-      }
-    } else if (updateData.startTime && !updateData.endTime) {
-      // If only start time is provided, validate it against existing end time
-      if (convertTimeToMinutes(updateData.startTime) >= convertTimeToMinutes(existingEvent.endTime)) {
-        return res.status(400).json({ message: "End time must be after start time" });
-      }
-    } else if (!updateData.startTime && updateData.endTime) {
-      // If only end time is provided, validate it against existing start time
-      if (convertTimeToMinutes(existingEvent.startTime) >= convertTimeToMinutes(updateData.endTime)) {
-        return res.status(400).json({ message: "End time must be after start time" });
-      }
-    }
-
-    // Validate pincode if provided
-    if (updateData.address && updateData.address.pincode && !/^\d{6}$/.test(updateData.address.pincode)) {
-      return res.status(400).json({ message: "Pincode must be 6 digits" });
-    }
-
-    // Validate phone number if provided
-    if (updateData.requesterContact && !/^\d{10}$/.test(updateData.requesterContact)) {
-      return res.status(400).json({ message: "Phone number must be 10 digits" });
-    }
-
-    // Handle uploaded file
+    // Handle file upload if present
     if (req.file) {
-      updateData.imageUrl = `http://localhost:5000/uploads/${req.file.filename}`;
-      console.log("File uploaded:", updateData.imageUrl);
+      updateData.imageUrl = req.file.path;
+      
+      // Delete old image if it exists
+      if (existingEvent.imageUrl) {
+        // Code to delete old file from storage
+        // e.g., fs.unlink(existingEvent.imageUrl, (err) => {...});
+      }
     }
-
+    
+    // If no fields to update, return existing event
+    if (Object.keys(updateData).length === 0) {
+      return res.json(existingEvent);
+    }
+    
+    // Use $set to update only the specified fields
     const updatedEvent = await Events.findByIdAndUpdate(
       req.params.id,
-      updateData,
+      { $set: updateData },
       { new: true, runValidators: true }
     ).populate('address.mandal', 'mandalName')
      .populate('createdBy', 'username');
@@ -336,7 +350,6 @@ exports.updateEvent = async (req, res) => {
     });
   }
 };
-
 
 // Delete event
 exports.deleteEvent = async (req, res) => {
@@ -361,4 +374,3 @@ exports.deleteEvent = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
