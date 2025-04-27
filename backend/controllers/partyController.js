@@ -1,5 +1,26 @@
 const PartyAndYouth = require('../models/PartyAndYouth');
+const crypto = require('crypto');
 
+// Encryption configuration (should match schema configuration)
+// const encryptionAlgorithm = 'aes-256-cbc';
+// const encryptionKey = crypto.randomBytes(32); // Must be same as in schema
+// const iv = crypto.randomBytes(16); // Must be same as in schema
+
+// Function to encrypt data (for manual encryption if needed)
+// function encryptAadhar(text) {
+//   const cipher = crypto.createCipheriv(encryptionAlgorithm, Buffer.from(encryptionKey), iv);
+//   let encrypted = cipher.update(text, 'utf8', 'hex');
+//   encrypted += cipher.final('hex');
+//   return encrypted;
+// }
+
+// Function to decrypt data (for manual decryption if needed)
+// function decryptAadhar(encryptedText) {
+//   const decipher = crypto.createDecipheriv(encryptionAlgorithm, Buffer.from(encryptionKey), iv);
+//   let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+//   decrypted += decipher.final('utf8');
+//   return decrypted;
+// }
 // Get all party members (filtered by query params)
 exports.getAllPartyMembers = async (req, res) => {
   try {
@@ -7,10 +28,7 @@ exports.getAllPartyMembers = async (req, res) => {
     const filters = {};
 
     if (search) {
-      filters.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { aadharNo: { $regex: search, $options: 'i' } }
-      ];
+      filters.name = { $regex: search, $options: 'i' };
     }
 
     if (mandal) {
@@ -21,29 +39,45 @@ exports.getAllPartyMembers = async (req, res) => {
       filters.designation = designation;
     }
 
-    // ✅ Apply status filter if provided, otherwise default to active
     if (status === 'inactive') {
       filters.isActive = false;
     } else {
-      // default to active if status is not provided or is 'active'
       filters.isActive = true;
     }
 
-    console.log("filters", filters);
-
-    const members = await PartyAndYouth.find(filters);
-    res.json(members);
+    const members = await PartyAndYouth.find(filters).lean();
+    
+    // Mask Aadhar numbers in response
+    const safeMembers = members.map(member => ({
+      ...member,
+      aadharNo: member.aadharNo ? `****${member.aadharNo.slice(-4)}` : null
+    }));
+    
+    res.json(safeMembers);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error fetching members:', error);
+    res.status(500).json({ 
+      message: 'Error fetching members',
+      error: error.message 
+    });
   }
 };
-
 // Create new party member
+
 exports.createPartyMember = async (req, res) => {
   try {
     const memberData = req.body;
     
-    // If user is logged in, attach the creator ID
+    // Validate Aadhar before processing
+    if (!memberData.aadharNo || !/^\d{12}$/.test(String(memberData.aadharNo).trim())) {
+      return res.status(400).json({ 
+        message: 'Aadhar number must be exactly 12 digits' 
+      });
+    }
+
+    // Convert to string explicitly
+    memberData.aadharNo = String(memberData.aadharNo).trim();
+    
     if (req.user) {
       memberData.createdBy = req.user.id;
     }
@@ -51,9 +85,25 @@ exports.createPartyMember = async (req, res) => {
     const member = new PartyAndYouth(memberData);
     await member.save();
     
-    res.status(201).json(member);
+    // Return response with masked Aadhar
+    const response = member.toObject();
+    response.aadharNo = `****${response.aadharNo.slice(-4)}`;
+    
+    res.status(201).json(response);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('Create member error:', {
+      error: error.message,
+      stack: error.stack
+    });
+    
+    const message = error.message.includes('validation failed') 
+      ? error.message.replace('PartyAndYouth validation failed: ', '')
+      : error.message;
+    
+    res.status(400).json({ 
+      message,
+      details: error.errors ? Object.values(error.errors).map(e => e.message) : undefined
+    });
   }
 };
 
@@ -70,7 +120,7 @@ exports.updatePartyMember = async (req, res) => {
       return res.status(404).json({ message: 'Member not found' });
     }
     
-    res.json(member);
+    res.json(member); 
   } catch (error) {
     res.status(400).json({ message: error.message });
   }

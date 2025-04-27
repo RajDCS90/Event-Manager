@@ -1,82 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import FormInput from "../common/FormInput";
 import { usePartyAndYouth } from "../../context/P&YContext";
-
-const mandalData = {
-  "Mandal 1": {
-    villages: {
-      "Village 1": {
-        postOffice: "Village 1 PO",
-        policeStation: "Village 1 PS",
-        pincode: "500001"
-      },
-      "Village 2": {
-        postOffice: "Village 2 PO",
-        policeStation: "Village 2 PS",
-        pincode: "500002"
-      }
-    }
-  },
-  "Mandal 2": {
-    villages: {
-      "Village 3": {
-        postOffice: "Village 3 PO",
-        policeStation: "Village 3 PS",
-        pincode: "500003"
-      },
-      "Village 4": {
-        postOffice: "Village 4 PO",
-        policeStation: "Village 4 PS",
-        pincode: "500004"
-      }
-    }
-  },
-  "Mandal 3": {
-    villages: {
-      "Village 5": {
-        postOffice: "Village 5 PO",
-        policeStation: "Village 5 PS",
-        pincode: "500005"
-      },
-      "Village 6": {
-        postOffice: "Village 6 PO",
-        policeStation: "Village 6 PS",
-        pincode: "500006"
-      }
-    }
-  },
-  "Mandal 4": {
-    villages: {
-      "Village 7": {
-        postOffice: "Village 7 PO",
-        policeStation: "Village 7 PS",
-        pincode: "500007"
-      },
-      "Village 8": {
-        postOffice: "Village 8 PO",
-        policeStation: "Village 8 PS",
-        pincode: "500008"
-      }
-    }
-  },
-  "Mandal 5": {
-    villages: {
-      "Village 9": {
-        postOffice: "Village 9 PO",
-        policeStation: "Village 9 PS",
-        pincode: "500009"
-      },
-      "Village 10": {
-        postOffice: "Village 10 PO",
-        policeStation: "Village 10 PS",
-        pincode: "500010"
-      }
-    }
-  }
-};
+import { useMandal } from "../../context/MandalContext";
 
 const PartyYouthForm = ({ onClose }) => {
   const { createMember } = usePartyAndYouth();
+  const { mandals, fetchMandals } = useMandal();
 
   const [formData, setFormData] = useState({
     aadharNo: "",
@@ -84,8 +13,11 @@ const PartyYouthForm = ({ onClose }) => {
     whatsappNo: "",
     designation: "",
     address: {
-      mandal: "Mandal 1",
+      mandal: "",
+      areaType: "",
+      area: "",
       village: "",
+      booth: "",
       policeStation: "",
       postOffice: "",
       pincode: "",
@@ -93,44 +25,89 @@ const PartyYouthForm = ({ onClose }) => {
     },
   });
 
-  const [villageOptions, setVillageOptions] = useState(['ecwe','wecw']);
+  const [areaOptions, setAreaOptions] = useState([]);
+  const [villageOptions, setVillageOptions] = useState([]);
+  const [boothOptions, setBoothOptions] = useState([]);
 
-  // Get mandal options from the mandalData keys
-  const mandalOptions = Object.keys(mandalData);
+  useEffect(() => {
+    fetchMandals();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
     if (name === "mandal") {
-      // When mandal changes, update village options and reset village-related fields
-      const villages = mandalData[value] ? Object.keys(mandalData[value].villages) : [];
-      setVillageOptions(villages);
-      
+      // When mandal changes, reset all dependent fields
       setFormData(prev => ({
         ...prev,
         address: {
           ...prev.address,
           mandal: value,
+          areaType: "",
+          area: "",
           village: "",
+          booth: "",
           policeStation: "",
           postOffice: "",
           pincode: ""
         }
       }));
-    } 
+    }
+    else if (name === "areaType") {
+      // When area type (Panchayat/Ward) changes, update area options
+      setFormData(prev => ({
+        ...prev,
+        address: {
+          ...prev.address,
+          areaType: value,
+          area: "",
+          village: "",
+          booth: "",
+          policeStation: "",
+          postOffice: "",
+          pincode: ""
+        }
+      }));
+    }
+    else if (name === "area") {
+      // When area changes, update village options
+      const selectedMandal = mandals.find(m => m.mandalName === formData.address.mandal);
+      const selectedArea = selectedMandal?.areas.find(a => a.name === value);
+      const villages = selectedArea?.villages?.map(v => v.name) || [];
+
+      setVillageOptions(villages);
+
+      setFormData(prev => ({
+        ...prev,
+        address: {
+          ...prev.address,
+          area: value,
+          village: "",
+          booth: "",
+          policeStation: "",
+          postOffice: "",
+          pincode: ""
+        }
+      }));
+    }
     else if (name === "village") {
-      // When village changes, auto-fill the other address fields
-      const selectedMandal = formData.address.mandal;
-      const villageInfo = mandalData[selectedMandal]?.villages?.[value] || {};
-      
+      // When village changes, update booth options
+      const selectedMandal = mandals.find(m => m.mandalName === formData.address.mandal);
+      const selectedArea = selectedMandal?.areas.find(a => a.name === formData.address.area);
+      const selectedVillage = selectedArea?.villages?.find(v => v.name === value);
+      const booths = selectedVillage?.booths?.map(b => b.number) || [];
+
+      setBoothOptions(booths);
+
       setFormData(prev => ({
         ...prev,
         address: {
           ...prev.address,
           village: value,
-          policeStation: villageInfo.policeStation || "",
-          postOffice: villageInfo.postOffice || "",
-          pincode: villageInfo.pincode || ""
+          booth: "",
+          policeStation: "",
+          postOffice: "",
+          pincode: ""
         }
       }));
     }
@@ -163,8 +140,11 @@ const PartyYouthForm = ({ onClose }) => {
       whatsappNo: "",
       designation: "",
       address: {
-        mandal: "Mandal 1",
+        mandal: "",
+        areaType: "",
+        area: "",
         village: "",
+        booth: "",
         policeStation: "",
         postOffice: "",
         pincode: "",
@@ -175,12 +155,36 @@ const PartyYouthForm = ({ onClose }) => {
     onClose();
   };
 
+  // Get mandal options from the mandals data
+  const mandalOptions = mandals.map(m => m.mandalName);
+
+  // Get area type options (Panchayat/Ward) based on selected mandal
+  const areaTypeOptions = [];
+  const selectedMandal = mandals.find(m => m.mandalName === formData.address.mandal);
+  if (selectedMandal) {
+    const hasPanchayat = selectedMandal.areas.some(a => a.type === "Panchayat");
+    const hasWard = selectedMandal.areas.some(a => a.type === "Ward");
+
+    if (hasPanchayat) areaTypeOptions.push("Panchayat");
+    if (hasWard) areaTypeOptions.push("Ward");
+  }
+
+  // Get area options (Panchayat/Ward names) based on selected mandal and area type
+  const filteredAreaOptions = [];
+  if (selectedMandal && formData.address.areaType) {
+    filteredAreaOptions.push(
+      ...selectedMandal.areas
+        .filter(a => a.type === formData.address.areaType)
+        .map(a => a.name)
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg w-full">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-gray-800">Add Party Youth</h2>
       </div>
-  
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <FormInput
@@ -208,10 +212,12 @@ const PartyYouthForm = ({ onClose }) => {
           <FormInput
             label="Aadhar Number"
             name="aadharNo"
-            type="number"
             value={formData.aadharNo}
             onChange={handleChange}
             required
+            maxLength={12}
+            pattern="\d{12}"
+            title="Please enter exactly 12 digits"
           />
         </div>
 
@@ -226,29 +232,79 @@ const PartyYouthForm = ({ onClose }) => {
               type="select"
               value={formData.address.mandal}
               onChange={handleChange}
-              options={mandalOptions.map(m => ({ value: m, label: m }))}
-              required
-            />
-            <FormInput
-              label="Village"
-              name="village"
-              type="select"
-              value={formData.address.village}
-              onChange={handleChange}
               options={[
-                { value: "", label: "Select Village" },
-                ...villageOptions.map(v => ({ value: v, label: v }))
+                { value: "", label: "Select Mandal" },
+                ...mandalOptions.map(m => ({ value: m, label: m }))
               ]}
               required
-              disabled={!formData.address.mandal}
             />
+
+            {formData.address.mandal && (
+              <FormInput
+                label="Area Type"
+                name="areaType"
+                type="select"
+                value={formData.address.areaType}
+                onChange={handleChange}
+                options={[
+                  { value: "", label: "Select Type" },
+                  ...areaTypeOptions.map(t => ({ value: t, label: t }))
+                ]}
+                required
+              />
+            )}
+
+            {formData.address.areaType && (
+              <FormInput
+                label={formData.address.areaType}
+                name="area"
+                type="select"
+                value={formData.address.area}
+                onChange={handleChange}
+                options={[
+                  { value: "", label: `Select ${formData.address.areaType}` },
+                  ...filteredAreaOptions.map(a => ({ value: a, label: a }))
+                ]}
+                required
+              />
+            )}
+
+            {formData.address.area && (
+              <FormInput
+                label="Village"
+                name="village"
+                type="select"
+                value={formData.address.village}
+                onChange={handleChange}
+                options={[
+                  { value: "", label: "Select Village" },
+                  ...villageOptions.map(v => ({ value: v, label: v }))
+                ]}
+                required
+              />
+            )}
+
+            {formData.address.village && (
+              <FormInput
+                label="Booth"
+                name="booth"
+                type="select"
+                value={formData.address.booth}
+                onChange={handleChange}
+                options={[
+                  { value: "", label: "Select Booth" },
+                  ...boothOptions.map(b => ({ value: b, label: b }))
+                ]}
+                required
+              />
+            )}
+
             <FormInput
               label="Police Station"
               name="policeStation"
               value={formData.address.policeStation}
               onChange={handleChange}
               required
-              readOnly
             />
             <FormInput
               label="Post Office"
@@ -256,7 +312,6 @@ const PartyYouthForm = ({ onClose }) => {
               value={formData.address.postOffice}
               onChange={handleChange}
               required
-              readOnly
             />
             <FormInput
               label="Pincode"
@@ -266,7 +321,6 @@ const PartyYouthForm = ({ onClose }) => {
               pattern="[0-9]{6}"
               maxLength="6"
               required
-              readOnly
             />
             <FormInput
               label="Landmark"
