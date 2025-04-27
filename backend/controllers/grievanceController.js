@@ -5,161 +5,145 @@ const mongoose = require('mongoose');
 // Get all grievances (filtered by query params)
 exports.getAllGrievances = async (req, res) => {
   try {
-    // Build filter object
-    const filters = {};
+    const filters = req.query;
+    const query = {};
     
-    // Basic filters
-    if (req.query.status) {
-      filters.status = req.query.status;
-    }
-    
-    // Address filters
-    if (req.query.mandal) {
-      // Try to find mandal by name if it's not a valid ObjectId
-      if (mongoose.Types.ObjectId.isValid(req.query.mandal)) {
-        filters['address.mandal'] = mongoose.Types.ObjectId(req.query.mandal);
-      } else {
-        // Look up mandal by name
-        try {
-          const mandal = await Mandal.findOne({ mandalName: req.query.mandal });
-          if (mandal) {
-            filters['address.mandal'] = mandal._id;
-          } else {
-            // No matching mandal found, return empty result
-            return res.json([]);
-          }
-        } catch (err) {
-          console.error('Error finding mandal by name:', err);
-          return res.status(400).json({ message: 'Error processing mandal filter' });
-        }
-      }
-    }
-    
-    // Filter by area, village, and booth
-    if (req.query.area) {
-      filters['address.area'] = req.query.area;
-    }
-    
-    if (req.query.village) {
-      filters['address.village'] = req.query.village;
-    }
-    
-    if (req.query.booth) {
-      filters['address.booth'] = req.query.booth;
-    }
 
-    // Handle date filters
-    if (req.query.programDate) {
-      // Single date filter
-      const date = new Date(req.query.programDate);
-      if (!isNaN(date.getTime())) {
-        const startOfDay = new Date(date);
-        startOfDay.setUTCHours(0, 0, 0, 0);
-        
-        const endOfDay = new Date(date);
-        endOfDay.setUTCHours(23, 59, 59, 999);
-        
-        filters.programDate = {
-          $gte: startOfDay,
-          $lte: endOfDay
-        };
-      }
-    } else if (req.query.startDate && req.query.endDate) {
-      // Date range filter
-      const startDate = new Date(req.query.startDate);
-      const endDate = new Date(req.query.endDate);
-      
-      if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-        startDate.setUTCHours(0, 0, 0, 0);
-        endDate.setUTCHours(23, 59, 59, 999);
-        
-        filters.programDate = {
-          $gte: startDate,
-          $lte: endDate
-        };
+    // Handle address filters
+    if (filters.mandal) {
+      const mandal = await Mandal.findOne({
+        mandalName: filters.mandal,
+      });
+      if (mandal) {
+        query["address.mandal"] = mandal._id;
+      } else if (mongoose.Types.ObjectId.isValid(filters.mandal)) {
+        query["address.mandal"] = filters.mandal;
       }
     }
 
-    console.log('Applied filters:', filters);
+    // Other filters
+    if (filters.area) query["address.area"] = filters.area;
+    if (filters.village) query["address.village"] = filters.village;
+    if (filters.booth) query["address.booth"] = filters.booth;
 
-    const grievances = await Grievance.find(filters)
+
+    // Date filtering
+    if (filters.startDate && filters.endDate) {
+      const startDate = new Date(filters.startDate);
+      const endDate = new Date(filters.endDate);
+      startDate.setUTCHours(0, 0, 0, 0);
+      endDate.setUTCHours(23, 59, 59, 999);
+      query.programDate = { $gte: startDate, $lte: endDate };
+    }
+
+    const grievances = await Grievance.find(query)
       .populate('address.mandal', 'mandalName')
       .populate('createdBy', 'username')
       .sort({ programDate: 1, startTime: 1 });
 
-    res.json(grievances);
+    return res.json(grievances);
+
   } catch (error) {
     console.error('Error fetching grievances:', error);
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
 // Create new grievance
 exports.createGrievance = async (req, res) => {
   try {
-    const { programDate, startTime, endTime, address, ...rest } = req.body;
-    
-    // Validate date and times
+    const { programDate, startTime, endTime, address = {}, ...rest } = req.body;
+
+    // Validate date
     const dateObj = new Date(programDate);
     if (isNaN(dateObj.getTime())) {
-      return res.status(400).json({ message: 'Invalid date format' });
+      return res.status(400).json({ message: "Invalid date format" });
     }
 
-    // Convert time strings to minutes for comparison
-    const startMinutes = convertTimeToMinutes(startTime);
-    const endMinutes = convertTimeToMinutes(endTime);
-    
-    if (startMinutes >= endMinutes) {
-      return res.status(400).json({ message: 'End time must be after start time' });
+    // Validate times
+    if (!isValidTime(startTime) || !isValidTime(endTime)) {
+      return res.status(400).json({ message: "Invalid time format (HH:MM)" });
     }
 
-    // Process address data
-    const addressData = {};
-    
-    // Handle mandal - look up by name if string is provided
+    if (convertTimeToMinutes(startTime) >= convertTimeToMinutes(endTime)) {
+      return res
+        .status(400)
+        .json({ message: "End time must be after start time" });
+    }
+
+    // Validate pincode if provided
+    if (address.pincode && !/^\d{6}$/.test(address.pincode)) {
+      return res.status(400).json({ message: "Pincode must be 6 digits" });
+    }
+
+    // Validate phone number if provided
+    if (rest.requesterContact && !/^\d{10}$/.test(rest.requesterContact)) {
+      return res
+        .status(400)
+        .json({ message: "Phone number must be 10 digits" });
+    }
+
+    // Find the mandal by name to get its ObjectId
+    let mandalDoc;
     if (address.mandal) {
-      if (mongoose.Types.ObjectId.isValid(address.mandal)) {
-        addressData.mandal = address.mandal;
-      } else {
-        // Try to find the mandal by name
-        const mandal = await Mandal.findOne({ mandalName: address.mandal });
-        if (!mandal) {
-          return res.status(400).json({ message: `Mandal with name "${address.mandal}" not found` });
-        }
-        addressData.mandal = mandal._id;
+      mandalDoc = await Mandal.findOne({ mandalName: address.mandal });
+      if (!mandalDoc) {
+        return res.status(400).json({ message: "Invalid mandal name" });
       }
     } else {
-      return res.status(400).json({ message: 'Mandal is required' });
+      return res.status(400).json({ message: "Mandal is required" });
     }
-    
-    // Store other address fields
-    addressData.area = address.area;
-    addressData.village = address.village;
-    addressData.booth = address.booth;
-    addressData.postOffice = address.postOffice;
-    addressData.policeStation = address.policeStation;
-    addressData.pincode = address.pincode;
+
+    // Find the area type (Panchayat or Ward)
+    const selectedArea = mandalDoc.areas.find(
+      (area) => area.name === address.area
+    );
+    if (!selectedArea) {
+      return res.status(400).json({ message: "Invalid area name" });
+    }
+
+    // Construct complete address with all hierarchical information
+    const completeAddress = {
+      mandal: mandalDoc._id,
+      mandalName: address.mandal,
+      area: address.area,
+      areaType: selectedArea.type,
+      village: address.village,
+      booth: address.booth,
+      postOffice: address.postOffice,
+      policeStation: address.policeStation,
+      pincode: address.pincode,
+    };
 
     const grievanceData = {
       ...rest,
       programDate: dateObj,
       startTime,
       endTime,
-      address: addressData,
-      createdBy: req.user.id
+      address: completeAddress,
+      createdBy: req.user.id,
     };
-    
+
     const grievance = new Grievance(grievanceData);
     await grievance.save();
-    
-    // Populate the mandal field for the response
-    await grievance.populate('address.mandal', 'mandalName');
-    await grievance.populate('createdBy', 'username');
-    
-    res.status(201).json(grievance);
+
+    // Fetch the created grievance with populated mandal for the response
+    const populatedGrievance = await Grievance.findById(grievance._id)
+      .populate("address.mandal", "mandalName")
+      .populate("createdBy", "username");
+
+    res.status(201).json(populatedGrievance);
   } catch (error) {
-    console.error('Error creating grievance:', error);
-    res.status(400).json({ message: error.message });
+    console.error("Create grievance error:", error);
+    res.status(400).json({
+      message: "Validation failed",
+      errors: error.errors
+        ? Object.keys(error.errors).reduce((acc, key) => {
+            acc[key] = error.errors[key].message;
+            return acc;
+          }, {})
+        : error.message,
+    });
   }
 };
 
@@ -198,50 +182,61 @@ exports.updateGrievance = async (req, res) => {
 
     // Handle address updates
     if (address) {
-      updateData.address = {};
+      updateData.address = grievance.address ? { ...grievance.address } : {};
       
       // Process mandal - handle as object with _id property
       if (address.mandal) {
-        // Check if mandal is an object with _id
+        let mandalId;
+        let mandalName;
+        
+        // Check different possible mandal formats
         if (address.mandal._id) {
-          // Use the _id property directly
-          updateData.address.mandal = address.mandal._id;
-        } 
-        // If it's a string ID
-        else if (mongoose.Types.ObjectId.isValid(address.mandal)) {
-          updateData.address.mandal = address.mandal;
-        } 
-        // If it's a string name
-        else if (typeof address.mandal === 'string') {
+          mandalId = address.mandal._id;
+          mandalName = address.mandal.mandalName;
+        } else if (mongoose.Types.ObjectId.isValid(address.mandal)) {
+          mandalId = address.mandal;
+        } else if (typeof address.mandal === 'string') {
           const mandal = await Mandal.findOne({ mandalName: address.mandal });
           if (!mandal) {
             return res.status(400).json({ message: `Mandal with name "${address.mandal}" not found` });
           }
-          updateData.address.mandal = mandal._id;
-        }
-        // If it has a mandalName property (object with mandalName)
-        else if (address.mandal.mandalName) {
+          mandalId = mandal._id;
+          mandalName = mandal.mandalName;
+        } else if (address.mandal.mandalName) {
           const mandal = await Mandal.findOne({ mandalName: address.mandal.mandalName });
           if (!mandal) {
             return res.status(400).json({ message: `Mandal with name "${address.mandal.mandalName}" not found` });
           }
-          updateData.address.mandal = mandal._id;
+          mandalId = mandal._id;
+          mandalName = mandal.mandalName;
         }
-        else {
-          return res.status(400).json({ message: 'Invalid mandal format' });
+
+        if (mandalId) {
+          updateData.address.mandal = mandalId;
+          updateData.address.mandalName = mandalName || (await Mandal.findById(mandalId)).mandalName;
         }
-      } else if (grievance.address && grievance.address.mandal) {
-        // Keep existing mandal if not provided
-        updateData.address.mandal = grievance.address.mandal;
+      }
+
+      // Update other address fields
+      if (address.area) {
+        updateData.address.area = address.area;
+        // Find and set areaType from the mandal's areas
+        if (updateData.address.mandal) {
+          const mandal = await Mandal.findById(updateData.address.mandal);
+          if (mandal) {
+            const areaInfo = mandal.areas.find(a => a.name === address.area);
+            if (areaInfo) {
+              updateData.address.areaType = areaInfo.type;
+            }
+          }
+        }
       }
       
-      // Update other address fields
-      updateData.address.area = address.area || (grievance.address ? grievance.address.area : '');
-      updateData.address.village = address.village || (grievance.address ? grievance.address.village : '');
-      updateData.address.booth = address.booth || (grievance.address ? grievance.address.booth : '');
-      updateData.address.postOffice = address.postOffice || (grievance.address ? grievance.address.postOffice : '');
-      updateData.address.policeStation = address.policeStation || (grievance.address ? grievance.address.policeStation : '');
-      updateData.address.pincode = address.pincode || (grievance.address ? grievance.address.pincode : '');
+      if (address.village) updateData.address.village = address.village;
+      if (address.booth) updateData.address.booth = address.booth;
+      if (address.postOffice) updateData.address.postOffice = address.postOffice;
+      if (address.policeStation) updateData.address.policeStation = address.policeStation;
+      if (address.pincode) updateData.address.pincode = address.pincode;
     }
 
     // Handle uploaded file (if any)
@@ -261,10 +256,10 @@ exports.updateGrievance = async (req, res) => {
       return res.status(404).json({ message: 'Grievance not found' });
     }
 
-    res.json(updatedGrievance);
+    return res.json(updatedGrievance);
   } catch (error) {
     console.error('Update error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       message: 'Error updating grievance',
       error: error.message
     });
@@ -307,4 +302,8 @@ exports.deleteGrievance = async (req, res) => {
 function convertTimeToMinutes(timeStr) {
   const [hours, minutes] = timeStr.split(':').map(Number);
   return hours * 60 + minutes;
+}
+
+function isValidTime(timeStr) {
+  return /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(timeStr);
 }

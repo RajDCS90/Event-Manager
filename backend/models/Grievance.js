@@ -56,32 +56,53 @@ const GrievanceSchema = new mongoose.Schema(
       type: String, // Store image URL or file path
       required: false,
     },
-   address: {
-       postOffice: {
-         type: String,
-         trim: true,
-         // required: true
-       },
-       policeStation: {
-         type: String,
-         trim: true,
-         // required: true
-       },
-       pincode: {
-         type: String,
-         trim: true,
-         validate: {
-           validator: v => /^[0-9]{6}$/.test(v),
-           message: props => `${props.value} is not a valid pincode!`
-         },
-         required: true
-       },
-       mandal: {
-         type: mongoose.Schema.Types.ObjectId,
-         ref: 'Mandal', // This assumes you have a Mandal model
-         required: true
-       }
+  address: {
+     mandal: {
+       type: mongoose.Schema.Types.ObjectId,
+       ref: 'Mandal',
+       required: true
      },
+     mandalName: {
+       type: String,
+       required: true
+     },
+     area: {
+       type: String,
+       required: true
+     },
+     areaType: {
+       type: String,
+       enum: ['Panchayat', 'Ward'],
+       required: true
+     },
+     village: {
+       type: String,
+       required: true
+     },
+     booth: {
+       type: String,
+       required: true
+     },
+     postOffice: {
+       type: String,
+       trim: true,
+       required: true
+     },
+     policeStation: {
+       type: String,
+       trim: true,
+       required: true
+     },
+     pincode: {
+       type: String,
+       trim: true,
+       validate: {
+         validator: v => /^[0-9]{6}$/.test(v),
+         message: props => `${props.value} is not a valid pincode!`
+       },
+       required: true
+     }
+   },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

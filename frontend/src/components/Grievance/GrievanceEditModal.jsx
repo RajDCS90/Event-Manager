@@ -16,6 +16,7 @@ const GrievanceEditModal = ({ grievance, isOpen, onClose, onSave }) => {
   const [villageOptions, setVillageOptions] = useState([]);
   const [boothOptions, setBoothOptions] = useState([]);
 
+
   const [formData, setFormData] = useState({
     grievanceName: '',
     type: 'complaint',
@@ -43,7 +44,7 @@ const GrievanceEditModal = ({ grievance, isOpen, onClose, onSave }) => {
   }, []);
 
   useEffect(() => {
-    if (grievance) {
+    if (grievance && mandals.length > 0) {
       const initialData = {
         grievanceName: grievance.grievanceName || '',
         type: grievance.type || 'complaint',
@@ -56,7 +57,7 @@ const GrievanceEditModal = ({ grievance, isOpen, onClose, onSave }) => {
         assignedTo: grievance.assignedTo || '',
         resolutionNotes: grievance.resolutionNotes || '',
         address: {
-          mandal: grievance.address?.mandal || '',
+          mandal: grievance.address?.mandalName || grievance.address?.mandal?.mandalName || '',
           area: grievance.address?.area || '',
           village: grievance.address?.village || '',
           booth: grievance.address?.booth || '',
@@ -65,23 +66,41 @@ const GrievanceEditModal = ({ grievance, isOpen, onClose, onSave }) => {
           pincode: grievance.address?.pincode || ''
         }
       };
-
+  
       setFormData(initialData);
-
-      // Set options based on initial data
+  
+      // Now set the options based on the initial data
       if (initialData.address.mandal) {
-        const selectedMandal = mandals.find(m => m.mandalName === initialData.address.mandal);
-        setAreaOptions(selectedMandal?.areas || []);
+        const selectedMandal = mandals.find(m => 
+          m.mandalName === initialData.address.mandal || 
+          m._id === initialData.address.mandal
+        );
+        
+        if (selectedMandal) {
+          setAreaOptions(selectedMandal.areas || []);
+          
+          // If area exists in initial data, find and set villages
+          if (initialData.address.area) {
+            const selectedArea = selectedMandal.areas.find(a => 
+              a.name === initialData.address.area
+            );
+            if (selectedArea) {
+              setVillageOptions(selectedArea.villages || []);
+              
+              // If village exists in initial data, find and set booths
+              if (initialData.address.village) {
+                const selectedVillage = selectedArea.villages.find(v => 
+                  v.name === initialData.address.village
+                );
+                if (selectedVillage) {
+                  setBoothOptions(selectedVillage.booths || []);
+                }
+              }
+            }
+          }
+        }
       }
-      if (initialData.address.area) {
-        const selectedArea = areaOptions.find(a => a.name === initialData.address.area);
-        setVillageOptions(selectedArea?.villages || []);
-      }
-      if (initialData.address.village) {
-        const selectedVillage = villageOptions.find(v => v.name === initialData.address.village);
-        setBoothOptions(selectedVillage?.booths || []);
-      }
-
+  
       if (grievance.imageUrl) {
         setImagePreview(grievance.imageUrl);
       }

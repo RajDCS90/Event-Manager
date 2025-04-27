@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import EventRow from "./EventRow"
 import EventDetail from "../Landing/EventDetail"
@@ -8,6 +6,7 @@ const EventList = ({ events, onEdit, onDelete }) => {
   const [detailEvent, setDetailEvent] = useState(null)
 
   const handleShowDetail = (event) => {
+    console.log(event)
     setDetailEvent(event)
   }
 
@@ -89,22 +88,10 @@ const EventList = ({ events, onEdit, onDelete }) => {
 
       {/* Modal rendered outside of the table structure */}
       {detailEvent && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-30 flex items-center justify-center">
-          <EventDetail
-            event={{
-              ...detailEvent,
-              title: detailEvent.eventName,
-              date: new Date(detailEvent.eventDate).toLocaleDateString(),
-              time: `${detailEvent.startTime} - ${detailEvent.endTime}`,
-              location: detailEvent.venue,
-              description: detailEvent.description,
-              image: detailEvent.imageUrl || "https:/https://images.pexels.com/photos/31756517/pexels-photo-31756517/free-photo-of-scenic-mountain-view-in-himachal-pradesh-india.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load/via.placeholder.com/800x400",
-              gallery: detailEvent.gallery || [],
-              address: detailEvent.address,
-            }}
-            onClose={handleCloseDetail}
-          />
-        </div>
+        <EventDetail
+          event={detailEvent}
+          onClose={handleCloseDetail}
+        />
       )}
     </>
   )

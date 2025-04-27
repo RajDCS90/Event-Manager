@@ -1,158 +1,226 @@
-import {
-  X,
-  Calendar,
-  MapPin,
-  User,
-  Mail,
-  Phone,
-  Home,
-  Navigation,
-} from "lucide-react";
+import { Calendar, MapPin, Clock, User, X, ChevronLeft } from 'lucide-react';
+import { useEffect } from 'react';
 
 export default function EventDetail({ event, onClose }) {
   if (!event) return null;
 
+  const {
+    eventName,
+    eventDate,
+    startTime,
+    endTime,
+    venue,
+    eventType,
+    imageUrl,
+    description,
+    requesterName,
+    requesterContact,
+    status,
+    mandal
+  } = event;
+
+  // Handle address data safely
+  const address = event.address || {};
+
+  // Safely get mandal name from different possible structures
+  const getMandalName = () => {
+    if (typeof address.mandal === 'string') return address.mandal;
+    if (address.mandal?.mandalName) return address.mandal.mandalName;
+    if (typeof mandal === 'string') return mandal;
+    if (mandal?.mandalName) return mandal.mandalName;
+    if (address.mandalName) return address.mandalName;
+    return 'N/A';
+  };
+
+  // Format date safely
+  const formattedDate = eventDate ? new Date(eventDate).toLocaleDateString(undefined, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }) : 'N/A';
+
+  const timeRange = `${startTime || 'N/A'} - ${endTime || 'N/A'}`;
+  const fallbackImage = 'https://images.pexels.com/photos/2608517/pexels-photo-2608517.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
+
+  // Close modal when clicking on overlay
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  // Close modal when pressing Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-4xl max-h-screen overflow-hidden shadow-2xl">
-        {/* Image and Close Button */}
-        <div className="relative">
+    <div 
+      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto"
+      onClick={handleOverlayClick}
+    >
+      <div className="bg-white rounded-2xl w-full max-w-3xl overflow-hidden shadow-lg animate-fadeIn relative max-h-[90vh] overflow-y-auto">
+        
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-20 bg-white/90 p-2 rounded-full hover:bg-white shadow"
+          aria-label="Close"
+        >
+          <X size={22} className="text-orange-500" />
+        </button>
+
+        {/* Back Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 left-4 z-20 bg-white/90 p-2 px-3 rounded-full hover:bg-white flex items-center shadow"
+          aria-label="Go back"
+        >
+          <ChevronLeft size={18} className="text-orange-500" />
+          <span className="ml-1 text-gray-700 text-sm font-medium">Back</span>
+        </button>
+
+        {/* Event Image */}
+        <div className="w-full h-42 md:h-80 bg-gray-100">
           <img
-            src={event.image}
-            alt={event.title}
-            className="w-full h-48 object-cover rounded-t-lg"
+            src={imageUrl || fallbackImage}
+            alt={eventName || 'Event'}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.src = fallbackImage;
+            }}
           />
-          <button
-            onClick={onClose}
-            className="absolute top-3 right-3 bg-white/80 hover:bg-white rounded-full p-1"
-          >
-            <X size={22} />
-          </button>
         </div>
 
-        {/* Scrollable Content */}
-        <div className="p-4 overflow-y-auto max-h-[calc(100vh-12rem)]">
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-xl font-bold text-gray-800">{event.title}</h2>
-            <span
-              className={`px-3 py-1 rounded-full text-sm font-medium ${
-                event.status === "completed"
-                  ? "bg-green-100 text-green-800"
-                  : event.status === "pending"
-                  ? "bg-yellow-100 text-yellow-800"
-                  : "bg-gray-100 text-gray-800"
-              }`}
-            >
-              {event.status}
-            </span>
-          </div>
-
-          <div className="mb-4 flex flex-wrap gap-3 text-sm">
-            <div className="bg-gray-100 px-3 py-1 rounded-full flex items-center">
-              <Calendar size={16} className="mr-2 text-orange-500" />
-              <span>
-                {event.date} | {event.time}
-              </span>
-            </div>
-            <div className="bg-gray-100 px-3 py-1 rounded-full flex items-center">
-              <MapPin size={16} className="mr-2 text-orange-500" />
-              <span>{event.location}</span>
-            </div>
-            <div className="bg-gray-100 px-3 py-1 rounded-full flex items-center">
-              <User size={16} className="mr-2 text-orange-500" />
-              <span>Requester: {event.requesterName}</span>
+        {/* Event Content */}
+        <div className="p-6 space-y-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">{eventName || 'Unnamed Event'}</h1>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {eventType && (
+                <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full capitalize">
+                  {eventType}
+                </span>
+              )}
+              {status && (
+                <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full capitalize ${
+                  status === 'approved' ? 'bg-green-100 text-green-800' : 
+                  status === 'rejected' ? 'bg-red-100 text-red-800' : 
+                  'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {status}
+                </span>
+              )}
             </div>
           </div>
 
-          {/* Address Section */}
-          {event.address && (
-            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-              <h3 className="font-semibold text-gray-700 mb-2">Address Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <AddressField
-                  icon={<Home size={16} className="text-orange-500 mt-1 mr-2" />}
-                  label="Village"
-                  value={event.address.village}
-                />
-                <AddressField
-                  icon={<Navigation size={16} className="text-orange-500 mt-1 mr-2" />}
-                  label="Post Office"
-                  value={event.address.postOffice}
-                />
-                <AddressField
-                  icon={<MapPin size={16} className="text-orange-500 mt-1 mr-2" />}
-                  label="Police Station"
-                  value={event.address.policeStation}
-                />
-                <AddressField
-                  icon={<MapPin size={16} className="text-orange-500 mt-1 mr-2" />}
-                  label="Mandal"
-                  value={event.address.mandal}
-                />
-                <AddressField
-                  icon={<Mail size={16} className="text-orange-500 mt-1 mr-2" />}
-                  label="Pincode"
-                  value={event.address.pincode}
-                />
-                {event.requesterContact && (
-                  <AddressField
-                    icon={<Phone size={16} className="text-orange-500 mt-1 mr-2" />}
-                    label="Contact Number"
-                    value={event.requesterContact}
-                  />
-                )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+            <div className="flex items-start">
+              <Calendar size={16} className="text-orange-500 mt-1 mr-2" />
+              <div>
+                <h3 className="font-medium">Date</h3>
+                <p>{formattedDate}</p>
               </div>
             </div>
-          )}
 
-          {/* Event Details */}
-          <div className="space-y-4 text-sm">
-            <DetailSection title="Event Type" content={event.eventType} />
-            {event.description && (
-              <DetailSection title="Description" content={event.description} />
-            )}
-            {event.gallery && event.gallery.length > 0 && (
+            <div className="flex items-start">
+              <Clock size={16} className="text-orange-500 mt-1 mr-2" />
               <div>
-                <h3 className="font-semibold text-gray-700 mb-2">Gallery</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {event.gallery.map((image, index) => (
-                    <div key={index} className="overflow-hidden rounded-lg border">
-                      <img
-                        src={image}
-                        alt={`Event image ${index + 1}`}
-                        className="w-full h-28 object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  ))}
+                <h3 className="font-medium">Time</h3>
+                <p>{timeRange}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start">
+              <MapPin size={16} className="text-orange-500 mt-1 mr-2" />
+              <div>
+                <h3 className="font-medium">Venue</h3>
+                <p>{venue || 'N/A'}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start">
+              <User size={16} className="text-orange-500 mt-1 mr-2" />
+              <div>
+                <h3 className="font-medium">Mandal</h3>
+                <p>{getMandalName()}</p>
+              </div>
+            </div>
+
+            {address.area && (
+              <div className="flex items-start">
+                <MapPin size={16} className="text-orange-500 mt-1 mr-2" />
+                <div>
+                  <h3 className="font-medium">Area</h3>
+                  <p>{address.area}</p>
+                </div>
+              </div>
+            )}
+
+            {address.village && (
+              <div className="flex items-start">
+                <MapPin size={16} className="text-orange-500 mt-1 mr-2" />
+                <div>
+                  <h3 className="font-medium">Village</h3>
+                  <p>{address.village}</p>
+                </div>
+              </div>
+            )}
+
+            {address.booth && (
+              <div className="flex items-start">
+                <MapPin size={16} className="text-orange-500 mt-1 mr-2" />
+                <div>
+                  <h3 className="font-medium">Booth</h3>
+                  <p>{address.booth}</p>
+                </div>
+              </div>
+            )}
+
+            {requesterName && (
+              <div className="flex items-start">
+                <User size={16} className="text-orange-500 mt-1 mr-2" />
+                <div>
+                  <h3 className="font-medium">Requester</h3>
+                  <p>{requesterName}</p>
+                </div>
+              </div>
+            )}
+
+            {requesterContact && (
+              <div className="flex items-start">
+                <User size={16} className="text-orange-500 mt-1 mr-2" />
+                <div>
+                  <h3 className="font-medium">Contact</h3>
+                  <p>{requesterContact}</p>
                 </div>
               </div>
             )}
           </div>
+
+          {/* Description */}
+          {description && (
+            <div>
+              <h3 className="font-semibold text-gray-800 mb-2">Event Description</h3>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-gray-700">
+                  {description.trim() ? description : 'No description provided'}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-    </div>
-  );
-}
-
-// Reusable subcomponent for address fields
-function AddressField({ icon, label, value }) {
-  return (
-    <div className="flex items-start">
-      {icon}
-      <div>
-        <p className="text-xs text-gray-500">{label}</p>
-        <p className="font-medium">{value || "N/A"}</p>
-      </div>
-    </div>
-  );
-}
-
-// Reusable subcomponent for simple detail sections
-function DetailSection({ title, content }) {
-  return (
-    <div>
-      <h3 className="font-semibold text-gray-700 mb-1">{title}</h3>
-      <p className="text-gray-600 capitalize">{content}</p>
     </div>
   );
 }

@@ -2,6 +2,9 @@ import { Calendar, MapPin, Clock, User, X, ChevronLeft, MessageSquare, Mail, Pho
 import { useEffect } from 'react';
 
 export default function GrievanceDetailModal({ grievance, onClose }) {
+
+  console.log(grievance)
+
   if (!grievance) return null;
 
   // Close modal when clicking on overlay
@@ -44,6 +47,15 @@ export default function GrievanceDetailModal({ grievance, onClose }) {
     requesterName
   } = grievance;
 
+  // Safely get mandal name from different possible structures
+  const getMandalName = () => {
+    if (typeof address.mandal === 'string') return address.mandal;
+    if (address.mandal?.mandalName) return address.mandal.mandalName;
+    if (typeof mandal === 'string') return mandal;
+    if (mandal?.mandalName) return mandal.mandalName;
+    return 'N/A';
+  };
+
   const formattedDate = new Date(programDate).toLocaleDateString(undefined, {
     weekday: 'long',
     year: 'numeric',
@@ -68,9 +80,6 @@ export default function GrievanceDetailModal({ grievance, onClose }) {
       onClick={handleOverlayClick}
     >
       <div className="bg-white rounded-2xl w-full max-w-3xl overflow-hidden shadow-lg animate-fadeIn relative max-h-[90vh] overflow-y-auto">
-
-        {/* Close Button */}
-       
 
         {/* Back Button */}
         <button
@@ -155,62 +164,88 @@ export default function GrievanceDetailModal({ grievance, onClose }) {
           </div>
 
           {/* Address Section */}
-          {address && (
-            <div>
-              <h3 className="font-semibold text-gray-800 mb-2">Address Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+          <div>
+            <h3 className="font-semibold text-gray-800 mb-2">Address Details</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+              <div className="flex items-start">
+                <MapPin size={16} className="text-orange-500 mt-1 mr-2" />
+                <div>
+                  <h3 className="font-medium">Mandal</h3>
+                  <p>{getMandalName()}</p>
+                </div>
+              </div>
+
+              {address?.area && (
+                <div className="flex items-start">
+                  <Navigation size={16} className="text-orange-500 mt-1 mr-2" />
+                  <div>
+                    <h3 className="font-medium">Area</h3>
+                    <p>{address.area}</p>
+                  </div>
+                </div>
+              )}
+
+              {address?.village && (
                 <div className="flex items-start">
                   <Home size={16} className="text-orange-500 mt-1 mr-2" />
                   <div>
                     <h3 className="font-medium">Village</h3>
-                    <p>{address.village || 'N/A'}</p>
+                    <p>{address.village}</p>
                   </div>
                 </div>
+              )}
 
+              {address?.booth && (
                 <div className="flex items-start">
-                  <Navigation size={16} className="text-orange-500 mt-1 mr-2" />
+                  <MapPin size={16} className="text-orange-500 mt-1 mr-2" />
+                  <div>
+                    <h3 className="font-medium">Booth</h3>
+                    <p>{address.booth}</p>
+                  </div>
+                </div>
+              )}
+
+              {address?.postOffice && (
+                <div className="flex items-start">
+                  <Mail size={16} className="text-orange-500 mt-1 mr-2" />
                   <div>
                     <h3 className="font-medium">Post Office</h3>
-                    <p>{address.postOffice || 'N/A'}</p>
+                    <p>{address.postOffice}</p>
                   </div>
                 </div>
+              )}
 
+              {address?.policeStation && (
                 <div className="flex items-start">
                   <MapPin size={16} className="text-orange-500 mt-1 mr-2" />
                   <div>
                     <h3 className="font-medium">Police Station</h3>
-                    <p>{address.policeStation || 'N/A'}</p>
+                    <p>{address.policeStation}</p>
                   </div>
                 </div>
+              )}
 
-                <div className="flex items-start">
-                  <MapPin size={16} className="text-orange-500 mt-1 mr-2" />
-                  <div>
-                    <h3 className="font-medium">Mandal</h3>
-                    <p>{address.mandal || mandal || 'N/A'}</p>
-                  </div>
-                </div>
-
+              {address?.pincode && (
                 <div className="flex items-start">
                   <Mail size={16} className="text-orange-500 mt-1 mr-2" />
                   <div>
                     <h3 className="font-medium">Pincode</h3>
-                    <p>{address.pincode || 'N/A'}</p>
+                    <p>{address.pincode}</p>
                   </div>
                 </div>
+              )}
 
-                {requesterContact && (
-                  <div className="flex items-start">
-                    <Phone size={16} className="text-orange-500 mt-1 mr-2" />
-                    <div>
-                      <h3 className="font-medium">Contact Number</h3>
-                      <p>{requesterContact}</p>
-                    </div>
+              {requesterContact && (
+                <div className="flex items-start">
+                  <Phone size={16} className="text-orange-500 mt-1 mr-2" />
+                  <div>
+                    <h3 className="font-medium">Contact Number</h3>
+                    <p>{requesterContact}</p>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
 
           {/* Description */}
           <div>

@@ -16,6 +16,7 @@ function isValidTime(timeStr) {
 }
 
 // Get all events with pagination and filtering
+
 exports.getAllEvents = async (req, res) => {
   try {
     const filters = req.query;
@@ -23,8 +24,7 @@ exports.getAllEvents = async (req, res) => {
 
     // Pagination - default to 30 documents when no query parameters
     const page = parseInt(filters.page) || 1;
-    const limit =
-      Object.keys(filters).length === 0 ? 30 : parseInt(filters.limit) || 10;
+    const limit = Object.keys(filters).length === 0 ? 30 : 200;
     const skip = (page - 1) * limit;
 
     // Basic filters
@@ -38,7 +38,6 @@ exports.getAllEvents = async (req, res) => {
       query.venue = { $regex: filters.venue, $options: "i" };
     }
 
-    // Date filters remain the same...
     // Handle date range in format "YYYY-MM-DD,YYYY-MM-DD"
     if (filters.dateRange) {
       const [startDate, endDate] = filters.dateRange.split(',');
@@ -123,11 +122,29 @@ exports.getAllEvents = async (req, res) => {
       .populate({ path: "createdBy", select: "username" })
       .populate({
         path: "address.mandal",
-        select: "mandalName areas",
+        select: "mandalName",
       });
 
+    // Transform the response to simplify the address schema
+    const simplifiedEvents = events.map(event => {
+      const eventObj = event.toObject();
+      
+      // If address.mandal is populated and has mandalName, extract it
+      if (eventObj.address && eventObj.address.mandal && typeof eventObj.address.mandal === 'object') {
+        const mandalName = eventObj.address.mandal.mandalName;
+        
+        // Simplify the mandal object to match grievance structure
+        eventObj.address.mandal = {
+          _id: eventObj.address.mandal._id,
+          mandalName: mandalName
+        };
+      }
+      
+      return eventObj;
+    });
+
     res.json({
-      events: events,
+      events: simplifiedEvents,
       page,
       limit,
       totalCount,

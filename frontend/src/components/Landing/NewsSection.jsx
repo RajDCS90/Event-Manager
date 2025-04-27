@@ -82,7 +82,7 @@ export default function NewsSection() {
   }, [events, grievances]);
 
   return (
-    <section className="py-12 bg-white">
+    <section className="py-12  bg-white">
       <div className="container mx-auto px-4">
         <SectionHeader 
           icon={<CalendarDays size={20} className="text-white" />} 
