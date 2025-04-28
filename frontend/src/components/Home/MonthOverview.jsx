@@ -1,24 +1,18 @@
 import { Calendar, AlertCircle } from 'lucide-react';
+import { format } from 'date-fns';
+import { useEvents } from '../../context/EventContext';
+import { useGrievance } from '../../context/GrievanceContext';
 
-const MonthOverview = ({  events, 
+const MonthOverview = ({
+  events, 
   grievances, 
   currentMonth, 
   setShowEventTables, 
   setShowGravianceTables,
-  scrollToTables // Add this new prop
- }) => {
-
-  const handleEventClick = () => {
-    setShowEventTables(true);
-    // Scroll after a small delay to allow the table to render
-    setTimeout(() => scrollToTables(), 100);
-  };
-
-  const handleGrievanceClick = () => {
-    setShowGravianceTables(true);
-    // Scroll after a small delay to allow the table to render
-    setTimeout(() => scrollToTables(), 100);
-  };
+  scrollToTables
+}) => {
+  const { fetchEvents } = useEvents();
+  const { fetchGrievances } = useGrievance();
 
   // Helper to filter items for current month
   const getMonthItems = (items, dateField) => {
@@ -32,6 +26,48 @@ const MonthOverview = ({  events,
   const monthEvents = getMonthItems(events, 'eventDate');
   const monthGrievances = getMonthItems(grievances, 'programDate');
   
+  const handleEventClick = async () => {
+    // Fetch events for current month
+    const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+    const lastDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+    
+    const currentMonthFilter = {
+      dateRange: {
+        startDate: format(firstDayOfMonth, "yyyy-MM-dd"),
+        endDate: format(lastDayOfMonth, "yyyy-MM-dd")
+      }
+    };
+    
+    // Fetch events with the filter
+    await fetchEvents(currentMonthFilter);
+    
+    // Show the table
+    setShowEventTables(true);
+    
+    // Scroll after a small delay to allow the table to render
+    setTimeout(() => scrollToTables(), 100);
+  };
+
+  const handleGrievanceClick = async () => {
+    // Fetch grievances for current month
+    const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+    const lastDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+    
+    const filters = {
+      startDate: format(firstDayOfMonth, "yyyy-MM-dd"),
+      endDate: format(lastDayOfMonth, "yyyy-MM-dd")
+    };
+    
+    // Fetch grievances with the filter
+    await fetchGrievances(filters);
+    
+    // Show the table
+    setShowGravianceTables(true);
+    
+    // Scroll after a small delay to allow the table to render
+    setTimeout(() => scrollToTables(), 100);
+  };
+  
   return (
     <div className="bg-white rounded-lg shadow-lg p-4">
       <h2 className="text-lg font-semibold text-gray-800 mb-4">
@@ -43,7 +79,7 @@ const MonthOverview = ({  events,
           <div className="bg-blue-100 rounded-full p-3 mr-3">
             <Calendar size={24} className="text-blue-600" />
           </div>
-          <div >
+          <div>
             <p className="text-sm text-blue-600">Events</p>
             <p className="text-2xl font-bold text-blue-700">{monthEvents.length}</p>
           </div>

@@ -17,18 +17,24 @@ export const EventProvider = ({ children }) => {
   const { notify } = useToast(); // Get the notify function from ToastContext
 
   // Memoized fetchEvents with useCallback
-  // In the fetchEvents function, update the date range handling:
-const fetchEvents = useCallback(async (filters = {}, page = 1, limit = 100) => {
+
+const fetchEvents = useCallback(async (filters = {}) => {
   try {
     setLoading(true);
-
-    console.log(filters)
     
+    console.log(filters);
+    
+    // Only include page in params initially
     const params = {
-      page,
-      limit,
       ...filters
     };
+    
+    // Remove empty filters to ensure backend defaults are used
+    Object.keys(params).forEach(key => {
+      if (params[key] === '' || params[key] === null || params[key] === undefined) {
+        delete params[key];
+      }
+    });
 
     // Handle date range filters
     if (filters.dateRange) {
@@ -45,8 +51,8 @@ const fetchEvents = useCallback(async (filters = {}, page = 1, limit = 100) => {
     setPagination({
       page: response.data.page,
       limit: response.data.limit,
-      total: response.data.total,
-      pages: response.data.pages
+      totalCount: response.data.totalCount,
+      totalPages: response.data.totalPages
     });
     setError(null);
   } catch (err) {

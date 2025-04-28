@@ -116,48 +116,62 @@
 
 
 
-import { createContext, useState, useContext } from "react"
+import { createContext, useState, useContext, useCallback } from "react"
 import api from "../services/api"
 
 const GrievanceContext = createContext()
 
 export const GrievanceProvider = ({ children }) => {
-  const [grievances, setGrievances] = useState([])
+  const [grievances, setGrievances] = useState([]);
+  const [pagination, setPagination] = useState({
+      page: 1,
+      limit: 100,
+      total: 0,
+      pages: 1
+    });
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  const fetchGrievances = async (filters = {}) => {
+  const fetchGrievances = useCallback(async (filters = {}) => {
     try {
-      setLoading(true)
-
+      setLoading(true);
+  
       // Prepare API params
-      const params = {}
-
-      if (filters.status) params.status = filters.status
-      if (filters.mandal) params.mandal = filters.mandal
-      if (filters.area) params.area = filters.area
-      if (filters.village) params.village = filters.village
-      if (filters.booth) params.booth = filters.booth
-
+      const params = {
+      };
+  
+      // Only add non-empty filters
+      if (filters.status) params.status = filters.status;
+      if (filters.mandal) params.mandal = filters.mandal;
+      if (filters.area) params.area = filters.area;
+      if (filters.village) params.village = filters.village;
+      if (filters.booth) params.booth = filters.booth;
+  
       // Handle date filters
       if (filters.programDate) {
-        params.programDate = filters.programDate
+        params.programDate = filters.programDate;
       } else if (filters.startDate && filters.endDate) {
-        params.startDate = filters.startDate
-        params.endDate = filters.endDate
+        params.startDate = filters.startDate;
+        params.endDate = filters.endDate;
       }
-
-      const query = new URLSearchParams(params).toString()
-      const res = await api.get(`/grievances?${query}`)
-      setGrievances(res.data)
-      setError(null)
+  
+      const response = await api.get('/grievances', { params });
+      
+      setGrievances(response.data.grievances || []);
+      setPagination({
+        page: response.data.page,
+        limit: response.data.limit,
+        totalCount: response.data.totalCount,
+        totalPages: response.data.totalPages
+      });
+      setError(null);
     } catch (err) {
-      console.error("Failed to fetch grievances:", err)
-      setError(err.response?.data?.message || "Failed to fetch grievances")
+      console.error("Failed to fetch grievances:", err);
+      setError(err.response?.data?.message || "Failed to fetch grievances");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  }, []);
 
   const createGrievance = async (grievanceData) => {
     try {

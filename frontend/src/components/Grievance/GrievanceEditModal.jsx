@@ -299,8 +299,9 @@ const GrievanceEditModal = ({ grievance, isOpen, onClose, onSave }) => {
                 disabled={isSubmitting}
               >
                 <option value="complaint">Complaint</option>
-                <option value="suggestion">Suggestion</option>
-                <option value="inquiry">Inquiry</option>
+                <option value="request">Request</option>
+                <option value="feedback">Feedback</option>
+                <option value="other">Other</option>
               </select>
             </div>
 

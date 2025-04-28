@@ -29,7 +29,7 @@ export default function EventsAndGrievancesPage() {
   const scrollToTables = () => {
     tablesRef.current?.scrollIntoView({
       behavior: "smooth",
-      block: "start", // You can adjust this to 'center' or 'end' if needed
+      block: "start",
     });
   };
 
@@ -37,6 +37,8 @@ export default function EventsAndGrievancesPage() {
     fetchEvents();
     fetchGrievances();
   }, []);
+
+  
   useEffect(()=>{
     console.log("grievances",grievances)
   },[grievances])
