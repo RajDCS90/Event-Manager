@@ -1,59 +1,99 @@
 const PartyAndYouth = require('../models/PartyAndYouth');
-const crypto = require('crypto');
 
-// Encryption configuration (should match schema configuration)
-// const encryptionAlgorithm = 'aes-256-cbc';
-// const encryptionKey = crypto.randomBytes(32); // Must be same as in schema
-// const iv = crypto.randomBytes(16); // Must be same as in schema
-
-// Function to encrypt data (for manual encryption if needed)
-// function encryptAadhar(text) {
-//   const cipher = crypto.createCipheriv(encryptionAlgorithm, Buffer.from(encryptionKey), iv);
-//   let encrypted = cipher.update(text, 'utf8', 'hex');
-//   encrypted += cipher.final('hex');
-//   return encrypted;
-// }
-
-// Function to decrypt data (for manual decryption if needed)
-// function decryptAadhar(encryptedText) {
-//   const decipher = crypto.createDecipheriv(encryptionAlgorithm, Buffer.from(encryptionKey), iv);
-//   let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
-//   decrypted += decipher.final('utf8');
-//   return decrypted;
-// }
 // Get all party members (filtered by query params)
 exports.getAllPartyMembers = async (req, res) => {
   try {
-    const { search, mandal, designation, status } = req.query;
+    const { 
+      search, 
+      mandal, 
+      designation, 
+      status,
+      ward,
+      panchayat,
+      village,
+      booth,
+      areaType
+    } = req.query;
+    
     const filters = {};
+    let shouldLimitResults = false;
 
+    // Check if any filter is applied (excluding status)
+    const hasFilters = search || mandal || designation || ward || panchayat || village || booth || areaType;
+
+    // Search filter
     if (search) {
       filters.name = { $regex: search, $options: 'i' };
     }
 
+    // Mandal filter
     if (mandal) {
       filters['address.mandal'] = mandal;
     }
 
+    // Designation filter
     if (designation) {
       filters.designation = designation;
     }
 
+    // Status filter (defaults to active users)
     if (status === 'inactive') {
       filters.isActive = false;
     } else {
       filters.isActive = true;
+      // Only limit results if no filters are applied and we're showing active users
+      if (!hasFilters) {
+        shouldLimitResults = true;
+      }
     }
 
-    const members = await PartyAndYouth.find(filters).lean();
-    
+    // Ward filter
+    if (ward) {
+      filters['address.area'] = ward;
+      filters['address.areaType'] = 'Ward';
+    }
+
+    // Panchayat filter
+    if (panchayat) {
+      filters['address.area'] = panchayat;
+      filters['address.areaType'] = 'Panchayat';
+    }
+
+    // Village filter
+    if (village) {
+      filters['address.village'] = village;
+    }
+
+    // Booth filter
+    if (booth) {
+      filters['address.booth'] = booth;
+    }
+
+    // Area type filter (if neither ward nor panchayat is specified)
+    if (areaType && !ward && !panchayat) {
+      filters['address.areaType'] = areaType;
+    }
+
+    // Create base query
+    let query = PartyAndYouth.find(filters);
+
+    // Apply limit only if no filters are present and we're showing active users
+    if (shouldLimitResults) {
+      query = query.limit(30);
+    }
+
+    const members = await query.lean();
+
     // Mask Aadhar numbers in response
     const safeMembers = members.map(member => ({
       ...member,
       aadharNo: member.aadharNo ? `****${member.aadharNo.slice(-4)}` : null
     }));
     
-    res.json(safeMembers);
+    res.json({
+      data: safeMembers,
+      limited: shouldLimitResults // Indicates if results were limited
+    });
   } catch (error) {
     console.error('Error fetching members:', error);
     res.status(500).json({ 

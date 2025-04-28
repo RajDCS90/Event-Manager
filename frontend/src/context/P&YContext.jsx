@@ -12,33 +12,37 @@ export const PartyAndYouthProvider = ({ children }) => {
   
 
   // Fetch all members (with optional filters)
-  const fetchMembers = async (filters = {}) => {
-    try {
-      setLoading(true);
-      
-      // Convert filters object to query parameters
-      const params = new URLSearchParams();
-      
-      // if ( filters.search) params.append('search', filters.search);
-      if (filters.status) params.append("status", filters.status);
-      if (filters.mandal) params.append('mandal', filters.mandal);
-      if (filters.designation) params.append('designation', filters.designation);
-      
-      // Make the API call with query parameters
-      const response = await api.get(`/party-members?${params.toString()}`);
-      
-      console.log('Party members response:', response);
-      setMembers(response.data);
-      setError(null);
-      return response.data;
-    } catch (err) {
-      console.error('Error fetching party members:', err);
-      setError(err.response?.data?.message || 'Failed to fetch party members');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Update the fetchMembers function in your context
+const fetchMembers = async (filters = {}) => {
+  try {
+    setLoading(true);
+    
+    // Convert filters object to query parameters
+    const params = new URLSearchParams();
+    
+    if (filters.search) params.append('search', filters.search);
+    if (filters.status) params.append('status', filters.status);
+    if (filters.mandal) params.append('mandal', filters.mandal);
+    if (filters.designation) params.append('designation', filters.designation);
+    if (filters.ward) params.append('ward', filters.ward);
+    if (filters.panchayat) params.append('panchayat', filters.panchayat);
+    if (filters.village) params.append('village', filters.village);
+    if (filters.booth) params.append('booth', filters.booth);
+    if (filters.areaType) params.append('areaType', filters.areaType);
+    
+    const response = await api.get(`/party-members?${params.toString()}`);
+    
+    setMembers(response.data);
+    setError(null);
+    return response.data;
+  } catch (err) {
+    console.error('Error fetching party members:', err);
+    setError(err.response?.data?.message || 'Failed to fetch party members');
+    throw err;
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Create new member (public access)
   const createMember = async (memberData) => {

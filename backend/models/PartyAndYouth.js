@@ -73,12 +73,6 @@ const PartyAndYouthSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Aadhar number is required'],
     unique: true,
-    // validate: {
-    //   validator: function(v) {
-    //     return /^\d{12}$/.test(v);
-    //   },
-    //   message: 'Aadhar must be exactly 12 digits'
-    // },
     set: encrypt,
     get: decrypt
   },
