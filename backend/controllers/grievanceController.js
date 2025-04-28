@@ -8,6 +8,10 @@ exports.getAllGrievances = async (req, res) => {
     const filters = req.query;
     const query = {};
     
+    // Pagination - default to 30 documents when no query parameters
+    const page = parseInt(filters.page) || 1;
+    const limit = Object.keys(filters).length === 0 ? 30 : 200;
+    const skip = (page - 1) * limit;
 
     // Handle address filters
     if (filters.mandal) {
@@ -25,7 +29,7 @@ exports.getAllGrievances = async (req, res) => {
     if (filters.area) query["address.area"] = filters.area;
     if (filters.village) query["address.village"] = filters.village;
     if (filters.booth) query["address.booth"] = filters.booth;
-
+    if (filters.status) query.status = filters.status;
 
     // Date filtering
     if (filters.startDate && filters.endDate) {
@@ -34,14 +38,34 @@ exports.getAllGrievances = async (req, res) => {
       startDate.setUTCHours(0, 0, 0, 0);
       endDate.setUTCHours(23, 59, 59, 999);
       query.programDate = { $gte: startDate, $lte: endDate };
+    } else if (filters.programDate) {
+      const date = new Date(filters.programDate);
+      if (!isNaN(date.getTime())) {
+        const startOfDay = new Date(date);
+        startOfDay.setUTCHours(0, 0, 0, 0);
+        const endOfDay = new Date(date);
+        endOfDay.setUTCHours(23, 59, 59, 999);
+        query.programDate = { $gte: startOfDay, $lte: endOfDay };
+      }
     }
+
+    // Get total count for pagination
+    const totalCount = await Grievance.countDocuments(query);
 
     const grievances = await Grievance.find(query)
       .populate('address.mandal', 'mandalName')
       .populate('createdBy', 'username')
-      .sort({ programDate: 1, startTime: 1 });
+      .sort({ programDate: 1, startTime: 1 })
+      .skip(skip)
+      .limit(limit);
 
-    return res.json(grievances);
+    return res.json({
+      grievances,
+      page,
+      limit,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit)
+    });
 
   } catch (error) {
     console.error('Error fetching grievances:', error);
